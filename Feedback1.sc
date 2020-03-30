@@ -21,13 +21,12 @@ Feedback1 : EffectGUI {
 
 	audio {
 		Server.default.waitForBoot({
-			SynthDef(\feed, {|in=0, gainin=0, loop=10, feedback=0, out=0, deltime=75, del=0.05, freqdiv=4,
+			SynthDef(\feed, {|in=0, out=0, loop=10, gainin=0, feedback=0, deltime=75, del=0.05, freqdiv=4,
 				revtimes=5, amp=0.4, damping=1360, mod=0.75, base=64, trem=4, effect=(0.8.neg),
 				vol=0.125, chord=#[0,7,12,15,19,24], d|
 
 				var a, k, minfreqs, freqs, dry, freq, has_freq, feed_amp; //VARS
 
-				//var sig = (InFeedback.ar(loop, 2) + WhiteNoise.ar(0.001!2)) * feedback;
 				var sig = ((InFeedback.ar(loop, 2) + WhiteNoise.ar(0.001!2)) * feedback) + (In.ar(in, 2) * gainin);
 
 				// delay due to distance from amp - I chose 0.05s, or 20Hz
