@@ -14,26 +14,24 @@ Feedback1 : EffectGUI {
 	}
 
 	chord {|achord|
+		//if (achord.insNil, {^chord});
 		chord = achord;
 		synth.set(\chord, chord)
 	}
 
 	audio {
 		Server.default.waitForBoot({
-			SynthDef(\feed, {|in=0, loop=10, out=0, deltime=75, del=0.05, freqdiv=4, revtimes=5, amp=0.4,
-				damping=1360, mod=0.75, base=64, trem=4, effect=(0.8.neg), gain=1, vol=0.125, chord=#[0,7,12,15,19,24], d|
+			SynthDef(\feed, {|in=0, gainin=0, loop=10, feedback=0, out=0, deltime=75, del=0.05, freqdiv=4,
+				revtimes=5, amp=0.4, damping=1360, mod=0.75, base=64, trem=4, effect=(0.8.neg),
+				vol=0.125, chord=#[0,7,12,15,19,24], d|
 
 				var a, k, minfreqs, freqs, dry, freq, has_freq, feed_amp; //VARS
-				//var quantizedMidi, midiDiff, harmonize, confidence, inPitch;
 
-				var sig =
-				InFeedback.ar(loop, 2) +
-				WhiteNoise.ar(0.001!2) +
-				(In.ar(in, 2) * gain);
+				//var sig = (InFeedback.ar(loop, 2) + WhiteNoise.ar(0.001!2)) * feedback;
+				var sig = ((InFeedback.ar(loop, 2) + WhiteNoise.ar(0.001!2)) * feedback) + (In.ar(in, 2) * gainin);
 
 				// delay due to distance from amp - I chose 0.05s, or 20Hz
 				sig = DelayN.ar(sig, 1/10-ControlDur.ir, 1/deltime-ControlDur.ir);
-				//sig = DelayN.ar(sig, 5, del);
 
 				// guitar string frequencies - for some reason I had to pitch them down
 				freqs = (base+chord).midicps/freqdiv;
@@ -68,12 +66,12 @@ Feedback1 : EffectGUI {
 
 				Out.ar(loop, sig); // feedback loop before the main output
 
-				sig = XFade2.ar(dry, sig, effect) * vol;
+				sig = XFade2.ar(dry, sig, effect);
 
 				sig = Limiter.ar(sig);
-				//sig = Normalizer.ar(sig);
+				sig = Normalizer.ar(sig, 1, 0.01);
 
-				Out.ar(out, sig)// 1/8=0.125 max vol
+				Out.ar(out, sig * vol)
 			}).load;
 
 			// launch synth
@@ -94,7 +92,7 @@ Feedback1 : EffectGUI {
 
 	gui {
 		// GUI ////////////////////////
-		w = Window.new("feedback unit", Rect(0,0, 310, 240)).alwaysOnTop=true;
+		w = Window.new("feedback unit", Rect(0,0, 310, 265)).alwaysOnTop=true;
 		w.view.decorator=FlowLayout(w.view.bounds);
 		w.view.decorator.gap=2@2;
 		w.onClose = {
@@ -109,7 +107,7 @@ Feedback1 : EffectGUI {
 		.action_{|m|
 			synth.set(\in, m.value);
 		}
-		.value_(6); // default to sound in
+		.value_(2); // default to sound in
 
 
 		StaticText(w, 20@18).align_(\right).string_("Loop").resize_(7);
@@ -118,7 +116,7 @@ Feedback1 : EffectGUI {
 		.action_{|m|
 			synth.set(\loop, m.value);
 		}
-		.value_(10); // default to sound in
+		.value_(10);
 
 		StaticText(w, 20@18).align_(\right).string_("Out").resize_(7);
 		controls[\out] = PopUpMenu(w, Rect(10, 10, 38, 17))
@@ -126,7 +124,7 @@ Feedback1 : EffectGUI {
 		.action_{|m|
 			synth.set(\out, m.value);
 		}
-		.value_(0); // default to sound in
+		.value_(0); //
 
 
 		Button(w, Rect(20, 20, 55, 20))
@@ -147,11 +145,19 @@ Feedback1 : EffectGUI {
 			synth.set(\chord, chord);
 		});
 
+		 // SLIDERS //
+
 		controls[\gainin] = EZSlider( w,         // parent
 			300@20,    // bounds
-			"in gain",  // label
+			"feedback",  // label
 			ControlSpec(0, 2, \lin, 0.001, 0, \amp),     // controlSpec
-			{ |ez| synth.set(\gain, ez.value) } // action
+			{ |ez| synth.set(\feedback, ez.value) } // action
+		);
+		controls[\gainin] = EZSlider( w,         // parent
+			300@20,    // bounds
+			"gain in",  // label
+			ControlSpec(0, 2, \lin, 0.001, 0, \amp),     // controlSpec
+			{ |ez| synth.set(\gainin, ez.value) } // action
 		);
 		controls[\deltime] = EZSlider( w,         // parent
 			300@20,    // bounds
@@ -287,4 +293,17 @@ Feedback1 : EffectGUI {
 			}, 17); // match cc
 		}.defer(0.5);
 	}
+
+	// control
+	in {|val| controls[\in].valueAction = val }
+	feedback {|val| controls[\feedback].valueAction = val }
+	ingain {|val| controls[\gainin].valueAction = val }
+	deltime {|val| controls[\deltime].valueAction = val }
+	amp {|val| controls[\amp].valueAction = val }
+	damp {|val| controls[\damp].valueAction = val }
+	mod {|val| controls[\mod].valueAction = val }
+	base {|val| controls[\base].valueAction = val }
+	vol {|val| controls[\vol].valueAction = val }
+	tremolo {|val| controls[\tremolo].valueAction = val }
+	drywet {|val| controls[\effect].valueAction = val }
 }
