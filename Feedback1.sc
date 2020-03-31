@@ -1,3 +1,74 @@
+// synthdef based on https://sccode.org/1-U by Nathaniel Virgo
+
+
+EffectGUI {
+	var <controls, path, w;
+
+	/*
+	a base class for a GUI window with widgets that can save/restore the configuration of the . Should be
+	extended and w variable must contain a ref to the window that contains the widgets.
+
+	widgets must be added to controls dictionary like this
+
+	controls[\gainin] = EZSlider( w,         // parent
+	300@20,    // bounds
+	"in gain",  // label
+	ControlSpec(0, 2, \lin, 0.001, 0, \amp),     // controlSpec
+	{ |ez| synth.set(\gain, ez.value) } // action
+	);
+	*/
+
+	*new {
+		^super.new.initEffectGUI;
+	}
+
+	initEffectGUI {
+		controls = Dictionary.new;
+		path = thisProcess.nowExecutingPath.dirname;
+	}
+
+	gui { // run this if you want to have open and save buttons in the window
+		// if w not nil
+		ActionButton(w,"S",{
+			this.save;
+		});
+		ActionButton(w,"O",{
+			this.open;
+		});
+	}
+
+	update {|name, value| // control widgets remotely
+		{controls[name].valueAction = value}.defer
+	}
+
+	save {
+		var data = Dictionary.new, name="", filename;
+		if (w.isNil.not, {name=w.name.replace(" ", "_")}); //prepend the windows name
+		filename = name++"_"++Date.getDate.stamp++".preset";
+
+		controls.keysValuesDo { |key, widget|
+			data.put(key, widget.value)
+		};
+
+		data.writeArchive(path ++ Platform.pathSeparator ++ filename);
+	}
+
+	open {
+		var data;
+		FileDialog({ |path|
+			data = Object.readArchive(path);
+			data.keysValuesDo{ |key, value|
+				try {
+					{controls[key].valueAction = value}.defer // wait for QT
+				}{|er| er.postln}
+			};
+		},
+		fileMode: 0,
+		stripResult: true,
+		path: path);
+	}
+}
+
 
 
 
@@ -10,7 +81,7 @@ Feedback1 : EffectGUI {
 
 	initFeedback1  {
 		this.auto;
-		chord = [0, 6.1, 10, 15.2, 22, 24 ];
+		chord = [0,7,12,15,19,24]; //[0, 6.1, 10, 15.2, 22, 24 ];
 	}
 
 	chord {|achord|
@@ -21,9 +92,12 @@ Feedback1 : EffectGUI {
 
 	audio {
 		Server.default.waitForBoot({
+
+			// BASED ON https://sccode.org/1-U by Nathaniel Virgo
+
 			SynthDef(\feed, {|in=0, out=0, loop=10, gainin=0, feedback=0, deltime=75, del=0.05, freqdiv=4,
 				revtimes=5, amp=0.4, damping=1360, mod=0.75, base=64, trem=4, effect=(0.8.neg),
-				vol=0.125, chord=#[0,7,12,15,19,24], d|
+				vol=0.125, chord=#[0,7,12,15,19,24]|
 
 				var a, k, minfreqs, freqs, dry, freq, has_freq, feed_amp; //VARS
 
@@ -52,16 +126,25 @@ Feedback1 : EffectGUI {
 
 				// and finally a spot of reverb
 				dry = sig;
-				sig = sig * SinOsc.ar(trem);
+
+				sig = sig * SinOsc.ar(trem); // and I like tremolo
 
 				//# freq, has_freq = Pitch.kr(sig, ampThreshold: 0.02, median: 7); // get the main resonant frequency
 				//freq.poll; //(feed_amp*2).neg
 				//sig = BPeakEQ.ar(sig, freq: freq, rq: 0.2, db: -24); // db should be dependant on energy on that area
 
 				revtimes.do { //rev times
-					d = 0.2.rand; // delayt and decayt
+					var d = 0.2.rand; // delayt and decayt
 					sig = AllpassN.ar(sig, d, d, 5);
 				};
+
+				sig = Compander.ar(sig, sig,
+					thresh: 0.5,
+					slopeBelow: 10,
+					slopeAbove:  1,
+					clampTime:   0.01,
+					relaxTime:   0.01
+				);
 
 				Out.ar(loop, sig); // feedback loop before the main output
 
@@ -74,7 +157,7 @@ Feedback1 : EffectGUI {
 			}).load;
 
 			// launch synth
-			synth = Synth(\feed, [\chord, [0,7,12,15,19,24]]); // e minor for instance
+			synth = Synth(\feed, [\chord, chord]); // e minor for instance
 			"-------AUDIO READY-------".postln
 		})
 	}
@@ -91,34 +174,33 @@ Feedback1 : EffectGUI {
 
 	gui {
 		// GUI ////////////////////////
-		w = Window.new("feedback unit", Rect(0,0, 310, 265)).alwaysOnTop=true;
+		w = Window.new("feedback unit", Rect(0,0, 310, 305)).alwaysOnTop=true;
 		w.view.decorator=FlowLayout(w.view.bounds);
 		w.view.decorator.gap=2@2;
 		w.onClose = {
 			synth.free;
 		};
 
-		super.gui; //
+		super.gui; // init super gui buttons
 
 		StaticText(w, 12@18).align_(\right).string_("In").resize_(7);
-		controls[\in] = PopUpMenu(w, Rect(10, 10, 38, 17))
+		controls[\in] = PopUpMenu(w, Rect(10, 10, 40, 17))
 		.items_( Array.fill(16, { arg i; i }) )
 		.action_{|m|
 			synth.set(\in, m.value);
 		}
 		.value_(2); // default to sound in
 
-
-		StaticText(w, 20@18).align_(\right).string_("Loop").resize_(7);
-		controls[\loop] = PopUpMenu(w, Rect(10, 10, 38, 17))
+		StaticText(w, 30@18).align_(\right).string_("Loop").resize_(7);
+		controls[\loop] = PopUpMenu(w, Rect(10, 10, 40, 17))
 		.items_( Array.fill(16, { arg i; i }) )
 		.action_{|m|
 			synth.set(\loop, m.value);
 		}
 		.value_(10);
 
-		StaticText(w, 20@18).align_(\right).string_("Out").resize_(7);
-		controls[\out] = PopUpMenu(w, Rect(10, 10, 38, 17))
+		StaticText(w, 23@18).align_(\right).string_("Out").resize_(7);
+		controls[\out] = PopUpMenu(w, Rect(10, 10, 40, 17))
 		.items_( Array.fill(16, { arg i; i }) )
 		.action_{|m|
 			synth.set(\out, m.value);
@@ -148,16 +230,20 @@ Feedback1 : EffectGUI {
 
 		controls[\gainin] = EZSlider( w,         // parent
 			300@20,    // bounds
-			"feedback",  // label
-			ControlSpec(0, 2, \lin, 0.001, 0, \amp),     // controlSpec
-			{ |ez| synth.set(\feedback, ez.value) } // action
-		);
-		controls[\gainin] = EZSlider( w,         // parent
-			300@20,    // bounds
 			"gain in",  // label
 			ControlSpec(0, 2, \lin, 0.001, 0, \amp),     // controlSpec
 			{ |ez| synth.set(\gainin, ez.value) } // action
 		);
+
+		StaticText(w);
+
+		controls[\feedback] = EZSlider( w,         // parent
+			300@20,    // bounds
+			"feedback",  // label
+			ControlSpec(0, 2, \lin, 0.001, 0, \amp),     // controlSpec
+			{ |ez| synth.set(\feedback, ez.value) } // action
+		);
+
 		controls[\deltime] = EZSlider( w,         // parent
 			300@20,    // bounds
 			"deltime",  // label
@@ -213,6 +299,8 @@ Feedback1 : EffectGUI {
 			ControlSpec(0, 2, \lin, 0.001, 0.3, \vol),     // controlSpec
 			{ |ez| synth.set(\vol, ez.value) } // action
 		);
+
+		StaticText(w);
 
 		controls[\tremolo] = EZSlider( w,         // parent
 			300@20,    // bounds
