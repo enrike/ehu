@@ -394,27 +394,30 @@ Feedback1 : EffectGUI {
 	}
 
 	// control
-	in {|val| controls[\in].valueAction = val }
-	gainin {|val| controls[\gainin].valueAction = val }
 
-	out {|val| controls[\out].valueAction = val }
-	loop {|val| controls[\loop].valueAction = val }
-	feedback {|val| controls[\feedback].valueAction = val }
-	deltime {|val| controls[\deltime].valueAction = val }
-	amp {|val| controls[\amp].valueAction = val }
-	damp {|val| controls[\damp].valueAction = val }
-	mod {|val| controls[\mod].valueAction = val }
-	base {|val| controls[\base].valueAction = val }
-	vol {|val| controls[\vol].valueAction = val }
+	setc {|control, val| {controls[control].valueAction = val}.defer}
 
-	thresh {|val| controls[\thresh].valueAction = val }
-	slopeBelow {|val| controls[\slopeBelow].valueAction = val }
-	slopeAbove {|val| controls[\slopeAbove].valueAction = val }
-	clampTime {|val| controls[\clampTime].valueAction = val }
-	relaxTime {|val| controls[\relaxTime].valueAction = val }
+	in {|val| this.setc(\in, val) }
+	gainin {|val| this.setc(\gainin, val) }
 
-	tremolo {|val| controls[\tremolo].valueAction = val }
-	drywet {|val| controls[\drywet].valueAction = val }
+	out {|val| this.setc(\out, val) }
+	loop {|val| this.setc(\loop, val) }
+	feedback {|val| this.setc(\feedback, val) }
+	deltime {|val| this.setc(\deltime, val) }
+	amp {|val| this.setc(\amp, val) }
+	damp {|val| this.setc(\damp, val) }
+	mod {|val| this.setc(\mod, val) }
+	base {|val| this.setc(\base, val) }
+	vol {|val| this.setc(\vol, val) }
+
+	thresh {|val| this.setc(\thresh, val) }
+	slopeBelow {|val| this.setc(\slopeBelow, val) }
+	slopeAbove {|val| this.setc(\slopeAbove, val) }
+	clampTime {|val| this.setc(\clampTime, val) }
+	relaxTime {|val| this.setc(\relaxTime, val) }
+
+	tremolo {|val| this.setc(\tremolo, val) }
+	drywet {|val| this.setc(\drywet, val) }
 }
 
 

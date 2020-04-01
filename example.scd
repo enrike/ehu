@@ -1,30 +1,38 @@
+
+/*
+connect MIDI keyboard to \base
+auto system: separated code and window
+AutomationGui check
+*/
+
 (
 f = Feedback1.new;
 f.chord([0, 6.1, 10, 15.2, 22, 24 ]);
+f.audio;
 f.gui;
 //f.midi; // setup
 //f.nanok; // connect to nanokontrol2
-f.audio;
 
 // other utils I use
 s.waitForBoot({
 	ChannelEQ.new;
-	CompanderGUI.new;
-	s.meter(10,10);
+	s.meter(2,2);
 })
 )
 
 
+
 // control
-f.chord([0, 6.1, 10, 15.2, 22, 24 ]);
+f.chord([0, 6.1, 10, 15.2, 22, 24 ].scramble);
 f.deltime(61)
-f.amp(0.4)
-f.damp(1000)
+f.amp(0.3)
+f.damp(1300)
 f.mod(1)
-f.base(64)
-f.vol(0.4)
-f.tremolo(4.2)
+f.base([64, 66, 68].choose)
+f.vol(0.7)
+f.tremolo(0.2)
 f.drywet(0.4)
+
 f.synth.set(\deltime, 14) // bypass gui
 
 
@@ -38,7 +46,7 @@ f.synth.set(\deltime, 14) // bypass gui
 //~chord = [0,7,12,15,19,24]; // mi menor si 64
 ~chord = [0, 6.1, 10, 15.2, 22, 24 ]; // chord
 ~chord = [0, 0.1, 0.15, 0.25, 0.5 ]; // chord
-~mel = [45.2,48, 46.5];//
+~mel = [45,48, 46];//
 ~times = [1, 7.1, 9.5];
 
 t = Task({
@@ -59,6 +67,9 @@ t = Task({
 t.start
 )
 t.stop
+
+
+
 
 
 (
