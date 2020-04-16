@@ -111,7 +111,7 @@ ChordGUI : EffectGUI {
 
 	updatemain {
 		var notes = this.notes;
-		[fund, notes].postln;
+		//[fund, notes].postln;
 		if (main.isNil.not, {
 			main.base(fund);
 			main.chord(notes)

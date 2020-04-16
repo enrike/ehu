@@ -1,5 +1,6 @@
 /*
 connect MIDI keyboard to \base
+add buttons to launch utils from main interface
 */
 
 (
@@ -13,10 +14,10 @@ f.gui;
 
 // other utils I use
 s.waitForBoot({
+	//f.on;
 	ChannelEQ.new;
-	NeckGUI.new(f);
+	//GNeckGUI.new(f);
 	//s.meter(2,2);
-
 	//AutoGUI.new(f);
 	//ChordGUI.new(f);
 })
@@ -24,6 +25,7 @@ s.waitForBoot({
 
 
 // other controls
+f.on; // f.off
 f.chord([0, 6.1, 10, 15.2, 22, 24 ].scramble);
 f.deltime(61)
 f.amp(0.3)
@@ -51,11 +53,26 @@ f.drywet(0.4)
 
 
 
+(
+t.stop;
+t = Task({
+	inf.do({|i|
+		f.chord( GuitarChords.chords.choose );
+		[0.1,n 2.7, 1.2].wrapAt(i).wait;
+	});
+});
+
+t.start;
+)
+
+
+
+
 
 // sequence 2 //
 (
 //~chord = [0,7,12,15,19,24]; // mi menor si 64
-~chord = [0, 6.1, 10, 15.2, 22, 24 ]; // chord
+//~chord = [0, 6.1, 10, 15.2, 22, 24 ]; // chord
 ~chord = [0, 0.1, 0.15, 0.25, 0.5 ]; // chord
 ~mel = [45,48, 46];//
 ~times = [1, 7.1, 3.5];
@@ -71,7 +88,7 @@ t = Task({
 		notes = ~chord.scramble;
 		base = ~mel.choose;
 		time = ~times.choose;
-		[time, base.midiname, base, (notes+64).midiname].postln;
+		[time, base.midiname, base, (notes+base).midiname].postln;
 		time.wait;
 	});
 });

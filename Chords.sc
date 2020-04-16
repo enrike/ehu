@@ -1,3 +1,4 @@
+
 GuitarChords {
 	classvar <chords;
 	// [ 0, 5, 10, 15, 19, 24 ]
@@ -47,5 +48,13 @@ GuitarChords {
 		chords[\Gm7] = [ 3, 10, 13, 18, 22, 27 ];
 		chords[\GM7] = [ 0, 5, 15, 19, 22, 26 ]; //X1 X2
 	}
+
+/*	*a {
+		^chords.select{ |item| item.key.asString.contains("A") };
+	}*/
+
+	// major {
+	// 	chords.select{ |item| item.key.asString.contains("M") };
+	// }
 }
 

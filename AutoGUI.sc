@@ -78,7 +78,7 @@ AutoGUI : EffectGUI {
 
 		values = Dictionary.new;
 
-		this.gui("Auto", Rect(430,0, 380, 20*(auto.main.controls.size-1)));
+		this.gui("Auto", Rect(430,0, 380, 340));
 
 		w.onClose = {
 			auto.kill;

@@ -2,13 +2,14 @@
 
 NeckGUI.new(master)
 
-	master is an optional instance of an object that contains a <chord variable. it will be updated each time chord changes in the ChordGUI
+master is an optional instance of an object that contains a <chord variable. it will be updated each time chord changes in the ChordGUI
 
 to do: explore tunnings
 */
 
 
-NeckGUI : EffectGUI {
+
+GNeckGUI : EffectGUI {
 	var main; // this is an object that has a <chord variable
 	var buttons;
 	var notes;

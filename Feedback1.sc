@@ -2,21 +2,22 @@
 
 
 Feedback1 : EffectGUI {
-	var auto, chord, <synth;
+	var auto, chord, <synth, path;
 
 	*new {
 		^super.new.initFeedback1();
 	}
 
 	initFeedback1  {
-		//.auto;
 		chord = [0,7,12,15,19,24]; //[0, 6.1, 10, 15.2, 22, 24 ];
 	}
 
 	audio {
 		Server.default.waitForBoot({
-			// BASED ON https://sccode.org/1-U by Nathaniel Virgo
 
+			path = thisProcess.nowExecutingPath.dirname;
+
+			// BASED ON https://sccode.org/1-U by Nathaniel Virgo
 			SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75, freqdiv=1,
 				revtimes=5, amp=0.6, damping=1360, mod=1, base=40, vol=0.9, chord=#[0,7,12,15,19,24],
 				thresh=0.5, slopeBelow=1, slopeAbove=0.5, clampTime=0.01, relaxTime=0.01, limit=0.5, norm=0.5,
@@ -65,16 +66,17 @@ Feedback1 : EffectGUI {
 				sig = Limiter.ar(sig * vol);
 
 				Out.ar(out, sig * on)
-			}).load;
+			}).send;
 
-			{ synth = Synth(\feed, [\chord, chord]) }.defer(0.01);
+			synth = Synth(\feed, [\chord, chord])
+			//			{ synth = Synth(\feed, [\chord, chord]) }.defer(0.01); // should wait until load oe send is done
 		})
 	}
 
 
 	gui {
 		// GUI ////////////////////////
-		super.gui("Feedback unit", Rect(0,0, 430, 430)); // init super gui buttons
+		super.gui("Feedback unit", Rect(0,0, 430, 440)); // init super gui buttons
 		w.onClose = {
 			synth.free;
 		};
@@ -106,7 +108,7 @@ Feedback1 : EffectGUI {
 			synth.set(\chord, ch)
 		});
 
-		Button(w, 22@20)
+		controls[\on] = Button(w, 22@18)
 		.states_([
 			["on", Color.white, Color.black],
 			["off", Color.black, Color.red]
@@ -115,6 +117,21 @@ Feedback1 : EffectGUI {
 			synth.set(\on, butt.value)
 		});
 
+		w.view.decorator.nextLine;
+
+		controls[\auto] = ActionButton(w,"auto",{
+			AutoGUI.new(this, path)
+		});
+
+		controls[\gneck] = ActionButton(w,"gneck",{
+			GNeckGUI.new(this, path);
+		});
+
+		controls[\chordsGUI] = ActionButton(w,"chords",{
+			ChordGUI.new(this, path);
+		});
+
+		w.view.decorator.nextLine;
 
 		// SLIDERS //
 		order.add(\gainin);
@@ -312,6 +329,9 @@ Feedback1 : EffectGUI {
 
 	setc {|control, val| {controls[control].valueAction = val}.defer}
 
+	on {|val| this.setc(\on, 1) }
+	off {|val| this.setc(\on, 0) }
+
 	in {|val| this.setc(\in, val) }
 	gainin {|val| this.setc(\gainin, val) }
 
@@ -340,10 +360,7 @@ Feedback1 : EffectGUI {
 		synth.set(\chord, chord)
 	}
 
-	base{ |val|
+	base { |val|
 		synth.set(\base, val)
 	}
 }
-
-
-// superclass
