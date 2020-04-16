@@ -19,14 +19,20 @@ EffectGUI {
 	);
 	*/
 
-	*new {
-		^super.new.initEffectGUI;
+	*new {|exepath|
+		^super.new.initEffectGUI(exepath);
 	}
 
-	initEffectGUI {
+	initEffectGUI {|exepath|
 		controls = Dictionary.new;
 		order = List.new;
-		path = thisProcess.nowExecutingPath.dirname;
+
+		if (exepath.isNil, {
+			try { path = thisProcess.nowExecutingPath.dirname} { path=Platform.userHomeDir}
+		},{
+			path = exepath;
+		});
+
 		effectsGroup = Group.new(Server.default, \addToTail); // was addAfter
 	}
 
@@ -55,6 +61,8 @@ EffectGUI {
 		controls.keysValuesDo { |key, widget|
 			data.put(key, widget.value)
 		};
+
+		("saving preset into" + path ++ Platform.pathSeparator ++ filename).postln;
 
 		data.writeArchive(path ++ Platform.pathSeparator ++ filename);
 	}

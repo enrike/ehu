@@ -14,14 +14,15 @@ f.gui;
 
 // other utils I use
 s.waitForBoot({
-	//f.on;
-	ChannelEQ.new;
-	//GNeckGUI.new(f);
-	//s.meter(2,2);
-	//AutoGUI.new(f);
-	//ChordGUI.new(f);
+	f.on;
+	f.eq;
+	f.gneck;
+	//f.auto;
+	//f.chords;
 })
 )
+
+f.auto
 
 
 // other controls
@@ -48,6 +49,10 @@ f.drywet(0.4)
 	slopeAbove
 	clampTime
 	relaxTime
+f.auto
+f.gneck
+f.chords
+f.eq
 */
 
 

@@ -131,6 +131,10 @@ Feedback1 : EffectGUI {
 			ChordGUI.new(this, path);
 		});
 
+		controls[\eq] = ActionButton(w,"EQ",{
+			try {ChannelEQ.new}{"cannot find ChannelEQ class. try installing it from http://github.com/enrike/supercollider-channeleq".postln}
+		});
+
 		w.view.decorator.nextLine;
 
 		// SLIDERS //
@@ -362,5 +366,18 @@ Feedback1 : EffectGUI {
 
 	base { |val|
 		synth.set(\base, val)
+	}
+
+	gneck {
+		controls[\gneck].valueAction = 1
+	}
+	eq {
+		controls[\eq].valueAction = 1
+	}
+	auto {
+		controls[\auto].valueAction = 1
+	}
+	chords {
+		controls[\chordsGUI].valueAction = 1
 	}
 }
