@@ -1,28 +1,29 @@
-
 /*
 connect MIDI keyboard to \base
-auto system: separated code and window
-AutomationGui check
 */
 
 (
 f = Feedback1.new;
+f.base(64); //fundamental freq
 f.chord([0, 6.1, 10, 15.2, 22, 24 ]);
 f.audio;
 f.gui;
-//f.midi; // setup
+//f.midi; // midi setup
 //f.nanok; // connect to nanokontrol2
 
 // other utils I use
 s.waitForBoot({
 	ChannelEQ.new;
-	s.meter(2,2);
+	NeckGUI.new(f);
+	//s.meter(2,2);
+
+	//AutoGUI.new(f);
+	//ChordGUI.new(f);
 })
 )
 
 
-
-// control
+// other controls
 f.chord([0, 6.1, 10, 15.2, 22, 24 ].scramble);
 f.deltime(61)
 f.amp(0.3)
@@ -33,9 +34,19 @@ f.vol(0.7)
 f.tremolo(0.2)
 f.drywet(0.4)
 
-f.synth.set(\deltime, 14) // bypass gui
+/* same goes for...
+    in
+	gainin
+	out
+	loop
+	feedback
 
-
+	thresh
+	slopeBelow
+	slopeAbove
+	clampTime
+	relaxTime
+*/
 
 
 
@@ -47,7 +58,7 @@ f.synth.set(\deltime, 14) // bypass gui
 ~chord = [0, 6.1, 10, 15.2, 22, 24 ]; // chord
 ~chord = [0, 0.1, 0.15, 0.25, 0.5 ]; // chord
 ~mel = [45,48, 46];//
-~times = [1, 7.1, 9.5];
+~times = [1, 7.1, 3.5];
 
 t = Task({
 	var notes=Array.new(6), base=64, time=0;
