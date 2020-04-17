@@ -37,8 +37,11 @@ EffectGUI {
 	}
 
 	gui { |name="", bounds=#[0,0, 310, 120]| // run this if you want to have open and save buttons in the window
+
+		name = name.replace(" ", "_").toLower;
+
 		w = Window.new(name, bounds).alwaysOnTop=true;
-		w.view.decorator=FlowLayout(w.view.bounds);
+		w.view.decorator = FlowLayout(w.view.bounds);
 		w.view.decorator.gap=2@2;
 
 		ActionButton(w,"S",{
@@ -49,13 +52,19 @@ EffectGUI {
 		});
 	}
 
+	defaultpreset {|name|
+		try {
+			this.read(path ++ Platform.pathSeparator ++ "default_" ++ name ++ ".preset")
+		} { ("no default preset for"+name).postln }
+	}
+
 	update {|name, value| // control widgets remotely
 		{controls[name].valueAction = value}.defer
 	}
 
 	save {
 		var data = Dictionary.new, name="", filename;
-		if (w.isNil.not, {name=w.name.replace(" ", "_")}); //prepend the windows name
+		if (w.isNil.not, {name=w.name.replace(" ", "_").toLower}); //prepend the windows name
 		filename = name++"_"++Date.getDate.stamp++".preset";
 
 		controls.keysValuesDo { |key, widget|
@@ -68,17 +77,21 @@ EffectGUI {
 	}
 
 	open {
-		var data;
-		FileDialog({ |path|
-			data = Object.readArchive(path);
-			data.keysValuesDo{ |key, value|
-				try {
-					{controls[key].valueAction = value}.defer // wait for QT
-				}{|er| er.postln}
-			};
+		FileDialog({ |apath|
+			this.read(apath)
 		},
 		fileMode: 0,
 		stripResult: true,
 		path: path);
+	}
+
+	read {|apath|
+		var	data = Object.readArchive(apath);
+		("reading preset"+apath).postln;
+		data.keysValuesDo{ |key, value|
+			try {
+				{controls[key].valueAction = value}.defer // wait for QT
+			}{|er| er.postln}
+		};
 	}
 }

@@ -69,11 +69,13 @@ AutoGUI : EffectGUI {
 
 	var auto, values;
 
-	*new {|amain|
-		^super.new.initAutomationGUI(amain);
+	*new {|amain, path|
+		^super.new.initAutomationGUI(amain, path);
 	}
 
-	initAutomationGUI {|amain|
+	initAutomationGUI {|amain, path|
+		super.initEffectGUI(path);
+
 		auto = Auto.new(amain);
 
 		values = Dictionary.new;
@@ -158,6 +160,8 @@ AutoGUI : EffectGUI {
 			})
 		};
 
+		super.defaultpreset( w.name.replace(" ", "_").toLower ); // try to read and apply the default preset
+
 		w.front;
 	}
 
@@ -169,12 +173,12 @@ AutoGUI : EffectGUI {
 		controls.do{|control|
 			if (control.isKindOf(EZRanger), {
 				//control.valueAction = [control.controlSpec.minval.asFloat.rand, control.controlSpec.maxval.asFloat.rand]
-					var rmin = control.controlSpec.clipLo.asFloat;
-					var rmax = control.controlSpec.clipHi.asFloat;
-					var min = rrand(rmin, rmax);
-					var max = min + rrand(min, rmax);
-					//controls[name.asSymbol].postln;
-					control.valueAction = [min, max]
+				var rmin = control.controlSpec.clipLo.asFloat;
+				var rmax = control.controlSpec.clipHi.asFloat;
+				var min = rrand(rmin, rmax);
+				var max = min + rrand(min, rmax);
+				//controls[name.asSymbol].postln;
+				control.valueAction = [min, max]
 			})
 		}
 	}

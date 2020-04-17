@@ -17,11 +17,13 @@ GNeckGUI : EffectGUI {
 	var midi;
 	var <chord;
 
-	*new {|amain|
-		^super.new.init(amain);
+	*new {|amain, path|
+		^super.new.init(amain, path);
 	}
 
-	init {|amain| //////////////////////
+	init {|amain, path| //////////////////////
+		super.initEffectGUI(path);
+
 		main = amain;
 
 		buttons = List.new;
@@ -55,12 +57,11 @@ GNeckGUI : EffectGUI {
 				6.do{|i|
 					var index = ch[i] - midi[i];
 					if (index>=0, {
-						[buttons[i], (ch[i]-midi[i])].postln;
+						//[buttons[i], (ch[i]-midi[i])].postln;
 						buttons[i][ch[i]-midi[i]].valueAction = 1
 					})
 				};
 		}, 0, false, 32);
-
 
 		ActionButton(w,"choose",{
 			this.choose
@@ -78,6 +79,8 @@ GNeckGUI : EffectGUI {
 		w.view.decorator.nextLine;
 
 		this.doButtons;
+
+		super.defaultpreset( w.name.replace(" ", "_").toLower ); // try to read and apply the default preset
 
 		w.front;
 	}
@@ -112,9 +115,10 @@ GNeckGUI : EffectGUI {
 
 					if (main.isNil.not, { main.chord(chord) }); // update chord in main object
 
-					["chord", chord].postln;
+					//["chord", chord].postln;
 				});
 				buttons[string].add(button);
+				//controls[ (freth.asString++"_"++string.asString).asSymbol ] = button; // every single one
 			};
 			w.view.decorator.nextLine;
 		};

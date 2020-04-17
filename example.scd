@@ -1,6 +1,8 @@
 /*
 connect MIDI keyboard to \base
 add buttons to launch utils from main interface
+
+all windows to try to open a preset file by default (default_auto.preset for instance)
 */
 
 (
@@ -16,7 +18,7 @@ f.gui;
 s.waitForBoot({
 	f.on;
 	f.eq;
-	f.gneck;
+	//f.gneck;
 	//f.auto;
 	//f.chords;
 })

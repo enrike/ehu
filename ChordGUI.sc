@@ -8,16 +8,19 @@ ChordGUI : EffectGUI {
 
 	var chord, main, fund=0;
 
-	*new {|amain|
-		^super.new.init(amain);
+	*new {|amain, path|
+		^super.new.init(amain, path);
 	}
 
-	init {|amain|
+	init {|amain, path|
+		super.initEffectGUI(path);
+
 		main = amain;
+
 		chord = List.new(6);
 		6.do{|i| chord.add( [0, 0, 0]) }; // octave, note, bend
 
-		this.gui("chord", 260@200);
+		this.gui("Chord", 260@200);
 
 		//w.view.decorator.nextLine;
 
@@ -97,6 +100,8 @@ ChordGUI : EffectGUI {
 
 			w.view.decorator.nextLine;
 		};
+
+		super.defaultpreset( w.name.replace(" ", "_").toLower ); // try to read and apply the default preset
 
 		w.front
 	}

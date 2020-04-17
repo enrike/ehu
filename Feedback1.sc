@@ -76,7 +76,7 @@ Feedback1 : EffectGUI {
 
 	gui {
 		// GUI ////////////////////////
-		super.gui("Feedback unit", Rect(0,0, 430, 440)); // init super gui buttons
+		super.gui("Feedback unit", 430@445); // init super gui buttons
 		w.onClose = {
 			synth.free;
 		};
@@ -119,21 +119,31 @@ Feedback1 : EffectGUI {
 
 		w.view.decorator.nextLine;
 
-		controls[\auto] = ActionButton(w,"auto",{
+		ActionButton(w,"auto",{
 			AutoGUI.new(this, path)
 		});
 
-		controls[\gneck] = ActionButton(w,"gneck",{
+		ActionButton(w,"gneck",{
 			GNeckGUI.new(this, path);
 		});
 
-		controls[\chordsGUI] = ActionButton(w,"chords",{
+		ActionButton(w,"chords",{
 			ChordGUI.new(this, path);
 		});
 
-		controls[\eq] = ActionButton(w,"EQ",{
+		ActionButton(w,"EQ",{
 			try {ChannelEQ.new}{"cannot find ChannelEQ class. try installing it from http://github.com/enrike/supercollider-channeleq".postln}
 		});
+
+//		controls[\base] = EZNumber.new(w, 40@20, "f", nil, {|ez| synth.set(\base, ez.value)}, 40, true, 15);
+
+/*		controls[\chord] = 	EZText( w,
+			200@20,
+			"chord",
+			{ |ez|  synth.set(\chord, ez.value.asArray) },
+			"100, 60, 40, 51, 34, 89",
+			true, 40
+		);*/
 
 		w.view.decorator.nextLine;
 
@@ -267,6 +277,7 @@ Feedback1 : EffectGUI {
 			{ |ez| synth.set(\vol, ez.value) } // action
 		);
 
+		super.defaultpreset( w.name.replace(" ", "_").toLower ); // try to read and apply the default preset
 
 		w.front;
 	}
@@ -369,15 +380,15 @@ Feedback1 : EffectGUI {
 	}
 
 	gneck {
-		controls[\gneck].valueAction = 1
+		GNeckGUI.new(this, path)
 	}
 	eq {
-		controls[\eq].valueAction = 1
+		ChannelEQ.new
 	}
 	auto {
-		controls[\auto].valueAction = 1
+		AutoGUI.new(this, path)
 	}
 	chords {
-		controls[\chordsGUI].valueAction = 1
+		ChordGUI.new(this, path)
 	}
 }
