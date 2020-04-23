@@ -28,15 +28,15 @@ ChordGUI : EffectGUI {
 
 		ActionButton(w,"all",{
 			this.rand;
-			this.updatemain;
+			//this.updatemain;
 		});
 		ActionButton(w,"octave",{
 			this.roctave;
-			this.updatemain;
+			//this.updatemain;
 		});
 		ActionButton(w,"notes",{
 			this.rnotes;
-			this.updatemain;
+			//this.updatemain;
 		});
 		/*		ActionButton(w,"scramble",{
 		this.scramble;
@@ -44,15 +44,19 @@ ChordGUI : EffectGUI {
 		});*/
 		ActionButton(w,"bend",{
 			this.rbend;
-			this.updatemain;
+			//this.updatemain;
 		});
+		ActionButton(w,"scramble",{
+			this.scramble;
+		});
+
 		ActionButton(w,"reset bend",{
 			this.resetbend;
-			this.updatemain;
+			//this.updatemain;
 		});
 		ActionButton(w,"0 oct",{
 			this.zerooct;
-			this.updatemain;
+			//this.updatemain;
 		});
 
 		w.view.decorator.nextLine;
@@ -73,14 +77,14 @@ ChordGUI : EffectGUI {
 		w.view.decorator.nextLine;
 
 		6.do{|i|
-			controls[(i+1).asString++"_oct"] = EZPopUpMenu(w, 62@20,
+			controls[(i+1).asString++"_oct"] = EZPopUpMenu(w, 50@20,
 				(i+1).asString,  [0,1,2,3,4,5,6,7,8,9],
 				{|m|
 					chord[i][0] = m.value;
 					this.updatemain;
-			}, 3, true, 20);
+			}, 3, true, 10);
 
-			controls[(i+1).asString++"_note"] = EZPopUpMenu(w, 42@20,
+			controls[(i+1).asString++"_note"] = EZPopUpMenu(w, 40@20,
 				//nil,  ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],
 				nil, [0,1,2,3,4,5,6,7,8,9,10,11],
 				{|m|
@@ -89,9 +93,9 @@ ChordGUI : EffectGUI {
 			}, 0, true, 20);
 
 			controls[(i+1).asString++"_bend"] = EZSlider( w,         // parent
-				100@20,    // bounds
+				155@20,    // bounds
 				nil,  // label
-				ControlSpec(-0.9, 0.9, \lin, 0.1, 0),     // controlSpec
+				ControlSpec(-0.9, 0.9, \lin, 0.01, 0),     // controlSpec
 				{ |ez|
 					chord[i][2] = ez.value;
 					this.updatemain;
@@ -127,51 +131,56 @@ ChordGUI : EffectGUI {
 		this.roctave;
 		this.rbend;
 		this.rnotes;
+		this.updatemain
 	}
 
 	rbend{
 		6.do{|i|
 			var sl = controls[(i+1).asString++"_bend"]; // counts from 1
-			sl.valueAction = rrand(sl.controlSpec.minval, sl.controlSpec.maxval)
-		}
+			sl.value = rrand(sl.controlSpec.minval, sl.controlSpec.maxval)
+		};
+		this.updatemain
 	}
 
 	resetbend {
 		6.do{|i|
 			var sl = controls[(i+1).asString++"_bend"];
-			sl.valueAction = 0
-		}
+			sl.value = 0
+		};
+		this.updatemain
 	}
 
 	rnotes{
 		6.do{|i|
 			var sl = controls[(i+1).asString++"_note"];
-			sl.valueAction = sl.items.size.rand;//rrand(sl.controlSpec.minval, sl.controlSpec.maxval)
-		}
+			sl.value = sl.items.size.rand;//rrand(sl.controlSpec.minval, sl.controlSpec.maxval)
+		};
+		this.updatemain
 	}
 
 	roctave{
 		6.do{|i|
 			var sl = controls[(i+1).asString++"_oct"];
 			sl.valueAction = sl.items.size.rand;//rrand(sl.controlSpec.minval, sl.controlSpec.maxval)
-		}
+		};
+		this.updatemain
 	}
 
-	/*	scramble {
-	var data = [chord[\0],chord[\1],chord[\2],chord[\3],chord[\4],chord[\5]].scramble; //get the [note, bend] and scramble
-
-	6.do{|i| // restore in its new position
-	chord[i.asSymbol] = data[i];
-	controls[(i+1).asString++"_note"].valueAction = data[i][0];
-	controls[(i+1).asString++"_bend"].valueAction = data[i][1];
-	};
-	this.updatemain
-	}*/
+	scramble { // octave, note, bend
+		chord = chord.scramble;
+		chord.do{|note, i| // restore gui to new position
+			controls[(i+1).asString++"_oct"].value = note[0];
+			controls[(i+1).asString++"_note"].value = note[1];
+			controls[(i+1).asString++"_bend"].value = note[2];
+		};
+		this.updatemain
+	}
 
 	zerooct {
 		6.do{|i|
 			var sl = controls[(i+1).asString++"_oct"];
-			sl.valueAction = 0
-		}
+			sl.value = 0
+		};
+		this.updatemain
 	}
 }

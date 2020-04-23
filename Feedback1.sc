@@ -102,12 +102,6 @@ Feedback1 : EffectGUI {
 			synth.set(\out, m.value);
 		}.valueAction = 0; //
 
-		ActionButton(w,"scramble",{
-			var ch = chord.scramble;
-			ch.postln;
-			synth.set(\chord, ch)
-		});
-
 		controls[\on] = Button(w, 22@18)
 		.states_([
 			["on", Color.white, Color.black],
@@ -135,15 +129,11 @@ Feedback1 : EffectGUI {
 			try {ChannelEQ.new}{"cannot find ChannelEQ class. try installing it from http://github.com/enrike/supercollider-channeleq".postln}
 		});
 
-//		controls[\base] = EZNumber.new(w, 40@20, "f", nil, {|ez| synth.set(\base, ez.value)}, 40, true, 15);
+/*		controls[\base] = EZNumber.new(w, 42@20, "f", nil, {|ez| synth.set(\base, ez.value)}, 40, true, 15);
 
-/*		controls[\chord] = 	EZText( w,
-			200@20,
-			"chord",
-			{ |ez|  synth.set(\chord, ez.value.asArray) },
-			"100, 60, 40, 51, 34, 89",
-			true, 40
-		);*/
+		controls[\chord] = 	TextField(w, 190@20)
+		.string_(chord.asString)
+		.action_({|tf| synth.set(\chord, this.chord(tf.value.asArray) ) });*/
 
 		w.view.decorator.nextLine;
 
@@ -258,6 +248,8 @@ Feedback1 : EffectGUI {
 			ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
 			{ |ez| synth.set(\drywet, ez.value) } // action
 		).valueAction_(-1);
+
+		controls[\drywet].valueAction = -1;
 
 		StaticText(w);
 
