@@ -76,6 +76,8 @@ EffectGUI {
 		data.writeArchive(path ++ Platform.pathSeparator ++ filename);
 	}
 
+	close { w.close }
+
 	open {
 		FileDialog({ |apath|
 			this.read(apath)

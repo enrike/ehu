@@ -1,8 +1,17 @@
 // synthdef based on https://sccode.org/1-U by Nathaniel Virgo
 
+// to do:
+// # EZSlider 3 decimals,
+// normalize intialise to -1
+// ChordGUI connect properly to Feedback
+// ON/OFF button on init
+// # XFade is this the best way to fade between two signals?
+// # close utils windows on close
+// autogui does not init poroperly after adding Normlvl widget
+
 
 Feedback1 : EffectGUI {
-	var auto, chord, <synth, path;
+	var auto, chord, <synth, path, base, utils;
 
 	*new {
 		^super.new.initFeedback1();
@@ -10,75 +19,82 @@ Feedback1 : EffectGUI {
 
 	initFeedback1  {
 		chord = [0,7,12,15,19,24]; //[0, 6.1, 10, 15.2, 22, 24 ];
+		base = 40;
+		utils = [];//refs to GUI windows
+		Server.default.waitForBoot{
+			this.audio;
+			{this.gui}.defer(0.5)
+		}
 	}
 
 	audio {
-		Server.default.waitForBoot({
 
-			path = thisProcess.nowExecutingPath.dirname;
+		path = thisProcess.nowExecutingPath.dirname;
 
-			// BASED ON https://sccode.org/1-U by Nathaniel Virgo
-			SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75, freqdiv=1,
-				revtimes=5, amp=0.6, damping=1360, mod=1, base=40, vol=0.9, chord=#[0,7,12,15,19,24],
-				thresh=0.5, slopeBelow=1, slopeAbove=0.5, clampTime=0.01, relaxTime=0.01, limit=0.5, norm=0.5,
-				freq=0, drywet=(1.neg), on=0|
+		// BASED ON https://sccode.org/1-U by Nathaniel Virgo
+		SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75, freqdiv=1,
+			revtimes=5, amp=0.6, damping=1360, mod=1, base=40, vol=0.9, chord=#[0,7,12,15,19,24],
+			thresh=0.5, slopeBelow=1, slopeAbove=0.5, clampTime=0.01, relaxTime=0.01, limit=0.5,
+			norm=0, normlvl=(1.neg), freq=0, drywet=(1.neg), on=0|
 
-				var del, minfreqs, freqs, dry; //VARS
-				var sig = ((InFeedback.ar(loop, 2) + WhiteNoise.ar(0.001!2)) * feedback) + (In.ar(in, 2) * gainin);
+			var del, minfreqs, freqs, dry, nsig; //VARS
+			var sig = ((InFeedback.ar(loop, 2) + WhiteNoise.ar(0.001!2)) * feedback) + (In.ar(in, 2) * gainin);
 
-				// delay due to distance from amp - I chose 0.05s, or 20Hz
-				sig = DelayN.ar(sig, 1/10-ControlDur.ir, 1/deltime-ControlDur.ir);
+			// delay due to distance from amp - I chose 0.05s, or 20Hz
+			sig = DelayN.ar(sig, 1/10-ControlDur.ir, 1/deltime-ControlDur.ir);
 
-				// guitar string frequencies - for some reason I had to pitch them down
-				freqs = (base+chord).midicps/freqdiv;
+			// guitar string frequencies - for some reason I had to pitch them down
+			freqs = (base+chord).midicps/freqdiv;
 
-				// whammy bar modulates freqs:
-				minfreqs = freqs * 0.5;
-				freqs = freqs * mod;
+			// whammy bar modulates freqs:
+			minfreqs = freqs * 0.5;
+			freqs = freqs * mod;
 
-				// 6 comb filters emulate the strings' resonances
-				// maxdelaytime, delaytime, decaytime
-				sig = CombN.ar(sig!6, 1/minfreqs, 1/freqs, 8).mean;
+			// 6 comb filters emulate the strings' resonances
+			// maxdelaytime, delaytime, decaytime
+			sig = CombN.ar(sig!6, 1/minfreqs, 1/freqs, 8).mean;
 
-				// a little filtering
-				sig = LPF.ar(sig, 8000);
-				sig = HPF.ar(sig * amp, 80);
+			// a little filtering
+			sig = LPF.ar(sig, 8000);
+			sig = HPF.ar(sig * amp, 80);
 
-				// and some not too harsh distortion
-				sig = RLPFD.ar(sig, damping * [1, 1.1], 0.1, 0.5);
-				sig = sig + sig.mean;
+			// and some not too harsh distortion
+			sig = RLPFD.ar(sig, damping * [1, 1.1], 0.1, 0.5);
+			sig = sig + sig.mean;
 
-				// and finally a spot of reverb
-				revtimes.do { // loop rev times
-					del = 0.2.rand; // delayt and decayt
-					sig = AllpassN.ar(sig, del, del, 5);
-				};
+			// and finally a spot of reverb
+			revtimes.do { // loop rev times
+				del = 0.2.rand; // delayt and decayt
+				sig = AllpassN.ar(sig, del, del, 5);
+			};
 
-				sig = Compander.ar(sig, sig, thresh, slopeBelow, slopeAbove, clampTime, relaxTime);
+			sig = Compander.ar(sig, sig, thresh, slopeBelow, slopeAbove, clampTime, relaxTime);
 
-				Out.ar(loop, sig); // feedback loop before the main output
+			Out.ar(loop, sig); // feedback loop before the main output
 
-				dry = sig;
-				sig = sig * SinOsc.ar(freq);
-				sig = XFade2.ar(dry, sig, drywet);
+			dry = sig;
+			sig = sig * SinOsc.ar(freq);
+			sig = XFade2.ar(dry, sig, drywet);
 
-				sig = Normalizer.ar(sig, norm, 0.01);
-				sig = Limiter.ar(sig * vol);
+			nsig = Normalizer.ar(sig, norm);
+			sig = XFade2.ar(sig, nsig, normlvl);
 
-				Out.ar(out, sig * on)
-			}).send;
+			sig = Limiter.ar(sig * vol, 1);
 
-			synth = Synth(\feed, [\chord, chord])
-			//			{ synth = Synth(\feed, [\chord, chord]) }.defer(0.01); // should wait until load oe send is done
-		})
+			Out.ar(out, sig * on)
+		}).send;
+
+		//synth = Synth(\feed, [\chord, chord])
+		{ synth = Synth(\feed, [\chord, chord]) }.defer(0.2); // should wait until load oe send is done
 	}
 
 
 	gui {
 		// GUI ////////////////////////
-		super.gui("Feedback unit", 430@445); // init super gui buttons
+		super.gui("Feedback unit", 430@465); // init super gui buttons
 		w.onClose = {
 			synth.free;
+			utils.do{|win| win.close};
 		};
 
 		StaticText(w, 12@18).align_(\right).string_("In").resize_(7);
@@ -114,22 +130,22 @@ Feedback1 : EffectGUI {
 		w.view.decorator.nextLine;
 
 		ActionButton(w,"auto",{
-			AutoGUI.new(this, path)
+			utils.add(AutoGUI.new(this, path))
 		});
 
 		ActionButton(w,"gneck",{
-			GNeckGUI.new(this, path);
+			utils.add(GNeckGUI.new(this, path));
 		});
 
 		ActionButton(w,"chords",{
-			ChordGUI.new(this, path);
+			utils.add(ChordGUI.new(this, path));
 		});
 
 		ActionButton(w,"EQ",{
 			try {ChannelEQ.new}{"cannot find ChannelEQ class. try installing it from http://github.com/enrike/supercollider-channeleq".postln}
 		});
 
-/*		controls[\base] = EZNumber.new(w, 42@20, "f", nil, {|ez| synth.set(\base, ez.value)}, 40, true, 15);
+		/*		controls[\base] = EZNumber.new(w, 42@20, "f", nil, {|ez| synth.set(\base, ez.value)}, 40, true, 15);
 
 		controls[\chord] = 	TextField(w, 190@20)
 		.string_(chord.asString)
@@ -144,7 +160,7 @@ Feedback1 : EffectGUI {
 			"gain in",  // label
 			ControlSpec(0, 2, \lin, 0.001, 0),     // controlSpec
 			{ |ez| synth.set(\gainin, ez.value) } // action
-		);
+		).numberView.maxDecimals = 3 ;
 
 		StaticText(w, Rect(0,0, 80, 15)).string="Feedback";
 
@@ -152,9 +168,9 @@ Feedback1 : EffectGUI {
 		controls[\feedback] = EZSlider( w,         // parent
 			420@20,    // bounds
 			"feedback",  // label
-			ControlSpec(0, 2, \lin, 0.001, 0.02),     // controlSpec
+			ControlSpec(0, 1, \lin, 0.001, 0.02),     // controlSpec
 			{ |ez| synth.set(\feedback, ez.value) } // action
-		);
+		).numberView.maxDecimals = 3 ;
 
 		order.add(\deltime);
 		controls[\deltime] = EZSlider( w,         // parent
@@ -162,7 +178,7 @@ Feedback1 : EffectGUI {
 			"deltime",  // label
 			ControlSpec(0, 500, \lin, 0.001, 75),     // controlSpec
 			{ |ez| synth.set(\deltime, ez.value) } // action
-		);
+		).numberView.maxDecimals = 3 ;
 
 		order.add(\amp);
 		controls[\amp] = EZSlider( w,         // parent
@@ -170,7 +186,7 @@ Feedback1 : EffectGUI {
 			"amp",  // label
 			ControlSpec(0, 3, \lin, 0.001, 0.6),     // controlSpec
 			{ |ez| synth.set(\amp, ez.value) } // action
-		);
+		).numberView.maxDecimals = 3 ;
 
 		order.add(\damp);
 		controls[\damp] = EZSlider( w,         // parent
@@ -186,18 +202,18 @@ Feedback1 : EffectGUI {
 			"mod",  // label
 			ControlSpec(0.85, 1.15, \lin, 0.001, 1),     // controlSpec
 			{ |ez| synth.set(\mod, ez.value) } // action
-		);
+		).numberView.maxDecimals = 3 ;
 
-		StaticText(w, Rect(0,0, 200, 15)).string="Compressor";
+		StaticText(w, Rect(0,0, 200, 15)).string="Compressor/Expander";
 
 		//COMPRESSOR
 		order.add(\thresh);
 		controls[\thresh] = EZSlider( w,         // parent
 			420@20,    // bounds
 			"thresh",  // label
-			ControlSpec(0.001, 1, \lin, 0.01, 0.5),     // controlSpec
+			ControlSpec(0.001, 1, \lin, 0.001, 0.5),     // controlSpec
 			{ |ez| synth.set(\thresh, ez.value) } // action
-		);
+		).numberView.maxDecimals = 3 ;
 
 		order.add(\slopebelow);
 		controls[\slopeBelow] = EZSlider( w,         // parent
@@ -219,17 +235,17 @@ Feedback1 : EffectGUI {
 		controls[\clampTime] = EZSlider( w,         // parent
 			420@20,    // bounds
 			"clpTime",  // label
-			ControlSpec(0, 1, \lin, 0.01, 0.01),     // controlSpec
+			ControlSpec(0, 0.3, \lin, 0.001, 0.01),     // controlSpec
 			{ |ez| synth.set(\clampTime, ez.value) } // action
-		);
+		).numberView.maxDecimals = 3 ;
 
 		order.add(\relaxTime);
 		controls[\relaxTime] = EZSlider( w,         // parent
 			420@20,    // bounds
 			"rlxTime",  // label
-			ControlSpec(0, 1, \lin, 0.01, 0.01),     // controlSpec
+			ControlSpec(0, 0.3, \lin, 0.001, 0.01),     // controlSpec
 			{ |ez| synth.set(\relaxTime, ez.value) } // action
-		);
+		).numberView.maxDecimals = 3 ;
 
 		StaticText(w, Rect(0,0, 200, 15)).string="Tremolo";
 
@@ -239,7 +255,7 @@ Feedback1 : EffectGUI {
 			"freq",  // label
 			ControlSpec(0, 60, \lin, 0.001, 0),     // controlSpec
 			{ |ez| synth.set(\freq, ez.value) } // action
-		);
+		).numberView.maxDecimals = 3 ;
 
 		order.add(\drywet);
 		controls[\drywet] = EZSlider( w,         // parent
@@ -257,9 +273,20 @@ Feedback1 : EffectGUI {
 		controls[\norm] = EZSlider( w,         // parent
 			420@20,    // bounds
 			"normalize",  // label
-			ControlSpec(0, 1, \lin, 0.001, 0.5),     // controlSpec
+			ControlSpec(0, 1, \lin, 0.001, 0),     // controlSpec
 			{ |ez| synth.set(\norm, ez.value) } // action
-		);
+		).numberView.maxDecimals = 3 ;
+
+		order.add(\normlvl);
+		controls[\normlvl] = EZSlider( w,         // parent
+			420@20,    // bounds
+			"norm_lvl",  // label
+			ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
+			{ |ez| synth.set(\normlvl, ez.value) } // action
+		).valueAction_(-1);
+
+		controls[\normlvl].valueAction = -1;
+
 
 		order.add(\vol);
 		controls[\vol] = EZSlider( w,         // parent
@@ -267,9 +294,9 @@ Feedback1 : EffectGUI {
 			"vol",  // label
 			ControlSpec(0, 2, \lin, 0.001, 0.9),     // controlSpec
 			{ |ez| synth.set(\vol, ez.value) } // action
-		);
+		).numberView.maxDecimals = 3 ;
 
-		super.defaultpreset( w.name.replace(" ", "_").toLower ); // try to read and apply the default preset
+		{ super.defaultpreset( w.name.replace(" ", "_").toLower ) }.defer(0.05); // try to read and apply the default preset
 
 		w.front;
 	}
@@ -350,6 +377,8 @@ Feedback1 : EffectGUI {
 	damp {|val| this.setc(\damp, val) }
 	mod {|val| this.setc(\mod, val) }
 	//base {|val| this.setc(\base, val) }
+	norm {|val| this.setc(\norm, val) }
+	normlvl {|val| this.setc(\normlvl, val) }
 	vol {|val| this.setc(\vol, val) }
 
 	thresh {|val| this.setc(\thresh, val) }
@@ -368,19 +397,23 @@ Feedback1 : EffectGUI {
 	}
 
 	base { |val|
+		base = val;
 		synth.set(\base, val)
 	}
 
 	gneck {
 		GNeckGUI.new(this, path)
 	}
+
 	eq {
 		ChannelEQ.new
 	}
+
 	auto {
 		AutoGUI.new(this, path)
 	}
+
 	chords {
-		ChordGUI.new(this, path)
+		ChordGUI.new(this, path, chord, base)
 	}
 }

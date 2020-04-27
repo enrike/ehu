@@ -8,17 +8,20 @@ ChordGUI : EffectGUI {
 
 	var chord, main, fund=0;
 
-	*new {|amain, path|
-		^super.new.init(amain, path);
+	*new {|amain, path, chord|
+		^super.new.init(amain, path, chord);
 	}
 
-	init {|amain, path|
+	init {|amain, path, achord|
 		super.initEffectGUI(path);
 
 		main = amain;
 
 		chord = List.new(6);
 		6.do{|i| chord.add( [0, 0, 0]) }; // octave, note, bend
+
+		if (achord.isNil.not, {chord = this.setchord(chord)});
+		//if (base.isNil.not, {this.base(abase)});
 
 		this.gui("Chord", 260@200);
 
@@ -61,7 +64,7 @@ ChordGUI : EffectGUI {
 
 		w.view.decorator.nextLine;
 
-		controls[\fund] = EZNumber(w,        // parent
+/*		controls[\fund] = EZNumber(w,        // parent
 			120@20,   // bounds
 			"fundamental", // label
 			ControlSpec(0, 127, \lin, 1, 1),    // controlSpec
@@ -72,7 +75,7 @@ ChordGUI : EffectGUI {
 			64,      // initValue
 			true,      // initAction
 			90 //labelwidth
-		);
+		);*/
 
 		w.view.decorator.nextLine;
 
@@ -105,17 +108,31 @@ ChordGUI : EffectGUI {
 			w.view.decorator.nextLine;
 		};
 
+		// if no default it should get the chord and base from main and display it in the widgets
 		super.defaultpreset( w.name.replace(" ", "_").toLower ); // try to read and apply the default preset
 
 		w.front
 	}
 
-	notes {
-		var notes = [0,0,0,0,0,0]; // base + 1 to 6
+	notes { // **** this is wrong because here notes are abs and in main are relative to a fund
+		var notes = [0,0,0,0,0,0];
 		notes.size.do{|i|
-			notes[i] = (chord[i][0]*12) + chord[i][1] + chord[i][2]
+			notes[i] = (chord[i][0]*12) + chord[i][1] + chord[i][2] // base, note and bend
 		};
 		^notes;
+	}
+
+	setnotes {|achord| // six abs MIDI notes array
+		chord = List.new(6);
+		achord.do{|note| chord.add( this.decompose(note)) }; // octave, note, bend
+	}
+
+	decompose {|abs|
+		var octave, note, blend;
+		octave = (abs/12).asInteger; //octave
+		note = abs.asInteger - (octave * 12); // note position within octave
+		blend = abs - (abs.asInteger); // bend
+		^[octave, note, blend];
 	}
 
 	updatemain {
@@ -137,7 +154,8 @@ ChordGUI : EffectGUI {
 	rbend{
 		6.do{|i|
 			var sl = controls[(i+1).asString++"_bend"]; // counts from 1
-			sl.value = rrand(sl.controlSpec.minval, sl.controlSpec.maxval)
+			sl.value = rrand(sl.controlSpec.minval, sl.controlSpec.maxval);
+			chord[i][2] = sl.value;
 		};
 		this.updatemain
 	}
@@ -145,7 +163,8 @@ ChordGUI : EffectGUI {
 	resetbend {
 		6.do{|i|
 			var sl = controls[(i+1).asString++"_bend"];
-			sl.value = 0
+			sl.value = 0;
+			chord[i][2] = 0;
 		};
 		this.updatemain
 	}
@@ -154,6 +173,7 @@ ChordGUI : EffectGUI {
 		6.do{|i|
 			var sl = controls[(i+1).asString++"_note"];
 			sl.value = sl.items.size.rand;//rrand(sl.controlSpec.minval, sl.controlSpec.maxval)
+			chord[i][1] = sl.value;
 		};
 		this.updatemain
 	}
@@ -162,6 +182,7 @@ ChordGUI : EffectGUI {
 		6.do{|i|
 			var sl = controls[(i+1).asString++"_oct"];
 			sl.valueAction = sl.items.size.rand;//rrand(sl.controlSpec.minval, sl.controlSpec.maxval)
+			chord[i][0] = sl.value;
 		};
 		this.updatemain
 	}
@@ -179,7 +200,8 @@ ChordGUI : EffectGUI {
 	zerooct {
 		6.do{|i|
 			var sl = controls[(i+1).asString++"_oct"];
-			sl.value = 0
+			sl.value = 0;
+			chord[i][0] = 0;
 		};
 		this.updatemain
 	}

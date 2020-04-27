@@ -7,16 +7,17 @@ all windows to try to open a preset file by default (default_auto.preset for ins
 
 (
 f = Feedback1.new;
-f.base(64); //fundamental freq
+f.base(40); //fundamental freq
 f.chord([0, 6.1, 10, 15.2, 22, 24 ]);
-f.audio;
-f.gui;
+f.chord([0, 6.1, 10, 15.2, 22, 24 ].scramble);
+f.chord([0,7,12,15,19,24]);
+
 //f.midi; // midi setup
 //f.nanok; // connect to nanokontrol2
 
 // other utils I use
 s.waitForBoot({
-	f.on;
+	//f.on;
 	f.eq;
 	//f.gneck;
 	//f.auto;
@@ -65,7 +66,7 @@ t.stop;
 t = Task({
 	inf.do({|i|
 		f.chord( GuitarChords.chords.choose );
-		[0.1,n 2.7, 1.2].wrapAt(i).wait;
+		[0.1, 2.7, 1.2].wrapAt(i).wait;
 	});
 });
 
@@ -79,7 +80,7 @@ t.start;
 // sequence 2 //
 (
 //~chord = [0,7,12,15,19,24]; // mi menor si 64
-//~chord = [0, 6.1, 10, 15.2, 22, 24 ]; // chord
+~chord = [0, 6.1, 10, 15.2, 22, 24 ]; // chord
 ~chord = [0, 0.1, 0.15, 0.25, 0.5 ]; // chord
 ~mel = [45,48, 46];//
 ~times = [1, 7.1, 3.5];
