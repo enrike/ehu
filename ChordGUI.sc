@@ -64,20 +64,22 @@ ChordGUI : EffectGUI {
 
 		w.view.decorator.nextLine;
 
-/*		controls[\fund] = EZNumber(w,        // parent
-			120@20,   // bounds
-			"fundamental", // label
-			ControlSpec(0, 127, \lin, 1, 1),    // controlSpec
-			{ |ez|
-				fund = ez.value;
-				this.updatemain;
-			}, // action
-			64,      // initValue
-			true,      // initAction
-			90 //labelwidth
+		/*		controls[\fund] = EZNumber(w,        // parent
+		120@20,   // bounds
+		"fundamental", // label
+		ControlSpec(0, 127, \lin, 1, 1),    // controlSpec
+		{ |ez|
+		fund = ez.value;
+		this.updatemain;
+		}, // action
+		64,      // initValue
+		true,      // initAction
+		90 //labelwidth
 		);*/
 
 		w.view.decorator.nextLine;
+
+
 
 		6.do{|i|
 			controls[(i+1).asString++"_oct"] = EZPopUpMenu(w, 50@20,
@@ -99,8 +101,8 @@ ChordGUI : EffectGUI {
 				155@20,    // bounds
 				nil,  // label
 				ControlSpec(-0.9, 0.9, \lin, 0.01, 0),     // controlSpec
-				{ |ez|
-					chord[i][2] = ez.value;
+				{ |m|
+					chord[i][2] = m.value;
 					this.updatemain;
 				} // action
 			);
@@ -108,11 +110,50 @@ ChordGUI : EffectGUI {
 			w.view.decorator.nextLine;
 		};
 
+
+		w.view.decorator.nextLine;
+
+		controls["all_oct"] = EZPopUpMenu(w, 50@20,
+			"A",  [0,1,2,3,4,5,6,7,8,9],
+			{|ez|
+				6.do{|i|
+					chord[i][0] = ez.value;
+					controls[(i+1).asString++"_oct"].value = ez.value
+				};
+				this.updatemain;
+		}, 3, true, 10);
+
+		controls["all_note"] = EZPopUpMenu(w, 40@20,
+			//nil,  ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],
+			nil, [0,1,2,3,4,5,6,7,8,9,10,11],
+			{|ez|
+				6.do{|i|
+					chord[i][1] = ez.value;
+					controls[(i+1).asString++"_note"].value = ez.value
+				};
+				this.updatemain;
+		}, 0, true, 20);
+
+		controls["all_bend"] = EZSlider( w,         // parent
+			155@20,    // bounds
+			nil,  // label
+			ControlSpec(-0.9, 0.9, \lin, 0.01, 0),     // controlSpec
+			{ |ez|
+				6.do{|i|
+					chord[i][2] = ez.value;
+					controls[(i+1).asString++"_bend"].value = ez.value
+				};
+				this.updatemain;
+			} // action
+		);
+
+
 		// if no default it should get the chord and base from main and display it in the widgets
 		super.defaultpreset( w.name.replace(" ", "_").toLower ); // try to read and apply the default preset
 
 		w.front
 	}
+
 
 	notes { // **** this is wrong because here notes are abs and in main are relative to a fund
 		var notes = [0,0,0,0,0,0];
