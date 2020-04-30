@@ -30,14 +30,14 @@ GNeckGUI : EffectGUI {
 		6.do{ buttons.add(List()) }; // 6 strings
 		notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 		tune = ['E', 'A', 'D', 'G', 'C', 'E']; // C E G C E G // G B D G B D
-		midi = [40, 45, 50, 55, 59, 64]-40; //  E2–A2–D3–G3–B3–E4.
-		chord = [40, 45, 50, 55, 59, 64]-40; // init to open strings chord
+		midi = [40, 45, 50, 55, 59, 64]; //  E2–A2–D3–G3–B3–E4.
+		chord = [40, 45, 50, 55, 59, 64]; // init to open strings chord
 
 		super.gui("GNeck", 138@495);
 
 		w.view.decorator.nextLine;
 
-		controls[\fund] = EZNumber(w,        // parent
+/*		controls[\fund] = EZNumber(w,        // parent
 			30@20,   // bounds
 			nil, // label
 			ControlSpec(0, 127, \lin, 1, 1),    // controlSpec
@@ -47,20 +47,23 @@ GNeckGUI : EffectGUI {
 			40,      // initValue
 			true,      // initAction
 			90 //labelwidth
-		);
+		);*/
 
 		controls[\chord] = EZPopUpMenu.new(w, 52@20, nil,
 			GuitarChords.chords.asSortedArgsArray.reject({|i| i; i.isArray}),
 			{|ez|
-				var ch = GuitarChords.chords[ez.item.asSymbol] - 1; // -1 because first row is not there
-				buttons.flat.collect(_.valueAction = 0);
+				var ch = GuitarChords.chords[ez.item.asSymbol]; // -1 because first row is not there
+				//buttons.flat.collect(_.valueAction = 0);
+				buttons.flat.collect(_.value = 0);
+				chord = midi.copy; // reset to open chord
 				6.do{|i|
-					var index = ch[i] - midi[i];
+					var index = midi[0] + ch[i] - midi[i] - 1;
+					[i, ch[i]-midi[i]].postln;
 					if (index>=0, {
-						//[buttons[i], (ch[i]-midi[i])].postln;
-						buttons[i][ch[i]-midi[i]].valueAction = 1
+						buttons[i][index].valueAction = 1
 					})
 				};
+				if (main.isNil.not, { main.chord(chord) }); // update chord in main object
 		}, 0, false, 32);
 
 		ActionButton(w,"choose",{
@@ -104,7 +107,7 @@ GNeckGUI : EffectGUI {
 						var pos = buttons.flat.indexOf(but);
 						var myst = (pos/15).asInteger;
 						var relpos = buttons[myst].indexOf(but);
-						chord[string] = midi[myst] + relpos + 1; //this should be the MIDI number for this note
+						chord[string] = midi[myst] + relpos + 1; //MIDI number for this note
 					}, { // open string when clicked off
 						chord[string] = midi[string];
 					});
@@ -125,7 +128,9 @@ GNeckGUI : EffectGUI {
 	}
 
 	clear {
-		buttons.flat.collect(_.valueAction = 0);
+		buttons.flat.collect(_.value = 0);
+		chord = midi.copy;
+		if (main.isNil.not, { main.chord(chord) }); // update chord in main object
 	}
 
 	rand {

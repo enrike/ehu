@@ -11,7 +11,7 @@
 
 
 Feedback1 : EffectGUI {
-	var auto, chord, <synth, path, base, utils;
+	var auto, chord, <synth, path, utils;
 
 	*new {
 		^super.new.initFeedback1();
@@ -19,7 +19,6 @@ Feedback1 : EffectGUI {
 
 	initFeedback1  {
 		chord = [0,7,12,15,19,24]; //[0, 6.1, 10, 15.2, 22, 24 ];
-		base = 40;
 		utils = [];//refs to GUI windows
 		Server.default.waitForBoot{
 			this.audio;
@@ -33,7 +32,7 @@ Feedback1 : EffectGUI {
 
 		// BASED ON https://sccode.org/1-U by Nathaniel Virgo
 		SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75, freqdiv=1,
-			revtimes=5, amp=0.6, damping=1360, mod=1, base=40, vol=0.9, chord=#[0,7,12,15,19,24],
+			revtimes=5, amp=0.6, damping=1360, mod=1, vol=0.9, chord=#[ 40, 47, 52, 55, 59, 64 ],
 			thresh=0.5, slopeBelow=1, slopeAbove=0.5, clampTime=0.01, relaxTime=0.01, limit=0.5,
 			norm=0, normlvl=(1.neg), freq=0, drywet=(1.neg), on=0|
 
@@ -44,7 +43,7 @@ Feedback1 : EffectGUI {
 			sig = DelayN.ar(sig, 1/10-ControlDur.ir, 1/deltime-ControlDur.ir);
 
 			// guitar string frequencies - for some reason I had to pitch them down
-			freqs = (base+chord).midicps/freqdiv;
+			freqs = chord.midicps/freqdiv;
 
 			// whammy bar modulates freqs:
 			minfreqs = freqs * 0.5;
@@ -145,12 +144,6 @@ Feedback1 : EffectGUI {
 			try {ChannelEQ.new}{"cannot find ChannelEQ class. try installing it from http://github.com/enrike/supercollider-channeleq".postln}
 		});
 
-		/*		controls[\base] = EZNumber.new(w, 42@20, "f", nil, {|ez| synth.set(\base, ez.value)}, 40, true, 15);
-
-		controls[\chord] = 	TextField(w, 190@20)
-		.string_(chord.asString)
-		.action_({|tf| synth.set(\chord, this.chord(tf.value.asArray) ) });*/
-
 		w.view.decorator.nextLine;
 
 		// SLIDERS //
@@ -194,7 +187,7 @@ Feedback1 : EffectGUI {
 			"damp",  // label
 			ControlSpec(200, 10000, \lin, 1, 1360),     // controlSpec
 			{ |ez| synth.set(\damping, ez.value) } // action
-		);
+		).numberView.maxDecimals = 3 ;
 
 		order.add(\mod);
 		controls[\mod] = EZSlider( w,         // parent
@@ -221,7 +214,7 @@ Feedback1 : EffectGUI {
 			"slpBelow",  // label
 			ControlSpec(-2, 2, \lin, 0.01, 1),     // controlSpec
 			{ |ez| synth.set(\slopeBelow, ez.value) } // action
-		);
+		).numberView.maxDecimals = 3 ;
 
 		order.add(\slopeAbove);
 		controls[\slopeAbove] = EZSlider( w,         // parent
@@ -229,7 +222,7 @@ Feedback1 : EffectGUI {
 			"slpAbove",  // label
 			ControlSpec(-2, 2, \lin, 0.01, 0.5),     // controlSpec
 			{ |ez| synth.set(\slopeAbove, ez.value) } // action
-		);
+		).numberView.maxDecimals = 3 ;
 
 		order.add(\clampTime);
 		controls[\clampTime] = EZSlider( w,         // parent
@@ -263,7 +256,7 @@ Feedback1 : EffectGUI {
 			"dry/wet",  // label
 			ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
 			{ |ez| synth.set(\drywet, ez.value) } // action
-		).valueAction_(-1);
+		).valueAction_(-1).numberView.maxDecimals = 3 ;
 
 		controls[\drywet].valueAction = -1;
 
@@ -339,10 +332,6 @@ Feedback1 : EffectGUI {
 				{ controls[\mod].valueAction_(args[0].linlin(0,127, 0.75, 1.25)) }.defer;
 			}, 5); // match cc
 
-			/*			MIDIdesynth.cc(\base, {arg ...args;
-			{ controls[\base].valueAction_(args[0]+1) }.defer;
-			}, 6); // match cc*/
-
 			MIDIdesynth.cc(\vol, {arg ...args;
 				{ controls[\vol].valueAction_(args[0].linlin(0,127, 0, 0.125)) }.defer;
 			}, 6); // match cc
@@ -376,7 +365,6 @@ Feedback1 : EffectGUI {
 	amp {|val| this.setc(\amp, val) }
 	damp {|val| this.setc(\damp, val) }
 	mod {|val| this.setc(\mod, val) }
-	//base {|val| this.setc(\base, val) }
 	norm {|val| this.setc(\norm, val) }
 	normlvl {|val| this.setc(\normlvl, val) }
 	vol {|val| this.setc(\vol, val) }
@@ -396,11 +384,6 @@ Feedback1 : EffectGUI {
 		synth.set(\chord, chord)
 	}
 
-	base { |val|
-		base = val;
-		synth.set(\base, val)
-	}
-
 	gneck {
 		GNeckGUI.new(this, path)
 	}
@@ -414,6 +397,6 @@ Feedback1 : EffectGUI {
 	}
 
 	chords {
-		ChordGUI.new(this, path, chord, base)
+		ChordGUI.new(this, path, chord)
 	}
 }
