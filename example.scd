@@ -7,10 +7,10 @@ all windows to try to open a preset file by default (default_auto.preset for ins
 
 (
 f = Feedback1.new;
-f.base(40); //fundamental freq
-f.chord([0, 6.1, 10, 15.2, 22, 24 ]);
-f.chord([0, 6.1, 10, 15.2, 22, 24 ].scramble);
-f.chord([0,7,12,15,19,24]);
+f.chord([0, 6.1, 10, 15.2, 22, 24 ]+40);
+//[40, 45, 50, 55, 59, 64]
+f.chord( ([0, 6.1, 10, 15.2, 22, 24 ]+40).scramble );
+f.chord([0,7,12,15,19,24]+40);
 
 //f.midi; // midi setup
 //f.nanok; // connect to nanokontrol2
@@ -30,12 +30,11 @@ f.auto
 
 // other controls
 f.on; // f.off
-f.chord([0, 6.1, 10, 15.2, 22, 24 ].scramble);
+f.chord( ([0, 6.1, 10, 15.2, 22, 24 ]+40).scramble );
 f.deltime(61)
 f.amp(0.3)
 f.damp(1300)
 f.mod(1)
-f.base([64, 66, 68].choose)
 f.vol(0.7)
 f.tremolo(0.2)
 f.drywet(0.4)
@@ -80,8 +79,8 @@ t.start;
 // sequence 2 //
 (
 //~chord = [0,7,12,15,19,24]; // mi menor si 64
-~chord = [0, 6.1, 10, 15.2, 22, 24 ]; // chord
-~chord = [0, 0.1, 0.15, 0.25, 0.5 ]; // chord
+~chord = [0, 6.1, 10, 15.2, 22, 24 ]+40; // chord
+~chord = [0, 0.1, 0.15, 0.25, 0.5 ]+40; // chord
 ~mel = [45,48, 46];//
 ~times = [1, 7.1, 3.5];
 
@@ -90,8 +89,7 @@ t = Task({
 
 	inf.do({ arg i;
 		// set the state
-		f.chord(notes);
-		f.base(base);
+		f.chord(base+notes);
 		// choose the next one, tell me and wait
 		notes = ~chord.scramble;
 		base = ~mel.choose;
@@ -109,7 +107,7 @@ t.stop
 
 
 (
-c = [0, 6.1, 10, 15.2, 22, 24].scramble;
+c = ([0, 6.1, 10, 15.2, 22, 24]+40).scramble;
 c.postln;
 f.chord(c);
 )
@@ -123,3 +121,26 @@ t = Task({
 	})
 })
 )
+
+
+
+(
+c = ([0, 6.1, 10, 15.2, 22, 24]+40).scramble;
+c.postln;
+f.chord(c);
+)
+~chords = []
+
+(
+
+t = Task({
+	inf.do({|i|
+		f.chord(Array.fill(6, {[0,3,6].choose+(0.1.rand)}));
+		[4,3, 0.3].choose.wait
+	})
+})
+)
+f.base(48)
+t.start
+t.stop
+
