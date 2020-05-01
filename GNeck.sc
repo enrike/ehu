@@ -17,11 +17,11 @@ GNeckGUI : EffectGUI {
 	var midi;
 	var <chord;
 
-	*new {|amain, path|
-		^super.new.init(amain, path);
+	*new {|amain, path, config|
+		^super.new.init(amain, path, config);
 	}
 
-	init {|amain, path| //////////////////////
+	init {|amain, path, config| //////////////////////
 		super.initEffectGUI(path);
 
 		main = amain;
@@ -37,18 +37,6 @@ GNeckGUI : EffectGUI {
 
 		w.view.decorator.nextLine;
 
-/*		controls[\fund] = EZNumber(w,        // parent
-			30@20,   // bounds
-			nil, // label
-			ControlSpec(0, 127, \lin, 1, 1),    // controlSpec
-			{ |ez|
-				if (main.isNil.not, { main.base(ez.value) });
-			}, // action
-			40,      // initValue
-			true,      // initAction
-			90 //labelwidth
-		);*/
-
 		controls[\chord] = EZPopUpMenu.new(w, 52@20, nil,
 			GuitarChords.chords.asSortedArgsArray.reject({|i| i; i.isArray}),
 			{|ez|
@@ -58,7 +46,6 @@ GNeckGUI : EffectGUI {
 				chord = midi.copy; // reset to open chord
 				6.do{|i|
 					var index = midi[0] + ch[i] - midi[i] - 1;
-					[i, ch[i]-midi[i]].postln;
 					if (index>=0, {
 						buttons[i][index].valueAction = 1
 					})
@@ -83,7 +70,9 @@ GNeckGUI : EffectGUI {
 
 		this.doButtons;
 
-		super.defaultpreset( w.name.replace(" ", "_").toLower ); // try to read and apply the default preset
+		if (config.isNil.not, { // not loading a config file by default
+			super.preset( w.name.replace(" ", "_").toLower, config ); // try to read and apply the default preset
+		});
 
 		w.front;
 	}
@@ -117,8 +106,6 @@ GNeckGUI : EffectGUI {
 					};
 
 					if (main.isNil.not, { main.chord(chord) }); // update chord in main object
-
-					//["chord", chord].postln;
 				});
 				buttons[string].add(button);
 				//controls[ (freth.asString++"_"++string.asString).asSymbol ] = button; // every single one

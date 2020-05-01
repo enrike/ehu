@@ -1,8 +1,9 @@
 /*
 connect MIDI keyboard to \base
-add buttons to launch utils from main interface
 
-all windows to try to open a preset file by default (default_auto.preset for instance)
+Bend MIDI vales use the correct ranges
+Close all utils on close
+load default file in utils?
 */
 
 (
@@ -11,6 +12,8 @@ f.chord([0, 6.1, 10, 15.2, 22, 24 ]+40);
 //[40, 45, 50, 55, 59, 64]
 f.chord( ([0, 6.1, 10, 15.2, 22, 24 ]+40).scramble );
 f.chord([0,7,12,15,19,24]+40);
+
+f.chord.postln;
 
 //f.midi; // midi setup
 //f.nanok; // connect to nanokontrol2
@@ -21,7 +24,8 @@ s.waitForBoot({
 	f.eq;
 	//f.gneck;
 	//f.auto;
-	//f.chords;
+	//f.chords(\default); //load default config file
+	//f.chords; // it takes the chord from main
 })
 )
 

@@ -52,9 +52,9 @@ EffectGUI {
 		});
 	}
 
-	defaultpreset {|name|
+	preset {|name, default=\default|
 		try {
-			this.read(path ++ Platform.pathSeparator ++ "default_" ++ name ++ ".preset")
+			this.read(path ++ Platform.pathSeparator ++ name ++ "_" ++ default.asString ++ ".preset")
 		} { ("no default preset for"+name).postln }
 	}
 

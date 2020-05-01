@@ -8,11 +8,11 @@ a.rand(["feedback", "deltime", "amp"])
 Auto {
 	var <procs, <main;
 
-	*new {|amain|
-		^super.new.initAuto(amain)
+	*new {|amain, config|
+		^super.new.initAuto(amain, config)
 	}
 
-	initAuto {|amain|
+	initAuto {|amain, config|
 		main = amain;
 		procs = Dictionary.new;
 	}
@@ -69,11 +69,11 @@ AutoGUI : EffectGUI {
 
 	var auto, values;
 
-	*new {|amain, path|
-		^super.new.initAutomationGUI(amain, path);
+	*new {|amain, path, config|
+		^super.new.initAutomationGUI(amain, path, config);
 	}
 
-	initAutomationGUI {|amain, path|
+	initAutomationGUI {|amain, path, config|
 		super.initEffectGUI(path);
 
 		auto = Auto.new(amain);
@@ -160,8 +160,9 @@ AutoGUI : EffectGUI {
 			})
 		};
 
-		super.defaultpreset( w.name.replace(" ", "_").toLower ); // try to read and apply the default preset
-
+		if (config.isNil.not, { // not loading a config file by default
+			super.preset( w.name.replace(" ", "_").toLower, config ); // try to read and apply the default preset
+		});
 		w.front;
 	}
 

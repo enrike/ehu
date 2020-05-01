@@ -137,7 +137,7 @@ Feedback1 : EffectGUI {
 		});
 
 		ActionButton(w,"chords",{
-			utils.add(ChordGUI.new(this, path));
+			utils.add(ChordGUI.new(this, path, chord));
 		});
 
 		ActionButton(w,"EQ",{
@@ -289,7 +289,7 @@ Feedback1 : EffectGUI {
 			{ |ez| synth.set(\vol, ez.value) } // action
 		).numberView.maxDecimals = 3 ;
 
-		{ super.defaultpreset( w.name.replace(" ", "_").toLower ) }.defer(0.05); // try to read and apply the default preset
+		{ super.preset( w.name.replace(" ", "_").toLower ) }.defer(0.05); // try to read and apply the default preset
 
 		w.front;
 	}
@@ -379,24 +379,26 @@ Feedback1 : EffectGUI {
 	drywet {|val| this.setc(\drywet, val) }
 
 	chord {|achord|
-		chord.postln;
-		chord = achord;
-		synth.set(\chord, chord)
+		if (achord.isNil, {^chord}, {
+			chord.postln;
+			chord = achord;
+			synth.set(\chord, chord)
+		});
 	}
 
-	gneck {
-		GNeckGUI.new(this, path)
+	gneck {|config|
+		GNeckGUI.new(this, path, config)
 	}
 
 	eq {
 		ChannelEQ.new
 	}
 
-	auto {
-		AutoGUI.new(this, path)
+	auto {|config|
+		AutoGUI.new(this, path, config)
 	}
 
-	chords {
-		ChordGUI.new(this, path, chord)
+	chords {|config|
+		ChordGUI.new(this, path, chord, config)
 	}
 }
