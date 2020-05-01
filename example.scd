@@ -21,7 +21,7 @@ s.waitForBoot({
 	//f.on;
 	f.eq;
 	//f.gneck;
-	//f.auto;
+	f.auto;
 	//f.chords; // it takes the chord from main
 })
 )

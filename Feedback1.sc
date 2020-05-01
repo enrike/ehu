@@ -22,7 +22,8 @@ Feedback1 : EffectGUI {
 		utils = List.new;//refs to GUI windows
 		Server.default.waitForBoot{
 			this.audio;
-			{this.gui}.defer(0.5)
+			this.gui;
+			//{this.gui}.defer(0.5)
 		}
 	}
 
@@ -92,7 +93,7 @@ Feedback1 : EffectGUI {
 		// GUI ////////////////////////
 		super.gui("Feedback unit", 430@465); // init super gui buttons
 		w.onClose = {
-			"closing down Feedback unit and open utils".postln;
+			"closing down Feedback unit and utils".postln;
 			synth.free;
 			utils.collect(_.close)
 		};
@@ -155,7 +156,8 @@ Feedback1 : EffectGUI {
 			"gain in",  // label
 			ControlSpec(0, 2, \lin, 0.001, 0),     // controlSpec
 			{ |ez| synth.set(\gainin, ez.value) } // action
-		).numberView.maxDecimals = 3 ;
+		);
+		controls[\gainin].numberView.maxDecimals = 3 ;
 
 		StaticText(w, Rect(0,0, 80, 15)).string="Feedback";
 
@@ -165,7 +167,8 @@ Feedback1 : EffectGUI {
 			"feedback",  // label
 			ControlSpec(0, 1, \lin, 0.001, 0.02),     // controlSpec
 			{ |ez| synth.set(\feedback, ez.value) } // action
-		).numberView.maxDecimals = 3 ;
+		);
+		controls[\feedback].numberView.maxDecimals = 3 ;
 
 		order.add(\deltime);
 		controls[\deltime] = EZSlider( w,         // parent
@@ -173,7 +176,8 @@ Feedback1 : EffectGUI {
 			"deltime",  // label
 			ControlSpec(0, 500, \lin, 0.001, 75),     // controlSpec
 			{ |ez| synth.set(\deltime, ez.value) } // action
-		).numberView.maxDecimals = 3 ;
+		);
+		controls[\deltime].numberView.maxDecimals = 3 ;
 
 		order.add(\amp);
 		controls[\amp] = EZSlider( w,         // parent
@@ -181,7 +185,8 @@ Feedback1 : EffectGUI {
 			"amp",  // label
 			ControlSpec(0, 3, \lin, 0.001, 0.6),     // controlSpec
 			{ |ez| synth.set(\amp, ez.value) } // action
-		).numberView.maxDecimals = 3 ;
+		);
+		controls[\amp].numberView.maxDecimals = 3 ;
 
 		order.add(\damp);
 		controls[\damp] = EZSlider( w,         // parent
@@ -189,7 +194,8 @@ Feedback1 : EffectGUI {
 			"damp",  // label
 			ControlSpec(200, 10000, \lin, 1, 1360),     // controlSpec
 			{ |ez| synth.set(\damping, ez.value) } // action
-		).numberView.maxDecimals = 3 ;
+		);
+		controls[\damp].numberView.maxDecimals = 3 ;
 
 		order.add(\mod);
 		controls[\mod] = EZSlider( w,         // parent
@@ -197,7 +203,8 @@ Feedback1 : EffectGUI {
 			"mod",  // label
 			ControlSpec(0.85, 1.15, \lin, 0.001, 1),     // controlSpec
 			{ |ez| synth.set(\mod, ez.value) } // action
-		).numberView.maxDecimals = 3 ;
+		);
+		controls[\mod].numberView.maxDecimals = 3 ;
 
 		StaticText(w, Rect(0,0, 200, 15)).string="Compressor/Expander";
 
@@ -208,15 +215,17 @@ Feedback1 : EffectGUI {
 			"thresh",  // label
 			ControlSpec(0.001, 1, \lin, 0.001, 0.5),     // controlSpec
 			{ |ez| synth.set(\thresh, ez.value) } // action
-		).numberView.maxDecimals = 3 ;
+		);
+		controls[\thresh].numberView.maxDecimals = 3 ;
 
-		order.add(\slopebelow);
+		order.add(\slopeBelow);
 		controls[\slopeBelow] = EZSlider( w,         // parent
 			420@20,    // bounds
 			"slpBelow",  // label
 			ControlSpec(-2, 2, \lin, 0.01, 1),     // controlSpec
 			{ |ez| synth.set(\slopeBelow, ez.value) } // action
-		).numberView.maxDecimals = 3 ;
+		);
+		controls[\slopeBelow].numberView.maxDecimals = 3 ;
 
 		order.add(\slopeAbove);
 		controls[\slopeAbove] = EZSlider( w,         // parent
@@ -224,7 +233,8 @@ Feedback1 : EffectGUI {
 			"slpAbove",  // label
 			ControlSpec(-2, 2, \lin, 0.01, 0.5),     // controlSpec
 			{ |ez| synth.set(\slopeAbove, ez.value) } // action
-		).numberView.maxDecimals = 3 ;
+		);
+		controls[\slopeAbove].numberView.maxDecimals = 3 ;
 
 		order.add(\clampTime);
 		controls[\clampTime] = EZSlider( w,         // parent
@@ -232,7 +242,8 @@ Feedback1 : EffectGUI {
 			"clpTime",  // label
 			ControlSpec(0, 0.3, \lin, 0.001, 0.01),     // controlSpec
 			{ |ez| synth.set(\clampTime, ez.value) } // action
-		).numberView.maxDecimals = 3 ;
+		);
+		controls[\clampTime].numberView.maxDecimals = 3 ;
 
 		order.add(\relaxTime);
 		controls[\relaxTime] = EZSlider( w,         // parent
@@ -240,7 +251,8 @@ Feedback1 : EffectGUI {
 			"rlxTime",  // label
 			ControlSpec(0, 0.3, \lin, 0.001, 0.01),     // controlSpec
 			{ |ez| synth.set(\relaxTime, ez.value) } // action
-		).numberView.maxDecimals = 3 ;
+		);
+		controls[\relaxTime].numberView.maxDecimals = 3 ;
 
 		StaticText(w, Rect(0,0, 200, 15)).string="Tremolo";
 
@@ -250,7 +262,8 @@ Feedback1 : EffectGUI {
 			"freq",  // label
 			ControlSpec(0, 60, \lin, 0.001, 0),     // controlSpec
 			{ |ez| synth.set(\freq, ez.value) } // action
-		).numberView.maxDecimals = 3 ;
+		);
+		controls[\tremolo].numberView.maxDecimals = 3 ;
 
 		order.add(\drywet);
 		controls[\drywet] = EZSlider( w,         // parent
@@ -258,7 +271,8 @@ Feedback1 : EffectGUI {
 			"dry/wet",  // label
 			ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
 			{ |ez| synth.set(\drywet, ez.value) } // action
-		).valueAction_(-1).numberView.maxDecimals = 3 ;
+		).valueAction_(-1);
+		controls[\drywet].numberView.maxDecimals = 3 ;
 
 		controls[\drywet].valueAction = -1;
 
@@ -270,7 +284,8 @@ Feedback1 : EffectGUI {
 			"normalize",  // label
 			ControlSpec(0, 1, \lin, 0.001, 0),     // controlSpec
 			{ |ez| synth.set(\norm, ez.value) } // action
-		).numberView.maxDecimals = 3 ;
+		);
+		controls[\norm].numberView.maxDecimals = 3 ;
 
 		order.add(\normlvl);
 		controls[\normlvl] = EZSlider( w,         // parent
@@ -289,7 +304,9 @@ Feedback1 : EffectGUI {
 			"vol",  // label
 			ControlSpec(0, 2, \lin, 0.001, 0.9),     // controlSpec
 			{ |ez| synth.set(\vol, ez.value) } // action
-		).numberView.maxDecimals = 3 ;
+		);
+		controls[\drywet].numberView.maxDecimals = 3 ;
+
 
 		{ super.preset( w.name.replace(" ", "_").toLower ) }.defer(0.05); // try to read and apply the default preset
 

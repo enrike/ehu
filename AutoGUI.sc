@@ -21,15 +21,8 @@ Auto {
 		procs.collect(_.stop)
 	}
 
-	/*	rand {|controls, time|
-	controls.do({|control|
-	this.sch(control, time);
-	})
-	}*/
-
 	sch {|control, time, range|
 		var atask, widget;
-		//[time, range].postln;
 
 		if (procs[control.asSymbol].isNil.not, { this.stop(control.asSymbol) }); // kill if already there before rebirth
 		widget = main.controls[control.asSymbol];
@@ -51,7 +44,6 @@ Auto {
 	}
 
 	stop {|name|
-		//("-- procs: killing"+name).postln;
 		procs[name.asSymbol].stop;
 		procs.removeAt(name.asSymbol);
 	}
@@ -69,18 +61,18 @@ AutoGUI : EffectGUI {
 
 	var auto, values;
 
-	*new {|amain, path, config|
-		^super.new.initAutomationGUI(amain, path, config);
+	*new {|main, path, config|
+		^super.new.initAutomationGUI(main, path, config);
 	}
 
-	initAutomationGUI {|amain, path, config|
+	initAutomationGUI {|main, path, config|
 		super.initEffectGUI(path);
 
-		auto = Auto.new(amain);
+		auto = Auto.new(main);
 
 		values = Dictionary.new;
 
-		this.gui("Auto", Rect(430,0, 380, 340));
+		this.gui("Auto", Rect(430,0, 380, 380));
 
 		w.onClose = {
 			auto.kill;
@@ -107,11 +99,11 @@ AutoGUI : EffectGUI {
 		//auto.main.controls.keysValuesDo{ |name, control, index|
 		auto.main.order.do{|name, index|
 			var control = auto.main.controls[name];
+
 			if (control.isKindOf(EZSlider), {
 				values[name] = Dictionary.new;
 				values[name][\range] = [0,1];
 				values[name][\time] = 1;
-
 				//slider
 				//EZRanger(nil, 400@16," test  ", \freq, { |v| v.value.postln }, [50,2000])
 				controls[name] = EZRanger( w,  // parent
