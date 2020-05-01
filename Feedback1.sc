@@ -19,7 +19,7 @@ Feedback1 : EffectGUI {
 
 	initFeedback1  {
 		chord = [0,7,12,15,19,24]; //[0, 6.1, 10, 15.2, 22, 24 ];
-		utils = [];//refs to GUI windows
+		utils = List.new;//refs to GUI windows
 		Server.default.waitForBoot{
 			this.audio;
 			{this.gui}.defer(0.5)
@@ -92,8 +92,9 @@ Feedback1 : EffectGUI {
 		// GUI ////////////////////////
 		super.gui("Feedback unit", 430@465); // init super gui buttons
 		w.onClose = {
+			"closing down Feedback unit and open utils".postln;
 			synth.free;
-			utils.do{|win| win.close};
+			utils.collect(_.close)
 		};
 
 		StaticText(w, 12@18).align_(\right).string_("In").resize_(7);
@@ -129,19 +130,20 @@ Feedback1 : EffectGUI {
 		w.view.decorator.nextLine;
 
 		ActionButton(w,"auto",{
-			utils.add(AutoGUI.new(this, path))
+			utils.add( AutoGUI.new(this, path) )
 		});
 
 		ActionButton(w,"gneck",{
-			utils.add(GNeckGUI.new(this, path));
+			utils.add( GNeckGUI.new(this, path) );
 		});
 
 		ActionButton(w,"chords",{
-			utils.add(ChordGUI.new(this, path, chord));
+			utils.add( ChordGUI.new(this, path, chord) );
 		});
 
 		ActionButton(w,"EQ",{
-			try {ChannelEQ.new}{"cannot find ChannelEQ class. try installing it from http://github.com/enrike/supercollider-channeleq".postln}
+			try { utils.add( ChannelEQ.new) }
+			{"cannot find ChannelEQ class. try installing it from http://github.com/enrike/supercollider-channeleq".postln}
 		});
 
 		w.view.decorator.nextLine;
@@ -387,18 +389,18 @@ Feedback1 : EffectGUI {
 	}
 
 	gneck {|config|
-		GNeckGUI.new(this, path, config)
+		utils.add( GNeckGUI.new(this, path, config) )
 	}
 
 	eq {
-		ChannelEQ.new
+		utils.add( ChannelEQ.new )
 	}
 
 	auto {|config|
-		AutoGUI.new(this, path, config)
-	}
+		utils.add( AutoGUI.new(this, path, config) )
+	 }
 
 	chords {|config|
-		ChordGUI.new(this, path, chord, config)
+		utils.add( ChordGUI.new(this, path, chord, config) )
 	}
 }

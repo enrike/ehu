@@ -2,8 +2,6 @@
 connect MIDI keyboard to \base
 
 Bend MIDI vales use the correct ranges
-Close all utils on close
-load default file in utils?
 */
 
 (
@@ -24,12 +22,18 @@ s.waitForBoot({
 	f.eq;
 	//f.gneck;
 	//f.auto;
-	//f.chords(\default); //load default config file
 	//f.chords; // it takes the chord from main
 })
 )
 
-f.auto
+
+// utils
+f.eq;
+f.gneck;
+f.auto;
+f.chords;
+// loading presets
+f.chords(\default); //loads "chords_default.preset" config file
 
 
 // other controls
@@ -43,22 +47,18 @@ f.vol(0.7)
 f.tremolo(0.2)
 f.drywet(0.4)
 
-/* same goes for...
-    in
-	gainin
-	out
-	loop
-	feedback
+/* same goes for other controls...
+in
+gainin
+out
+loop
+feedback
 
-	thresh
-	slopeBelow
-	slopeAbove
-	clampTime
-	relaxTime
-f.auto
-f.gneck
-f.chords
-f.eq
+thresh
+slopeBelow
+slopeAbove
+clampTime
+relaxTime
 */
 
 
