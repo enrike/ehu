@@ -1,0 +1,42 @@
+var o, p;
+o = [
+	Dictionary.prNew,  Array.prNew(128)
+];
+p = [
+	// Dictionary
+	0, [ array: o[1],  size: 20 ],  
+	// Array
+	1, [ nil,  nil,  nil,  nil,  
+		nil,  nil,  'tremolo',  0.0,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  'loop',  10,  
+		'on',  1,  'damp',  2574.0,  
+		'slopeAbove',  0.51,  'in',  2,  
+		'thresh',  0.5,  nil,  nil,  
+		nil,  nil,  'deltime',  242.215,  
+		'out',  0,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		'slopeBelow',  1.0,  'clampTime',  0.005,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		'feedback',  0.031,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		'amp',  0.156,  nil,  nil,  
+		'norm',  1.0,  nil,  nil,  
+		nil,  nil,  'drywet',  -1.0,  
+		'normlvl',  -0.07,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  'vol',  0.9,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		'gainin',  0.0,  'relaxTime',  0.007,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  'mod',  1.0 ]
+];
+prUnarchive(o,p);
