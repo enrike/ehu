@@ -1,17 +1,15 @@
 // synthdef based on https://sccode.org/1-U by Nathaniel Virgo
 
 // to do:
-// # EZSlider 3 decimals,
-// normalize intialise to -1
-// ChordGUI connect properly to Feedback
-// ON/OFF button on init
-// # XFade is this the best way to fade between two signals?
-// # close utils windows on close
-// autogui does not init poroperly after adding Normlvl widget
+//
+// connect MIDI keyboard to \base
+// MIDI conection with nanokontrol
+// Bend MIDI vales use the correct ranges
 
 
 Feedback1 : EffectGUI {
-	var auto, chord, <synth, path, utils;
+	var auto, chord, <synth, path, utils;ç
+	var vlay, levels, inOSCFunc, outOSCFunc, outmon;
 
 	*new {
 		^super.new.initFeedback1();
@@ -20,10 +18,11 @@ Feedback1 : EffectGUI {
 	initFeedback1  {
 		chord = [0,7,12,15,19,24]; //[0, 6.1, 10, 15.2, 22, 24 ];
 		utils = List.new;//refs to GUI windows
+		levels = List.new;
 		Server.default.waitForBoot{
 			this.audio;
-			this.gui;
-			//{this.gui}.defer(0.5)
+			//this.gui;
+			{this.gui}.defer(0.5)
 		}
 	}
 
@@ -37,11 +36,19 @@ Feedback1 : EffectGUI {
 			thresh=0.5, slopeBelow=1, slopeAbove=0.5, clampTime=0.01, relaxTime=0.01, limit=0.5,
 			norm=0, normlvl=(1.neg), freq=0, drywet=(1.neg), on=0|
 
-			var del, minfreqs, freqs, dry, nsig; //VARS
-			var sig = ((InFeedback.ar(loop, 2) + WhiteNoise.ar(0.001!2)) * feedback) + (In.ar(in, 2) * gainin);
+			var del, minfreqs, freqs, dry, nsig, sig, in_sig, outmon; //VARS
+			var imp, delimp;
+
+			imp = Impulse.kr(10);
+			delimp = Delay1.kr(imp);
+
+			in_sig = ((InFeedback.ar(loop, 2) + WhiteNoise.ar(0.001!2)) * feedback) + (In.ar(in, 2) * gainin);
+
+			// measure rms and Peak
+			SendPeakRMS.kr(in_sig, 10, 3, '/inlvl'); // this is to monitor the signal that enters the feedback unit
 
 			// delay due to distance from amp - I chose 0.05s, or 20Hz
-			sig = DelayN.ar(sig, 1/10-ControlDur.ir, 1/deltime-ControlDur.ir);
+			sig = DelayN.ar(in_sig, 1/10-ControlDur.ir, 1/deltime-ControlDur.ir);
 
 			// guitar string frequencies - for some reason I had to pitch them down
 			freqs = chord.midicps/freqdiv;
@@ -84,8 +91,30 @@ Feedback1 : EffectGUI {
 			Out.ar(out, sig * on)
 		}).send;
 
-		//synth = Synth(\feed, [\chord, chord])
-		{ synth = Synth(\feed, [\chord, chord]) }.defer(0.2); // should wait until load oe send is done
+		SynthDef(\outmon, {|out=2| // separated to monitor the absolute signal going out of SC after utils etc...
+			SendPeakRMS.kr(In.ar(out, 2), 10, 3, '/outlvl');
+		}).send;
+
+		inOSCFunc = OSCFunc({|msg| {
+			levels[..1].do({|lvl, i| // in levels
+				lvl.peakLevel = msg[3..][i*2].ampdb.linlin(-80, 0, 0, 1, \min);
+				lvl.value = msg[3..][(i*2)+1].ampdb.linlin(-80, 0, 0, 1);
+			});
+		}.defer;
+		}, '/inlvl', Server.default.addr);
+
+		outOSCFunc = OSCFunc({|msg| {
+			levels[2..].do({|lvl, i| // out levels
+				lvl.peakLevel = msg[3..][i*2].ampdb.linlin(-80, 0, 0, 1, \min);
+				lvl.value = msg[3..][(i*2)+1].ampdb.linlin(-80, 0, 0, 1);
+			});
+		}.defer;
+		}, '/outlvl', Server.default.addr);
+
+		{
+			outmon = Synth.tail(Server.default, \outmon); // TO TAIL to monitor the absolute sound out
+			synth = Synth(\feed, [\chord, chord])
+		}.defer(0.1); // should wait until load oe send is done
 	}
 
 
@@ -94,8 +123,12 @@ Feedback1 : EffectGUI {
 		super.gui("Feedback unit", 430@465); // init super gui buttons
 		w.onClose = {
 			"closing down Feedback unit and utils".postln;
+
+			inOSCFunc.free;
+			outOSCFunc.free;
 			synth.free;
-			utils.collect(_.close)
+			outmon.free;
+			try { utils.collect(_.close) }
 		};
 
 		StaticText(w, 12@18).align_(\right).string_("In").resize_(7);
@@ -117,6 +150,7 @@ Feedback1 : EffectGUI {
 		.items_( Array.fill(16, { arg i; i }) )
 		.action_{|m|
 			synth.set(\out, m.value);
+			outmon.set(\out, m.value);
 		}.valueAction = 0; //
 
 		controls[\on] = Button(w, 22@18)
@@ -127,6 +161,13 @@ Feedback1 : EffectGUI {
 		.action_({ arg butt;
 			synth.set(\on, butt.value)
 		});
+
+		vlay = VLayoutView(w, 150@22); // size
+		4.do{|i|
+			levels.add( LevelIndicator(vlay, 5).warning_(0.9).critical_(1.0).drawsPeak_(true) ); // 5 height each
+			if (i==1, {CompositeView(vlay, 2)}); // plus 2px separator
+		};
+
 
 		w.view.decorator.nextLine;
 
@@ -183,7 +224,7 @@ Feedback1 : EffectGUI {
 		controls[\amp] = EZSlider( w,         // parent
 			420@20,    // bounds
 			"amp",  // label
-			ControlSpec(0, 3, \lin, 0.001, 0.6),     // controlSpec
+			ControlSpec(0, 2, \lin, 0.001, 0.6),     // controlSpec
 			{ |ez| synth.set(\amp, ez.value) } // action
 		);
 		controls[\amp].numberView.maxDecimals = 3 ;
@@ -260,7 +301,7 @@ Feedback1 : EffectGUI {
 		controls[\tremolo] = EZSlider( w,         // parent
 			420@20,    // bounds
 			"freq",  // label
-			ControlSpec(0, 60, \lin, 0.001, 0),     // controlSpec
+			ControlSpec(0, 50, \lin, 0.001, 0),     // controlSpec
 			{ |ez| synth.set(\freq, ez.value) } // action
 		);
 		controls[\tremolo].numberView.maxDecimals = 3 ;
@@ -415,7 +456,7 @@ Feedback1 : EffectGUI {
 
 	auto {|config|
 		utils.add( AutoGUI.new(this, path, config) )
-	 }
+	}
 
 	chords {|config|
 		utils.add( ChordGUI.new(this, path, chord, config) )

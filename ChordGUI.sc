@@ -54,9 +54,9 @@ ChordGUI : EffectGUI {
 					this.updatemain;
 			}, 3, false, 10);
 
-			controls[(i+1).asString++"_note"] = EZPopUpMenu(w, 40@20,
-				//nil,  ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],
-				nil, [0,1,2,3,4,5,6,7,8,9,10,11],
+			controls[(i+1).asString++"_note"] = EZPopUpMenu(w, 42@20,
+				nil,  ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],
+				//nil, [0,1,2,3,4,5,6,7,8,9,10,11],
 				{|m|
 					chord[i][1] = m.value;
 					this.updatemain;
@@ -88,9 +88,9 @@ ChordGUI : EffectGUI {
 				this.updatemain;
 		}, 3, false, 10);
 
-		controls["all_note"] = EZPopUpMenu(w, 40@20,
-			//nil,  ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],
-			nil, [0,1,2,3,4,5,6,7,8,9,10,11],
+		controls["all_note"] = EZPopUpMenu(w, 42@20,
+			nil,  ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],
+			//nil, [0,1,2,3,4,5,6,7,8,9,10,11],
 			{|ez|
 				6.do{|i|
 					chord[i][1] = ez.value;

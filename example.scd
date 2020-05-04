@@ -1,14 +1,12 @@
 /*
-connect MIDI keyboard to \base
-
-Bend MIDI vales use the correct ranges
 */
 
 (
+s.meter;
 f = Feedback1.new;
-f.chord([0, 6.1, 10, 15.2, 22, 24 ]+40);
+//f.chord([0, 6.1, 10, 15.2, 22, 24 ]+40);
 //[40, 45, 50, 55, 59, 64]
-f.chord( ([0, 6.1, 10, 15.2, 22, 24 ]+40).scramble );
+//f.chord( ([0, 6.1, 10, 15.2, 22, 24 ]+40).scramble );
 f.chord([0,7,12,15,19,24]+40);
 
 f.chord.postln;
@@ -21,7 +19,7 @@ s.waitForBoot({
 	//f.on;
 	f.eq;
 	//f.gneck;
-	f.auto;
+	//f.auto;
 	//f.chords; // it takes the chord from main
 })
 )
