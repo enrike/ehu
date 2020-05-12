@@ -1,14 +1,15 @@
 // synthdef based on https://sccode.org/1-U by Nathaniel Virgo
 
 // to do:
-//
+// Auto to interpolate between positions: EnvGen in the synth?
+
 // connect MIDI keyboard to \base
 // MIDI conection with nanokontrol
 // Bend MIDI vales use the correct ranges
 
 
 Feedback1 : EffectGUI {
-	var auto, chord, <synth, path, utils;ç
+	var auto, chord, <synth, path, utils;
 	var vlay, levels, inOSCFunc, outOSCFunc, outmon;
 
 	*new {
@@ -16,28 +17,25 @@ Feedback1 : EffectGUI {
 	}
 
 	initFeedback1  {
-		chord = [0,7,12,15,19,24]; //[0, 6.1, 10, 15.2, 22, 24 ];
+		chord = [0,7,12,15,19,24]+40; //[0, 6.1, 10, 15.2, 22, 24 ];
 		utils = List.new;//refs to GUI windows
 		levels = List.new;
+		path = thisProcess.nowExecutingPath.dirname;
 		Server.default.waitForBoot{
 			this.audio;
-			//this.gui;
-			{this.gui}.defer(0.5)
 		}
 	}
 
 	audio {
-
-		path = thisProcess.nowExecutingPath.dirname;
-
 		// BASED ON https://sccode.org/1-U by Nathaniel Virgo
-		SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75, freqdiv=1,
+		SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75,
 			revtimes=5, amp=0.6, damping=1360, mod=1, vol=0.9, chord=#[ 40, 47, 52, 55, 59, 64 ],
-			thresh=0.5, slopeBelow=1, slopeAbove=0.5, clampTime=0.01, relaxTime=0.01, limit=0.5,
+			thresh=0.5, slopeBelow=1, slopeAbove=0.5, clampTime=0.01, relaxTime=0.01,
 			norm=0, normlvl=(1.neg), freq=0, drywet=(1.neg), on=0|
 
 			var del, minfreqs, freqs, dry, nsig, sig, in_sig, outmon; //VARS
 			var imp, delimp;
+			//var eqfreq, has_freq;
 
 			imp = Impulse.kr(10);
 			delimp = Delay1.kr(imp);
@@ -50,9 +48,7 @@ Feedback1 : EffectGUI {
 			// delay due to distance from amp - I chose 0.05s, or 20Hz
 			sig = DelayN.ar(in_sig, 1/10-ControlDur.ir, 1/deltime-ControlDur.ir);
 
-			// guitar string frequencies - for some reason I had to pitch them down
-			freqs = chord.midicps/freqdiv;
-
+			freqs = chord.midicps;
 			// whammy bar modulates freqs:
 			minfreqs = freqs * 0.5;
 			freqs = freqs * mod;
@@ -77,6 +73,11 @@ Feedback1 : EffectGUI {
 
 			sig = Compander.ar(sig, sig, thresh, slopeBelow, slopeAbove, clampTime, relaxTime);
 
+			//# eqfreq, has_freq = Pitch.kr(sig, ampThreshold: 0.02, median: 7); // get the main resonant frequency
+			//eqfreq.poll; //(feed_amp*2).neg
+			//sig = BPeakEQ.ar(sig, freq: freq, rq: 0.2, db: -12); // db should be dependant on energy on that area
+
+
 			Out.ar(loop, sig); // feedback loop before the main output
 
 			dry = sig;
@@ -95,6 +96,8 @@ Feedback1 : EffectGUI {
 			SendPeakRMS.kr(In.ar(out, 2), 10, 3, '/outlvl');
 		}).send;
 
+		Server.default.sync; // wait until synthdef is loaded
+
 		inOSCFunc = OSCFunc({|msg| {
 			levels[..1].do({|lvl, i| // in levels
 				lvl.peakLevel = msg[3..][i*2].ampdb.linlin(-80, 0, 0, 1, \min);
@@ -111,14 +114,16 @@ Feedback1 : EffectGUI {
 		}.defer;
 		}, '/outlvl', Server.default.addr);
 
-		{
-			outmon = Synth.tail(Server.default, \outmon); // TO TAIL to monitor the absolute sound out
-			synth = Synth(\feed, [\chord, chord])
-		}.defer(0.1); // should wait until load oe send is done
+		outmon = Synth.tail(Server.default, \outmon); // TO TAIL to monitor the absolute sound out
+		synth = Synth(\feed, [\chord, chord]);
+
+		Server.default.sync;
+		this.gui;
 	}
 
 
 	gui {
+		//Server.default.sync;
 		// GUI ////////////////////////
 		super.gui("Feedback unit", 430@465); // init super gui buttons
 		w.onClose = {
@@ -162,10 +167,10 @@ Feedback1 : EffectGUI {
 			synth.set(\on, butt.value)
 		});
 
-		vlay = VLayoutView(w, 150@22); // size
+		vlay = VLayoutView(w, 150@17); // size
 		4.do{|i|
-			levels.add( LevelIndicator(vlay, 5).warning_(0.9).critical_(1.0).drawsPeak_(true) ); // 5 height each
-			if (i==1, {CompositeView(vlay, 2)}); // plus 2px separator
+			levels.add( LevelIndicator(vlay, 4).warning_(0.9).critical_(1.0).drawsPeak_(true) ); // 5 height each
+			if (i==1, {CompositeView(vlay, 1)}); // plus 2px separator
 		};
 
 
@@ -348,61 +353,58 @@ Feedback1 : EffectGUI {
 		);
 		controls[\drywet].numberView.maxDecimals = 3 ;
 
+		//{ super.preset( w.name.replace(" ", "_").toLower ) }.defer(0.05); // try to read and apply the default preset
 
-		{ super.preset( w.name.replace(" ", "_").toLower ) }.defer(0.05); // try to read and apply the default preset
-
+		super.preset( w.name.replace(" ", "_").toLower );
 		w.front;
 	}
 
-	midi {
-		MIDIClient.init;
-		MIDIIn.connectAll;
-		MIDIdesynth.freeAll;
-	}
-
-
 	nanok { // old code needs update
 		{
+			MIDIClient.init;
+			MIDIIn.connectAll;
+			MIDIdef.freeAll;
+
 			// First NanoKontrol2 sliders
-			MIDIdesynth.cc(\gainin, {arg ...args;
+			MIDIdef.cc(\gainin, {arg ...args;
 				{ controls[\gainin].valueAction_(args[0].linlin(0,127, 0, 2)) }.defer;
 			}, 0); // match cc
 
-			MIDIdesynth.cc(\feedback, {arg ...args;
+			MIDIdef.cc(\feedback, {arg ...args;
 				{ controls[\feedback].valueAction_(args[0].linlin(0,127, 0, 2)) }.defer;
 			}, 1); // match cc
 
-			MIDIdesynth.cc(\deltime, {arg ...args;
+			MIDIdef.cc(\deltime, {arg ...args;
 				{ controls[\deltime].valueAction_(args[0].linlin(0,127, 0, 500)) }.defer;
 			}, 2); // match cc
 
-			MIDIdesynth.cc(\amp, {arg ...args;
+			MIDIdef.cc(\amp, {arg ...args;
 				{ controls[\amp].valueAction_(args[0].linlin(0,127, 0, 5)) }.defer;
 			}, 3); // match cc
 
-			MIDIdesynth.cc(\damp, {arg ...args;
+			MIDIdef.cc(\damp, {arg ...args;
 				{ controls[\damp].valueAction_(args[0].linlin(0,127, 20, 10000)) }.defer;
 			}, 4); // match cc
 
-			/*	MIDIdesynth.cc(\revtimes, {arg ...args;
+			/*	MIDIdef.cc(\revtimes, {arg ...args;
 			{ controls[\revtimes].valueAction_(args[0].linlin(0,127, 0, 20)) }.defer;
 			}, 4); // match cc*/
 
-			MIDIdesynth.cc(\mod, {arg ...args;
+			MIDIdef.cc(\mod, {arg ...args;
 				{ controls[\mod].valueAction_(args[0].linlin(0,127, 0.75, 1.25)) }.defer;
 			}, 5); // match cc
 
-			MIDIdesynth.cc(\vol, {arg ...args;
+			MIDIdef.cc(\vol, {arg ...args;
 				{ controls[\vol].valueAction_(args[0].linlin(0,127, 0, 0.125)) }.defer;
 			}, 6); // match cc
 
 			// nanokontrol knobs
 
 			// effects
-			MIDIdesynth.cc(\tremolo, {arg ...args;
+			MIDIdef.cc(\tremolo, {arg ...args;
 				{ controls[\tremolo].valueAction_(args[0].linlin(0,127, 0, 60)) }.defer;
 			}, 16); // match cc
-			MIDIdesynth.cc(\drywet, {arg ...args;
+			MIDIdef.cc(\drywet, {arg ...args;
 				{ controls[\drywet].valueAction_(args[0].linlin(0,127, 1.neg, 1)) }.defer;
 			}, 17); // match cc
 		}.defer(0.5);
@@ -450,8 +452,8 @@ Feedback1 : EffectGUI {
 		utils.add( GNeckGUI.new(this, path, config) )
 	}
 
-	eq {
-		utils.add( ChannelEQ.new )
+	eq {|bus|
+		utils.add( ChannelEQ.new(bus:bus) )
 	}
 
 	auto {|config|
