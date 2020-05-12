@@ -25,7 +25,7 @@ Auto {
 		var atask, widget;
 
 		if (procs[control.asSymbol].isNil.not, { this.stop(control.asSymbol) }); // kill if already there before rebirth
-		widget = main.controls[control.asSymbol];
+		widget = main.controls[control];
 
 		//time ? time = 1;
 		//range ? range = [widget.controlSpec.minval , widget.controlSpec.maxval];
@@ -72,7 +72,7 @@ AutoGUI : EffectGUI {
 
 		values = Dictionary.new;
 
-		this.gui("Auto", Rect(430,0, 380, 380));
+		this.gui("Auto", Rect(430,0, 380, 22+(main.order.size*22)));
 
 		w.onClose = {
 			auto.kill;
@@ -97,7 +97,7 @@ AutoGUI : EffectGUI {
 		});
 
 		//auto.main.controls.keysValuesDo{ |name, control, index|
-		auto.main.order.do{|name, index|
+		main.order.do{|name, index| // order should be a property passed as arg on init
 			var control = auto.main.controls[name];
 
 			if (control.isKindOf(EZSlider), {
@@ -115,7 +115,7 @@ AutoGUI : EffectGUI {
 						if (auto.procs[name].isNil.not, {
 							auto.sch(name, values[name][\time], ez.value)
 						});
-					}, initVal:[control.controlSpec.minval, control.controlSpec.maxval] // action
+					}, initVal:[control.controlSpec.minval, control.controlSpec.maxval], initAction:true // action
 				);
 
 				// time number
