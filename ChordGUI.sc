@@ -47,6 +47,7 @@ ChordGUI : EffectGUI {
 		w.view.decorator.nextLine;
 
 		6.do{|i|
+			//order.add((i+1).asString++"_oct");
 			controls[(i+1).asString++"_oct"] = EZPopUpMenu(w, 50@20,
 				(i+1).asString,  [0,1,2,3,4,5,6,7,8,9],
 				{|m|
@@ -54,6 +55,7 @@ ChordGUI : EffectGUI {
 					this.updatemain;
 			}, 3, false, 10);
 
+			//order.add((i+1).asString++"_note");
 			controls[(i+1).asString++"_note"] = EZPopUpMenu(w, 42@20,
 				nil,  ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],
 				//nil, [0,1,2,3,4,5,6,7,8,9,10,11],
@@ -62,6 +64,7 @@ ChordGUI : EffectGUI {
 					this.updatemain;
 			}, 0, false, 20);
 
+			order.add((i+1).asString++"_bend");
 			controls[(i+1).asString++"_bend"] = EZSlider( w,         // parent
 				155@20,    // bounds
 				nil,  // label
@@ -78,6 +81,7 @@ ChordGUI : EffectGUI {
 		StaticText(w, Rect(0,0, 10, 4)).string="";
 		w.view.decorator.nextLine;
 
+		//order.add("all_oct");
 		controls["all_oct"] = EZPopUpMenu(w, 50@20,
 			":A",  [0,1,2,3,4,5,6,7,8,9],
 			{|ez|
@@ -88,6 +92,7 @@ ChordGUI : EffectGUI {
 				this.updatemain;
 		}, 3, false, 10);
 
+		//order.add("all_note");
 		controls["all_note"] = EZPopUpMenu(w, 42@20,
 			nil,  ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"],
 			//nil, [0,1,2,3,4,5,6,7,8,9,10,11],
@@ -99,6 +104,7 @@ ChordGUI : EffectGUI {
 				this.updatemain;
 		}, 0, false, 20);
 
+		order.add("all_bend");
 		controls["all_bend"] = EZSlider( w,         // parent
 			155@20,    // bounds
 			nil,  // label
