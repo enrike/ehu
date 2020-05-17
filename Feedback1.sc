@@ -1,10 +1,11 @@
 // synthdef based on https://sccode.org/1-U by Nathaniel Virgo
 
 // to do:
-// Auto to interpolate between positions: EnvGen in the synth?
+// interpolate values?
 
 // connect MIDI keyboard to \base
-// MIDI conection with nanokontrol
+// connect S M R buttons in nanokontrol to actions R -> single random
+// delegate slider/knobs conexions to a user editable json file
 // Bend MIDI vales use the correct ranges
 
 
@@ -31,11 +32,10 @@ Feedback1 : EffectGUI {
 		SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75,
 			revtimes=5, amp=0.6, damping=1360, mod=1, vol=0.9, chord=#[ 40, 47, 52, 55, 59, 64 ],
 			thresh=0.5, slopeBelow=1, slopeAbove=0.5, clampTime=0.01, relaxTime=0.01,
-			norm=0, normlvl=(1.neg), freq=0, drywet=(1.neg), on=0|
+			norm=0, normlvl= -1, freq=0, drywet= -1, on=0|
 
 			var del, minfreqs, freqs, dry, nsig, sig, in_sig, outmon; //VARS
 			var imp, delimp;
-			//var eqfreq, has_freq;
 
 			imp = Impulse.kr(10);
 			delimp = Delay1.kr(imp);
@@ -72,11 +72,6 @@ Feedback1 : EffectGUI {
 			};
 
 			sig = Compander.ar(sig, sig, thresh, slopeBelow, slopeAbove, clampTime, relaxTime);
-
-			//# eqfreq, has_freq = Pitch.kr(sig, ampThreshold: 0.02, median: 7); // get the main resonant frequency
-			//eqfreq.poll; //(feed_amp*2).neg
-			//sig = BPeakEQ.ar(sig, freq: freq, rq: 0.2, db: -12); // db should be dependant on energy on that area
-
 
 			Out.ar(loop, sig); // feedback loop before the main output
 
@@ -191,6 +186,10 @@ Feedback1 : EffectGUI {
 		ActionButton(w,"EQ",{
 			try { utils.add( ChannelEQ.new) }
 			{"cannot find ChannelEQ class. try installing it from http://github.com/enrike/supercollider-channeleq".postln}
+		});
+
+		ActionButton(w,"anotch",{
+			utils.add( AutoNotchGUI.new(this, path) );
 		});
 
 		w.view.decorator.nextLine;
@@ -315,7 +314,7 @@ Feedback1 : EffectGUI {
 		controls[\drywet] = EZSlider( w,         // parent
 			420@20,    // bounds
 			"dry/wet",  // label
-			ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
+			ControlSpec(-1, 1, \lin, 0.01, -1),     // controlSpec
 			{ |ez| synth.set(\drywet, ez.value) } // action
 		).valueAction_(-1);
 		controls[\drywet].numberView.maxDecimals = 3 ;
@@ -337,7 +336,7 @@ Feedback1 : EffectGUI {
 		controls[\normlvl] = EZSlider( w,         // parent
 			420@20,    // bounds
 			"norm_lvl",  // label
-			ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
+			ControlSpec(-1, 1, \lin, 0.01, -1),     // controlSpec
 			{ |ez| synth.set(\normlvl, ez.value) } // action
 		).valueAction_(-1);
 
@@ -361,53 +360,40 @@ Feedback1 : EffectGUI {
 
 	nanok { // old code needs update
 		{
+			var setup = List.new;
+			setup = [[\gainin, 0], [\feedback, 1], [\deltime, 2], [\amp, 3], [\damp, 4], [\mod, 5], [\vol, 6],
+				[\tremolo,16], [\drywet, 17]
+			];
 			MIDIClient.init;
 			MIDIIn.connectAll;
 			MIDIdef.freeAll;
 
-			// First NanoKontrol2 sliders
-			MIDIdef.cc(\gainin, {arg ...args;
-				{ controls[\gainin].valueAction_(args[0].linlin(0,127, 0, 2)) }.defer;
-			}, 0); // match cc
-
-			MIDIdef.cc(\feedback, {arg ...args;
-				{ controls[\feedback].valueAction_(args[0].linlin(0,127, 0, 2)) }.defer;
-			}, 1); // match cc
-
-			MIDIdef.cc(\deltime, {arg ...args;
-				{ controls[\deltime].valueAction_(args[0].linlin(0,127, 0, 500)) }.defer;
-			}, 2); // match cc
-
-			MIDIdef.cc(\amp, {arg ...args;
-				{ controls[\amp].valueAction_(args[0].linlin(0,127, 0, 5)) }.defer;
-			}, 3); // match cc
-
-			MIDIdef.cc(\damp, {arg ...args;
-				{ controls[\damp].valueAction_(args[0].linlin(0,127, 20, 10000)) }.defer;
-			}, 4); // match cc
-
-			/*	MIDIdef.cc(\revtimes, {arg ...args;
-			{ controls[\revtimes].valueAction_(args[0].linlin(0,127, 0, 20)) }.defer;
-			}, 4); // match cc*/
-
-			MIDIdef.cc(\mod, {arg ...args;
-				{ controls[\mod].valueAction_(args[0].linlin(0,127, 0.75, 1.25)) }.defer;
-			}, 5); // match cc
-
-			MIDIdef.cc(\vol, {arg ...args;
-				{ controls[\vol].valueAction_(args[0].linlin(0,127, 0, 0.125)) }.defer;
-			}, 6); // match cc
 
 			// nanokontrol knobs
 
-			// effects
+			/*			// effects
 			MIDIdef.cc(\tremolo, {arg ...args;
-				{ controls[\tremolo].valueAction_(args[0].linlin(0,127, 0, 60)) }.defer;
+			{ controls[\tremolo].valueAction_(args[0].linlin(0,127, 0, 60)) }.defer;
 			}, 16); // match cc
 			MIDIdef.cc(\drywet, {arg ...args;
-				{ controls[\drywet].valueAction_(args[0].linlin(0,127, 1.neg, 1)) }.defer;
-			}, 17); // match cc
+			{ controls[\drywet].valueAction_(args[0].linlin(0,127, 1.neg, 1)) }.defer;
+			}, 17); // match cc*/
+
+			setup.do{|pair, i|
+				("MIDI"+pair[1].asString+">"+pair[0].asString).postln;
+				this.setupControl(pair[0], pair[1]);
+			}
 		}.defer(0.5);
+	}
+
+	setupControl {|control, chanel|
+		MIDIdef.cc(control, {arg ...args;
+			{
+				var min = controls[control].controlSpec.minval;
+				var max = controls[control].controlSpec.maxval;
+				controls[control].valueAction_(args[0].linlin(0,127, min, max))
+			}.defer;
+		}, chanel); // match cc
 	}
 
 	// control
@@ -462,5 +448,9 @@ Feedback1 : EffectGUI {
 
 	chords {|config|
 		utils.add( ChordGUI.new(this, path, chord, config) )
+	}
+
+	anotch {|config|
+		utils.add( AutoNotchGUI.new(this, path, config) )
 	}
 }

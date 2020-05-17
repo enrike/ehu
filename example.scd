@@ -1,25 +1,25 @@
 /* feedback
 */
 
-(
+( // run here the basic setup
 f = Feedback1.new;
 f.chord.postln;
-f.midi; // midi setup
+
 f.nanok; // connect to nanokontrol2
 
 // other utils I use
 {// wait until everything is ready to go
-	f.off;
-	f.eq; // download and install from https://github.com/enrike/supercollider-channeleq
+	f.eq; // download and install from https://github.com/enrike/supercollider-channeleq requieres wslib and tabbed views
 	//f.eq(10); // you can use the loop bus value to control the internal feedback EQ
 	//f.gneck;
 	//f.auto;
+	f.anotch;
 	//f.chords; // it takes the chord from main
 	//f.chords(\default); //loads "chords_default.preset" config file
-}.defer(0.5) // for instance
+}.defer(4) // for instance
 )
 
-
+f.chord( f.chord.scramble );
 
 // other controls
 f.on;
