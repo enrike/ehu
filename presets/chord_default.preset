@@ -1,0 +1,46 @@
+var o, p;
+o = [
+	Dictionary.prNew,  Array.prNew(128),  "4_note",  "4_bend",  
+	"5_oct",  "6_note",  "1_bend",  "5_note",  
+	"2_oct",  "3_bend",  "5_bend",  "6_bend",  
+	"4_oct",  "1_note",  "3_note",  "6_oct",  
+	"1_oct",  "3_oct",  "2_note",  "2_bend"
+];
+p = [
+	// Dictionary
+	0, [ array: o[1],  size: 19 ],  
+	// Array
+	1, [ nil,  nil,  nil,  nil,  
+		nil,  nil,  o[2],  11,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		o[3],  -0.2,  o[4],  0,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  o[5],  11,  
+		o[6],  0.7,  o[7],  11,  
+		nil,  nil,  nil,  nil,  
+		o[8],  0,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		'fund',  40.0,  o[9],  -0.9,  
+		o[10],  0.5,  nil,  nil,  
+		nil,  nil,  o[11],  0.3,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		o[12],  0,  o[13],  9,  
+		o[14],  0,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  o[15],  0,  
+		o[16],  0,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  o[17],  0,  
+		nil,  nil,  o[18],  6,  
+		o[19],  -0.8,  nil,  nil ]
+];
+prUnarchive(o,p);

@@ -1,0 +1,77 @@
+var o, p;
+o = [
+	Dictionary.prNew,  Array.prNew(128),  "mod_time",  Array.prNew(2),  
+	"gainin_time",  "damp_time",  Array.prNew(2),  Array.prNew(2),  
+	Array.prNew(2),  Array.prNew(2),  "slopeAbove_time",  "feedback_time",  
+	"amp_time",  Array.prNew(2),  "deltime_time",  Array.prNew(2),  
+	"drywet_time",  "thresh_time",  "tremolo_time",  Array.prNew(2),  
+	"relaxTime_time",  Array.prNew(2),  "clampTime_time",  Array.prNew(2),  
+	"vol_time",  Array.prNew(2),  "norm_time",  Array.prNew(2),  
+	Array.prNew(2),  Array.prNew(2)
+];
+p = [
+	// Dictionary
+	0, [ array: o[1],  size: 28 ],  
+	// Array
+	1, [ nil,  nil,  nil,  nil,  
+		o[2],  1.0,  'tremolo',  o[3],  
+		o[4],  1.0,  o[5],  1.0,  
+		nil,  nil,  'damp',  o[6],  
+		nil,  nil,  nil,  nil,  
+		'slopeAbove',  o[7],  'thresh',  o[8],  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  'deltime',  o[9],  
+		o[10],  1.0,  nil,  nil,  
+		o[11],  8.0,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		o[12],  1.0,  'clampTime',  o[13],  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  o[14],  10.0,  
+		'feedback',  o[15],  o[16],  1.0,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		o[17],  1.0,  o[18],  1.0,  
+		'amp',  o[19],  o[20],  1.0,  
+		'norm',  o[21],  nil,  nil,  
+		o[22],  1.0,  'drywet',  o[23],  
+		o[24],  1.0,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  'vol',  o[25],  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  o[26],  1.0,  
+		'gainin',  o[27],  'relaxTime',  o[28],  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  'mod',  o[29] ],  
+	// Array
+	3, [ 0.0,  60.0 ],  
+	// Array
+	6, [ 200.0,  10000.0 ],  
+	// Array
+	7, [ -2.0,  2.0 ],  
+	// Array
+	8, [ 0.0,  1.0 ],  
+	// Array
+	9, [ 0.0,  500.0 ],  
+	// Array
+	13, [ 0.0,  1.0 ],  
+	// Array
+	15, [ 0.0,  0.268 ],  
+	// Array
+	19, [ 0.0,  3.0 ],  
+	// Array
+	21, [ 0.0,  1.0 ],  
+	// Array
+	23, [ -1.0,  1.0 ],  
+	// Array
+	25, [ 0.0,  2.0 ],  
+	// Array
+	27, [ 0.0,  2.0 ],  
+	// Array
+	28, [ 0.0,  1.0 ],  
+	// Array
+	29, [ 0.85,  1.15 ]
+];
+prUnarchive(o,p);

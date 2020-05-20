@@ -55,7 +55,7 @@ BaseGUI {
 	preset {|name, default=\default|
 		name = name.replace(" ", "_").toLower;
 		try {
-			this.read(path ++ Platform.pathSeparator ++ name ++ "_" ++ default.asString ++ ".preset")
+			this.read(path ++ Platform.pathSeparator ++ "presets" ++ Platform.pathSeparator ++ name ++ "_" ++ default.asString ++ ".preset")
 		} { ("no default preset for"+name).postln }
 	}
 
@@ -74,9 +74,9 @@ BaseGUI {
 			data.put(key, widget.value)
 		};
 
-		("saving preset into" + path ++ Platform.pathSeparator ++ filename).postln;
+		("saving preset into" + path ++ Platform.pathSeparator ++ "presets" ++ Platform.pathSeparator ++ filename).postln;
 
-		data.writeArchive(path ++ Platform.pathSeparator ++ filename);
+		data.writeArchive(path ++ Platform.pathSeparator ++ "presets" ++ Platform.pathSeparator ++ filename);
 	}
 
 	close { ("closing"+w.name).postln; w.close }
