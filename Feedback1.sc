@@ -9,21 +9,28 @@
 // Bend MIDI vales use the correct ranges
 
 
-Feedback1 : EffectGUI {
+Feedback1 : BaseGUI {
 	var auto, chord, <synth, path, utils;
 	var vlay, levels, inOSCFunc, outOSCFunc, outmon;
 
-	*new {
-		^super.new.initFeedback1();
+	*new {|path, preset|
+		^super.new.initFeedback1(path, preset);
 	}
 
-	initFeedback1  {
+	initFeedback1  {|apath, preset|
 		chord = [0,7,12,15,19,24]+40; //[0, 6.1, 10, 15.2, 22, 24 ];
 		utils = List.new;//refs to GUI windows
 		levels = List.new;
-		path = thisProcess.nowExecutingPath.dirname;
+		if (apath.isNil, {
+			try { path = thisProcess.nowExecutingPath.dirname }
+		});
+
 		Server.default.waitForBoot{
 			this.audio;
+			this.gui;
+			if (preset.isNil.not, { // not loading a config file by default
+				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
 		}
 	}
 
@@ -31,7 +38,7 @@ Feedback1 : EffectGUI {
 		// BASED ON https://sccode.org/1-U by Nathaniel Virgo
 		SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75,
 			revtimes=5, amp=0.6, damping=1360, mod=1, vol=0.9, chord=#[ 40, 47, 52, 55, 59, 64 ],
-			thresh=0.5, slopeBelow=1, slopeAbove=0.5, clampTime=0.01, relaxTime=0.01,
+			//thresh=0.5, slopeBelow=1, slopeAbove=0.5, clampTime=0.01, relaxTime=0.01,
 			norm=0, normlvl= -1, freq=0, drywet= -1, on=0|
 
 			var del, minfreqs, freqs, dry, nsig, sig, in_sig, outmon; //VARS
@@ -59,10 +66,10 @@ Feedback1 : EffectGUI {
 
 			// a little filtering
 			sig = LPF.ar(sig, 8000);
-			sig = HPF.ar(sig * amp, 80);
+			sig = HPF.ar(sig * amp.lag(0.1), 80);
 
 			// and some not too harsh distortion
-			sig = RLPFD.ar(sig, damping * [1, 1.1], 0.1, 0.5);
+			sig = RLPFD.ar(sig, damping.lag(0.1) * [1, 1.1], 0.1, 0.5);
 			sig = sig + sig.mean;
 
 			// and finally a spot of reverb
@@ -71,18 +78,9 @@ Feedback1 : EffectGUI {
 				sig = AllpassN.ar(sig, del, del, 5);
 			};
 
-			sig = Compander.ar(sig, sig, thresh, slopeBelow, slopeAbove, clampTime, relaxTime);
-
 			Out.ar(loop, sig); // feedback loop before the main output
 
-			dry = sig;
-			sig = sig * SinOsc.ar(freq);
-			sig = XFade2.ar(dry, sig, drywet);
-
-			nsig = Normalizer.ar(sig, norm);
-			sig = XFade2.ar(sig, nsig, normlvl);
-
-			sig = Limiter.ar(sig * vol, 1);
+			sig = Limiter.ar(sig * vol.lag(0.1), 1);
 
 			Out.ar(out, sig * on)
 		}).send;
@@ -113,22 +111,23 @@ Feedback1 : EffectGUI {
 		synth = Synth(\feed, [\chord, chord]);
 
 		Server.default.sync;
-		this.gui;
 	}
 
 
 	gui {
-		//Server.default.sync;
-		// GUI ////////////////////////
-		super.gui("Feedback unit", 430@465); // init super gui buttons
+		super.gui("Feedback unit", 430@215); // init super gui buttons
+
 		w.onClose = {
-			"closing down Feedback unit and utils".postln;
+			"closing down Feedback unit and all opened utils:".postln;
 
 			inOSCFunc.free;
 			outOSCFunc.free;
 			synth.free;
 			outmon.free;
-			try { utils.collect(_.close) }
+			utils.do{|ut|
+				("-"+ut).postln;
+				ut.close
+			};
 		};
 
 		StaticText(w, 12@18).align_(\right).string_("In").resize_(7);
@@ -137,13 +136,6 @@ Feedback1 : EffectGUI {
 		.action_{|m|
 			synth.set(\in, m.value);
 		}.value = 2; // default to sound in
-
-		StaticText(w, 30@18).align_(\right).string_("Loop").resize_(7);
-		controls[\loop] = PopUpMenu(w, Rect(10, 10, 40, 17))
-		.items_( Array.fill(16, { arg i; i }) )
-		.action_{|m|
-			synth.set(\loop, m.value);
-		}.valueAction = 10;
 
 		StaticText(w, 23@18).align_(\right).string_("Out").resize_(7);
 		controls[\out] = PopUpMenu(w, Rect(10, 10, 40, 17))
@@ -162,12 +154,18 @@ Feedback1 : EffectGUI {
 			synth.set(\on, butt.value)
 		});
 
+		StaticText(w, 30@18).align_(\right).string_("Loop").resize_(7);
+		controls[\loop] = PopUpMenu(w, Rect(10, 10, 40, 17))
+		.items_( Array.fill(16, { arg i; i }) )
+		.action_{|m|
+			synth.set(\loop, m.value);
+		}.valueAction = 10;
+
 		vlay = VLayoutView(w, 150@17); // size
 		4.do{|i|
 			levels.add( LevelIndicator(vlay, 4).warning_(0.9).critical_(1.0).drawsPeak_(true) ); // 5 height each
 			if (i==1, {CompositeView(vlay, 1)}); // plus 2px separator
 		};
-
 
 		w.view.decorator.nextLine;
 
@@ -179,9 +177,11 @@ Feedback1 : EffectGUI {
 			utils.add( GNeckGUI.new(this, path) );
 		});
 
-		ActionButton(w,"chords",{
+		ActionButton(w,"chord",{
 			utils.add( ChordGUI.new(this, path, chord) );
 		});
+
+		w.view.decorator.nextLine;
 
 		ActionButton(w,"EQ",{
 			try { utils.add( ChannelEQ.new) }
@@ -191,6 +191,23 @@ Feedback1 : EffectGUI {
 		ActionButton(w,"anotch",{
 			utils.add( AutoNotchGUI.new(this, path) );
 		});
+
+		ActionButton(w,"compander",{
+			utils.add( CompanderGUI.new(this, path) );
+		});
+
+		ActionButton(w,"tremolo",{
+			utils.add( TremoloGUI.new(this, path) );
+		});
+
+		ActionButton(w,"normalizer",{
+			utils.add( NormalizerGUI.new(this, path) );
+		});
+
+		ActionButton(w,"limiter",{
+			utils.add( LimiterGUI.new(this, path) );
+		});
+
 
 		w.view.decorator.nextLine;
 
@@ -203,8 +220,6 @@ Feedback1 : EffectGUI {
 			{ |ez| synth.set(\gainin, ez.value) } // action
 		);
 		controls[\gainin].numberView.maxDecimals = 3 ;
-
-		StaticText(w, Rect(0,0, 80, 15)).string="Feedback";
 
 		order.add(\feedback);
 		controls[\feedback] = EZSlider( w,         // parent
@@ -251,98 +266,6 @@ Feedback1 : EffectGUI {
 		);
 		controls[\mod].numberView.maxDecimals = 3 ;
 
-		StaticText(w, Rect(0,0, 200, 15)).string="Compressor/Expander";
-
-		//COMPRESSOR
-		order.add(\thresh);
-		controls[\thresh] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"thresh",  // label
-			ControlSpec(0.001, 1, \lin, 0.001, 0.5),     // controlSpec
-			{ |ez| synth.set(\thresh, ez.value) } // action
-		);
-		controls[\thresh].numberView.maxDecimals = 3 ;
-
-		order.add(\slopeBelow);
-		controls[\slopeBelow] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"slpBelow",  // label
-			ControlSpec(-2, 2, \lin, 0.01, 1),     // controlSpec
-			{ |ez| synth.set(\slopeBelow, ez.value) } // action
-		);
-		controls[\slopeBelow].numberView.maxDecimals = 3 ;
-
-		order.add(\slopeAbove);
-		controls[\slopeAbove] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"slpAbove",  // label
-			ControlSpec(-2, 2, \lin, 0.01, 0.5),     // controlSpec
-			{ |ez| synth.set(\slopeAbove, ez.value) } // action
-		);
-		controls[\slopeAbove].numberView.maxDecimals = 3 ;
-
-		order.add(\clampTime);
-		controls[\clampTime] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"clpTime",  // label
-			ControlSpec(0, 0.3, \lin, 0.001, 0.01),     // controlSpec
-			{ |ez| synth.set(\clampTime, ez.value) } // action
-		);
-		controls[\clampTime].numberView.maxDecimals = 3 ;
-
-		order.add(\relaxTime);
-		controls[\relaxTime] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"rlxTime",  // label
-			ControlSpec(0, 0.3, \lin, 0.001, 0.01),     // controlSpec
-			{ |ez| synth.set(\relaxTime, ez.value) } // action
-		);
-		controls[\relaxTime].numberView.maxDecimals = 3 ;
-
-		StaticText(w, Rect(0,0, 200, 15)).string="Tremolo";
-
-		order.add(\tremolo);
-		controls[\tremolo] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"freq",  // label
-			ControlSpec(0, 50, \lin, 0.001, 0),     // controlSpec
-			{ |ez| synth.set(\freq, ez.value) } // action
-		);
-		controls[\tremolo].numberView.maxDecimals = 3 ;
-
-		order.add(\drywet);
-		controls[\drywet] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"dry/wet",  // label
-			ControlSpec(-1, 1, \lin, 0.01, -1),     // controlSpec
-			{ |ez| synth.set(\drywet, ez.value) } // action
-		).valueAction_(-1);
-		controls[\drywet].numberView.maxDecimals = 3 ;
-
-		controls[\drywet].valueAction = -1;
-
-		StaticText(w);
-
-		order.add(\norm);
-		controls[\norm] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"normalize",  // label
-			ControlSpec(0, 1, \lin, 0.001, 0),     // controlSpec
-			{ |ez| synth.set(\norm, ez.value) } // action
-		);
-		controls[\norm].numberView.maxDecimals = 3 ;
-
-		order.add(\normlvl);
-		controls[\normlvl] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"norm_lvl",  // label
-			ControlSpec(-1, 1, \lin, 0.01, -1),     // controlSpec
-			{ |ez| synth.set(\normlvl, ez.value) } // action
-		).valueAction_(-1);
-
-		controls[\normlvl].valueAction = -1;
-
-
 		order.add(\vol);
 		controls[\vol] = EZSlider( w,         // parent
 			420@20,    // bounds
@@ -350,11 +273,10 @@ Feedback1 : EffectGUI {
 			ControlSpec(0, 2, \lin, 0.001, 0.9),     // controlSpec
 			{ |ez| synth.set(\vol, ez.value) } // action
 		);
-		controls[\drywet].numberView.maxDecimals = 3 ;
+		controls[\vol].numberView.maxDecimals = 3 ;
 
-		//{ super.preset( w.name.replace(" ", "_").toLower ) }.defer(0.05); // try to read and apply the default preset
+		super.preset( w.name ); // try to load default preset
 
-		super.preset( w.name.replace(" ", "_").toLower );
 		w.front;
 	}
 
@@ -397,6 +319,8 @@ Feedback1 : EffectGUI {
 	}
 
 	// control
+
+	scramble { chord = chord.scramble }
 
 	setc {|control, val| {controls[control].valueAction = val}.defer}
 
@@ -446,7 +370,7 @@ Feedback1 : EffectGUI {
 		utils.add( AutoGUI.new(this, path, config) )
 	}
 
-	chords {|config|
+	ch {|config|
 		utils.add( ChordGUI.new(this, path, chord, config) )
 	}
 
