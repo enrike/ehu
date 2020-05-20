@@ -9,7 +9,7 @@ to do: explore tunnings
 
 
 
-GNeckGUI : EffectGUI {
+GNeckGUI : BaseGUI {
 	var main; // this is an object that has a <chord variable
 	var buttons;
 	var notes;
@@ -17,12 +17,12 @@ GNeckGUI : EffectGUI {
 	var midi;
 	var <chord;
 
-	*new {|amain, path, config|
-		^super.new.init(amain, path, config);
+	*new {|amain, path, preset|
+		^super.new.init(amain, path, preset);
 	}
 
-	init {|amain, path, config| //////////////////////
-		super.initEffectGUI(path);
+	init {|amain, path, preset| //////////////////////
+		super.initBaseGUI(path);
 
 		main = amain;
 
@@ -70,8 +70,8 @@ GNeckGUI : EffectGUI {
 
 		this.doButtons;
 
-		if (config.isNil.not, { // not loading a config file by default
-			super.preset( w.name.replace(" ", "_").toLower, config ); // try to read and apply the default preset
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
 		});
 
 		w.front;

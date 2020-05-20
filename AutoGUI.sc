@@ -8,11 +8,11 @@ a.rand(["feedback", "deltime", "amp"])
 Auto {
 	var <procs, <main;
 
-	*new {|amain, config|
-		^super.new.initAuto(amain, config)
+	*new {|amain, preset|
+		^super.new.initAuto(amain, preset)
 	}
 
-	initAuto {|amain, config|
+	initAuto {|amain, preset|
 		main = amain;
 		procs = Dictionary.new;
 	}
@@ -57,16 +57,16 @@ Auto {
 main must be an instance that contains a dictionary called controls with instances of Sliders
 */
 
-AutoGUI : EffectGUI {
+AutoGUI : BaseGUI {
 
 	var auto, values;
 
-	*new {|main, path, config|
-		^super.new.initAutomationGUI(main, path, config);
+	*new {|main, path, preset|
+		^super.new.initAutomationGUI(main, path, preset);
 	}
 
-	initAutomationGUI {|main, path, config|
-		super.initEffectGUI(path);
+	initAutomationGUI {|main, path, preset|
+		super.initBaseGUI(path);
 
 		auto = Auto.new(main);
 
@@ -152,8 +152,8 @@ AutoGUI : EffectGUI {
 			})
 		};
 
-		if (config.isNil.not, { // not loading a config file by default
-			super.preset( w.name.replace(" ", "_").toLower, config ); // try to read and apply the default preset
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
 		});
 		w.front;
 	}

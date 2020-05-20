@@ -2,7 +2,10 @@
 */
 
 ( // run here the basic setup
+l = Launcher.new;
 f = Feedback1.new;
+f = l.feedb;
+
 f.chord.postln;
 
 f.nanok; // connect to nanokontrol2
@@ -12,14 +15,36 @@ f.nanok; // connect to nanokontrol2
 	f.eq; // download and install from https://github.com/enrike/supercollider-channeleq requieres wslib and tabbed views
 	//f.eq(10); // you can use the loop bus value to control the internal feedback EQ
 	//f.gneck;
+	//f.ch; // it takes the chord from main
+	//f.ch(\default); //loads "chords_default.preset" config file
 	//f.auto;
-	f.anotch;
-	//f.chords; // it takes the chord from main
-	//f.chords(\default); //loads "chords_default.preset" config file
+	//f.anotch;
+	//f.trem;
+	//f.comp;
 }.defer(4) // for instance
 )
 
-f.chord( f.chord.scramble );
+
+(// in an instalation
+//f = Feedback1.new; // this opens feedback_unit_default.preset
+f = Feedback1.new(preset: \noisy); // this opens feedback_unit_noisy.preset
+
+{// wait until everything is ready to go
+	f.eq; // download and install from https://github.com/enrike/supercollider-channeleq requieres wslib and tabbed views
+	//f.eq(10); // you can use the loop bus value to control the internal feedback EQ
+	//f.gneck;
+	//f.ch; // it takes the chord from main
+	//f.ch(config: \default); //loads "chords_default.preset" config file
+	//f.auto;
+	//f.anotch;
+	//f.trem;
+	f.comp(\installation1);
+}.defer(4) // for instance
+)
+
+
+
+f.scramble; // chord
 
 // other controls
 f.on;

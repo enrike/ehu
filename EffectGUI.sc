@@ -1,7 +1,7 @@
 
-EffectGUI {
+BaseGUI {
 
-	classvar effectsGroup;
+	//classvar effectsGroup;
 
 	var <controls, path, <w, <order;
 
@@ -20,10 +20,10 @@ EffectGUI {
 	*/
 
 	*new {|exepath|
-		^super.new.initEffectGUI(exepath);
+		^super.new.initBaseGUI(exepath);
 	}
 
-	initEffectGUI {|exepath|
+	initBaseGUI {|exepath|
 		controls = Dictionary.new;
 		order = List.new;
 
@@ -33,7 +33,7 @@ EffectGUI {
 			path = exepath;
 		});
 
-		effectsGroup = Group.new(Server.default, \addToTail); // was addAfter
+		//effectsGroup = Group.new(Server.default, \addToTail); // was addAfter
 	}
 
 	gui { |name="", bounds=#[0,0, 310, 120]| // run this if you want to have open and save buttons in the window
@@ -53,6 +53,7 @@ EffectGUI {
 	}
 
 	preset {|name, default=\default|
+		name = name.replace(" ", "_").toLower;
 		try {
 			this.read(path ++ Platform.pathSeparator ++ name ++ "_" ++ default.asString ++ ".preset")
 		} { ("no default preset for"+name).postln }
@@ -67,6 +68,8 @@ EffectGUI {
 		if (w.isNil.not, {name=w.name.replace(" ", "_").toLower}); //prepend the windows name
 		filename = name++"_"++Date.getDate.stamp++".preset";
 
+		//data.put(\loc, w.bounds);
+
 		controls.keysValuesDo { |key, widget|
 			data.put(key, widget.value)
 		};
@@ -76,7 +79,7 @@ EffectGUI {
 		data.writeArchive(path ++ Platform.pathSeparator ++ filename);
 	}
 
-	close { w.close }
+	close { ("closing"+w.name).postln; w.close }
 
 	open {
 		FileDialog({ |apath|
@@ -90,10 +93,77 @@ EffectGUI {
 	read {|apath|
 		var	data = Object.readArchive(apath);
 		("reading preset"+apath).postln;
+
 		data.keysValuesDo{ |key, value|
+			[key, value].postln;
 			try {
 				{controls[key].valueAction = value}.defer // wait for QT
 			}{|er| er.postln}
 		};
 	}
+}
+
+
+
+EffectGUI : BaseGUI {
+	var <synth;
+
+	*new {|exepath=""|
+		^super.new.initEffectGUI(exepath);
+	}
+
+	initEffectGUI {|exepath|
+		super.gui(exepath);
+	}
+
+	close {
+		("freeing"+synth).postln;
+		synth.free;
+		super.close;
+	}
+
+	gui {|name, bounds|
+		super.gui(name, bounds);
+
+		StaticText(w, 20@18).align_(\right).string_("In").resize_(7);
+		controls[\in] = PopUpMenu(w, Rect(10, 10, 45, 17))
+		.items_( Array.fill(16, { arg i; i }) )
+		.action_{|m|
+			synth.set(\in, m.value);
+		}
+		.value_(0); // default to sound in
+
+		StaticText(w, 20@18).align_(\right).string_("Out").resize_(7);
+		controls[\out] = PopUpMenu(w, Rect(10, 10, 45, 17))
+		.items_( Array.fill(16, { arg i; i }) )
+		.action_{|m|
+			synth.set(\out, m.value);
+		}
+		.value_(0); // default to sound in
+
+		controls[\on] = Button(w, 22@18)
+		.states_([
+			["on", Color.white, Color.black],
+			["off", Color.black, Color.red]
+		])
+		.action_({ arg butt;
+			try{
+				var name;
+				name = synth.name;
+				synth.free;
+				if (butt.value==1, {
+					Server.default.waitForBoot{
+						synth = Synth.tail(Server.default, name);
+						Server.default.sync;
+						("run"+synth.name+"synth").postln;
+					};
+				})
+			} {synth.postln}
+		}).valueAction = 1;
+
+		//w.view.decorator.nextLine;
+
+		////////////////////////7
+	}
+
 }

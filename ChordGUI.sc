@@ -1,4 +1,4 @@
-ChordGUI : EffectGUI {
+ChordGUI : BaseGUI {
 	/*
 	c = ChordGUI.new(master);
 	c.notes;
@@ -8,12 +8,12 @@ ChordGUI : EffectGUI {
 
 	var chord, main;
 
-	*new {|amain, path, chord, config|
-		^super.new.init(amain, path, chord, config);
+	*new {|amain, path, chord, preset|
+		^super.new.init(amain, path, chord, preset);
 	}
 
-	init {|amain, path, achord, config|
-		super.initEffectGUI(path);
+	init {|amain, path, achord, preset|
+		super.initBaseGUI(path);
 
 		main = amain;
 
@@ -118,11 +118,11 @@ ChordGUI : EffectGUI {
 			} // action
 		);
 
-		if (config.isNil, { // not loading a config file by default
+		if (preset.isNil, { // not loading a config file by default
 			// if no default it should get the chord and base from main and display it in the widgets
 			if (achord.isNil.not, { this.setnotes(achord) });
 		}, {
-			super.preset( w.name.replace(" ", "_").toLower, config ); // try to read and apply the default preset
+			super.preset( w.name, preset ); // try to read and apply the default preset
 		});
 
 
