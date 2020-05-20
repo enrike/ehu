@@ -2,12 +2,8 @@
 */
 
 ( // run here the basic setup
-l = Launcher.new;
 f = Feedback1.new;
-f = l.feedb;
-
 f.chord.postln;
-
 f.nanok; // connect to nanokontrol2
 
 // other utils I use
@@ -24,10 +20,12 @@ f.nanok; // connect to nanokontrol2
 }.defer(4) // for instance
 )
 
+Launcher.new; // experimental
+
 
 (// in an instalation
-//f = Feedback1.new; // this opens feedback_unit_default.preset
-f = Feedback1.new(preset: \noisy); // this opens feedback_unit_noisy.preset
+f = Feedback1.new; // this opens feedback_unit_default.preset
+//f = Feedback1.new(preset: \noisy); // this opens feedback_unit_noisy.preset
 
 {// wait until everything is ready to go
 	f.eq; // download and install from https://github.com/enrike/supercollider-channeleq requieres wslib and tabbed views
@@ -44,9 +42,11 @@ f = Feedback1.new(preset: \noisy); // this opens feedback_unit_noisy.preset
 
 
 
-f.scramble; // chord
+
 
 // other controls
+f.scramble; // chord
+
 f.on;
 f.off;
 f.chord( ([0, 6.1, 10, 15.2, 22, 24 ]+40).scramble );

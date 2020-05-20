@@ -19,11 +19,11 @@ BaseGUI {
 	);
 	*/
 
-	*new {|exepath|
-		^super.new.initBaseGUI(exepath);
-	}
+	/*	*new {|exepath|
+	^super.new.initBaseGUI(exepath);
+	}*/
 
-	initBaseGUI {|exepath|
+	init {|exepath|
 		controls = Dictionary.new;
 		order = List.new;
 
@@ -32,8 +32,6 @@ BaseGUI {
 		},{
 			path = exepath;
 		});
-
-		//effectsGroup = Group.new(Server.default, \addToTail); // was addAfter
 	}
 
 	gui { |name="", bounds=#[0,0, 310, 120]| // run this if you want to have open and save buttons in the window
@@ -44,19 +42,27 @@ BaseGUI {
 		w.view.decorator = FlowLayout(w.view.bounds);
 		w.view.decorator.gap=2@2;
 
+		w.onClose = {
+			this.close;
+		};
+
 		ActionButton(w,"S",{
 			this.save;
 		});
 		ActionButton(w,"O",{
 			this.open;
 		});
+		w.front;
 	}
 
 	preset {|name, default=\default|
+		var thepath = "";
 		name = name.replace(" ", "_").toLower;
-		try {
-			this.read(path ++ Platform.pathSeparator ++ "presets" ++ Platform.pathSeparator ++ name ++ "_" ++ default.asString ++ ".preset")
-		} { ("no default preset for"+name).postln }
+		thepath = PathName.new(path ++ Platform.pathSeparator ++ "presets"
+			++ Platform.pathSeparator ++ name ++ "_" ++ default.asString ++ ".preset");
+		if (thepath.isFile==true, {
+			this.read(thepath.fullPath);
+		}, {("no preset for"+name).postln});
 	}
 
 	update {|name, value| // control widgets remotely
@@ -79,7 +85,7 @@ BaseGUI {
 		data.writeArchive(path ++ Platform.pathSeparator ++ "presets" ++ Platform.pathSeparator ++ filename);
 	}
 
-	close { ("closing"+w.name).postln; w.close }
+	close {}
 
 	open {
 		FileDialog({ |apath|
@@ -108,12 +114,12 @@ BaseGUI {
 EffectGUI : BaseGUI {
 	var <synth;
 
-	*new {|exepath=""|
-		^super.new.initEffectGUI(exepath);
-	}
+	/*	*new {|exepath=""|
+	^super.new.initEffectGUI(exepath);
+	}*/
 
-	initEffectGUI {|exepath|
-		super.gui(exepath);
+	init {|exepath|
+		super.init(exepath);
 	}
 
 	close {
@@ -147,23 +153,19 @@ EffectGUI : BaseGUI {
 			["off", Color.black, Color.red]
 		])
 		.action_({ arg butt;
-			try{
-				var name;
-				name = synth.name;
+			if (synth.isNil.not, {
+				var sname = synth.defName;
 				synth.free;
 				if (butt.value==1, {
 					Server.default.waitForBoot{
-						synth = Synth.tail(Server.default, name);
+						synth = Synth.tail(Server.default, sname);
 						Server.default.sync;
-						("run"+synth.name+"synth").postln;
+						("run"+sname+"synth").postln;
 					};
+				}, {
+					("kill"+sname+"synth").postln;
 				})
-			} {synth.postln}
-		}).valueAction = 1;
-
-		//w.view.decorator.nextLine;
-
-		////////////////////////7
+			});
+		}).value=1;
 	}
-
 }

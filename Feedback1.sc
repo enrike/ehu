@@ -9,283 +9,250 @@
 // Bend MIDI vales use the correct ranges
 
 
-Feedback1 : BaseGUI {
-	var auto, chord, <synth, path, utils;
+Feedback1 : EffectGUI {
+	var auto, chord, utils;
 	var vlay, levels, inOSCFunc, outOSCFunc, outmon;
 
 	*new {|path, preset|
-		^super.new.initFeedback1(path, preset);
+		^super.new.init(path, preset);
 	}
 
-	initFeedback1  {|apath, preset|
+	init  {|apath, preset|
+		super.init(path);
+
 		chord = [0,7,12,15,19,24]+40; //[0, 6.1, 10, 15.2, 22, 24 ];
 		utils = List.new;//refs to GUI windows
 		levels = List.new;
-		if (apath.isNil, {
-			try { path = thisProcess.nowExecutingPath.dirname }
-		});
 
 		Server.default.waitForBoot{
-			this.audio;
-			this.gui;
+
+			// BASED ON https://sccode.org/1-U by Nathaniel Virgo
+			SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75,
+				revtimes=5, amp=0.6, damping=1360, mod=1, vol=0.9, chord=#[ 40, 47, 52, 55, 59, 64 ],
+				//thresh=0.5, slopeBelow=1, slopeAbove=0.5, clampTime=0.01, relaxTime=0.01,
+				norm=0, normlvl= -1, freq=0, drywet= -1, on=0|
+
+				var del, minfreqs, freqs, dry, nsig, sig, in_sig, outmon; //VARS
+				var imp, delimp;
+
+				imp = Impulse.kr(10);
+				delimp = Delay1.kr(imp);
+
+				in_sig = ((InFeedback.ar(loop, 2) + WhiteNoise.ar(0.001!2)) * feedback) + (In.ar(in, 2) * gainin);
+
+				// measure rms and Peak
+				SendPeakRMS.kr(in_sig, 10, 3, '/inlvl'); // this is to monitor the signal that enters the feedback unit
+
+				// delay due to distance from amp - I chose 0.05s, or 20Hz
+				sig = DelayN.ar(in_sig, 1/10-ControlDur.ir, 1/deltime-ControlDur.ir);
+
+				freqs = chord.midicps;
+				// whammy bar modulates freqs:
+				minfreqs = freqs * 0.5;
+				freqs = freqs * mod;
+
+				// 6 comb filters emulate the strings' resonances
+				// maxdelaytime, delaytime, decaytime
+				sig = CombN.ar(sig!6, 1/minfreqs, 1/freqs, 8).mean;
+
+				// a little filtering
+				sig = LPF.ar(sig, 8000);
+				sig = HPF.ar(sig * amp.lag(0.1), 80);
+
+				// and some not too harsh distortion
+				sig = RLPFD.ar(sig, damping.lag(0.1) * [1, 1.1], 0.1, 0.5);
+				sig = sig + sig.mean;
+
+				// and finally a spot of reverb
+				revtimes.do { // loop rev times
+					del = 0.2.rand; // delayt and decayt
+					sig = AllpassN.ar(sig, del, del, 5);
+				};
+
+				Out.ar(loop, sig); // feedback loop before the main output
+
+				sig = Limiter.ar(sig * vol.lag(0.1), 1);
+
+				SendPeakRMS.kr(sig, 10, 3, '/outlvl');
+
+				Out.ar(out, sig * on)
+			}).send;
+/*
+			SynthDef(\outmon, {|out=2| // to monitor the signal going out of SC after utils etc...
+				SendPeakRMS.kr(In.ar(out, 2), 10, 3, '/outlvl');
+			}).send;*/
+
+			Server.default.sync; // wait until synthdef is loaded
+
+			inOSCFunc = OSCFunc({|msg| {
+				levels[..1].do({|lvl, i| // in levels
+					lvl.peakLevel = msg[3..][i*2].ampdb.linlin(-80, 0, 0, 1, \min);
+					lvl.value = msg[3..][(i*2)+1].ampdb.linlin(-80, 0, 0, 1);
+				});
+			}.defer;
+			}, '/inlvl', Server.default.addr);
+
+			outOSCFunc = OSCFunc({|msg| {
+				levels[2..].do({|lvl, i| // out levels
+					lvl.peakLevel = msg[3..][i*2].ampdb.linlin(-80, 0, 0, 1, \min);
+					lvl.value = msg[3..][(i*2)+1].ampdb.linlin(-80, 0, 0, 1);
+				});
+			}.defer;
+			}, '/outlvl', Server.default.addr);
+
+			//outmon = Synth.tail(Server.default, \outmon); // TO TAIL to monitor the absolute sound out
+			synth = Synth(\feed, [\chord, chord]);
+
+			Server.default.sync;
+
+
+			super.gui("Feedback unit", 430@215); // init super gui buttons
+
+			controls[\play] = Button(w, 22@18)
+			.states_([
+				[">", Color.white, Color.black],
+				["||", Color.black, Color.red]
+			])
+			.action_({ arg butt;
+				if (synth.isNil.not, {
+					synth.set(\on, butt.value)
+				});
+			}).valueAction=1;
+
+			StaticText(w, 30@18).align_(\right).string_("Loop").resize_(7);
+			controls[\loop] = PopUpMenu(w, Rect(10, 10, 40, 17))
+			.items_( Array.fill(16, { arg i; i }) )
+			.action_{|m|
+				synth.set(\loop, m.value);
+			}.valueAction = 10;
+
+			vlay = VLayoutView(w, 118@17); // size
+			4.do{|i|
+				levels.add( LevelIndicator(vlay, 4).warning_(0.9).critical_(1.0).drawsPeak_(true) ); // 5 height each
+				if (i==1, {CompositeView(vlay, 1)}); // plus 2px separator
+			};
+
+			w.view.decorator.nextLine;
+
+			ActionButton(w,"auto",{
+				utils.add( AutoGUI.new(this, path) )
+			});
+
+			ActionButton(w,"gneck",{
+				utils.add( GNeckGUI.new(this, path) );
+			});
+
+			ActionButton(w,"chord",{
+				utils.add( ChordGUI.new(this, path, chord) );
+			});
+
+			w.view.decorator.nextLine;
+
+			ActionButton(w,"EQ",{
+				try { utils.add( ChannelEQ.new) }
+				{"cannot find ChannelEQ class. try installing it from http://github.com/enrike/supercollider-channeleq".postln}
+			});
+
+			ActionButton(w,"anotch",{
+				path.postln;
+				utils.add( AutoNotchGUI.new(path) );
+			});
+
+			ActionButton(w,"compander",{
+				utils.add( CompanderGUI.new(path) );
+			});
+
+			ActionButton(w,"tremolo",{
+				utils.add( TremoloGUI.new(path) );
+			});
+
+			ActionButton(w,"normalizer",{
+				utils.add( NormalizerGUI.new(path) );
+			});
+
+			ActionButton(w,"limiter",{
+				utils.add( LimiterGUI.new(path) );
+			});
+
+
+			w.view.decorator.nextLine;
+
+			// SLIDERS //
+			order.add(\gainin);
+			controls[\gainin] = EZSlider( w,         // parent
+				420@20,    // bounds
+				"gain in",  // label
+				ControlSpec(0, 2, \lin, 0.001, 0),     // controlSpec
+				{ |ez| synth.set(\gainin, ez.value) } // action
+			);
+			controls[\gainin].numberView.maxDecimals = 3 ;
+
+			order.add(\feedback);
+			controls[\feedback] = EZSlider( w,         // parent
+				420@20,    // bounds
+				"feedback",  // label
+				ControlSpec(0, 1, \lin, 0.001, 0.02),     // controlSpec
+				{ |ez| synth.set(\feedback, ez.value) } // action
+			);
+			controls[\feedback].numberView.maxDecimals = 3 ;
+
+			order.add(\deltime);
+			controls[\deltime] = EZSlider( w,         // parent
+				420@20,    // bounds
+				"deltime",  // label
+				ControlSpec(0, 500, \lin, 0.001, 75),     // controlSpec
+				{ |ez| synth.set(\deltime, ez.value) } // action
+			);
+			controls[\deltime].numberView.maxDecimals = 3 ;
+
+			order.add(\amp);
+			controls[\amp] = EZSlider( w,         // parent
+				420@20,    // bounds
+				"amp",  // label
+				ControlSpec(0, 2, \lin, 0.001, 0.6),     // controlSpec
+				{ |ez| synth.set(\amp, ez.value) } // action
+			);
+			controls[\amp].numberView.maxDecimals = 3 ;
+
+			order.add(\damp);
+			controls[\damp] = EZSlider( w,         // parent
+				420@20,    // bounds
+				"damp",  // label
+				ControlSpec(200, 10000, \lin, 1, 1360),     // controlSpec
+				{ |ez| synth.set(\damping, ez.value) } // action
+			);
+			controls[\damp].numberView.maxDecimals = 3 ;
+
+			order.add(\mod);
+			controls[\mod] = EZSlider( w,         // parent
+				420@20,    // bounds
+				"mod",  // label
+				ControlSpec(0.85, 1.15, \lin, 0.001, 1),     // controlSpec
+				{ |ez| synth.set(\mod, ez.value) } // action
+			);
+			controls[\mod].numberView.maxDecimals = 3 ;
+
+			order.add(\vol);
+			controls[\vol] = EZSlider( w,         // parent
+				420@20,    // bounds
+				"vol",  // label
+				ControlSpec(0, 2, \lin, 0.001, 0.9),     // controlSpec
+				{ |ez| synth.set(\vol, ez.value) } // action
+			);
+			controls[\vol].numberView.maxDecimals = 3 ;
+
 			if (preset.isNil.not, { // not loading a config file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
 			});
+			controls.postln;
 		}
-	}
-
-	audio {
-		// BASED ON https://sccode.org/1-U by Nathaniel Virgo
-		SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75,
-			revtimes=5, amp=0.6, damping=1360, mod=1, vol=0.9, chord=#[ 40, 47, 52, 55, 59, 64 ],
-			//thresh=0.5, slopeBelow=1, slopeAbove=0.5, clampTime=0.01, relaxTime=0.01,
-			norm=0, normlvl= -1, freq=0, drywet= -1, on=0|
-
-			var del, minfreqs, freqs, dry, nsig, sig, in_sig, outmon; //VARS
-			var imp, delimp;
-
-			imp = Impulse.kr(10);
-			delimp = Delay1.kr(imp);
-
-			in_sig = ((InFeedback.ar(loop, 2) + WhiteNoise.ar(0.001!2)) * feedback) + (In.ar(in, 2) * gainin);
-
-			// measure rms and Peak
-			SendPeakRMS.kr(in_sig, 10, 3, '/inlvl'); // this is to monitor the signal that enters the feedback unit
-
-			// delay due to distance from amp - I chose 0.05s, or 20Hz
-			sig = DelayN.ar(in_sig, 1/10-ControlDur.ir, 1/deltime-ControlDur.ir);
-
-			freqs = chord.midicps;
-			// whammy bar modulates freqs:
-			minfreqs = freqs * 0.5;
-			freqs = freqs * mod;
-
-			// 6 comb filters emulate the strings' resonances
-			// maxdelaytime, delaytime, decaytime
-			sig = CombN.ar(sig!6, 1/minfreqs, 1/freqs, 8).mean;
-
-			// a little filtering
-			sig = LPF.ar(sig, 8000);
-			sig = HPF.ar(sig * amp.lag(0.1), 80);
-
-			// and some not too harsh distortion
-			sig = RLPFD.ar(sig, damping.lag(0.1) * [1, 1.1], 0.1, 0.5);
-			sig = sig + sig.mean;
-
-			// and finally a spot of reverb
-			revtimes.do { // loop rev times
-				del = 0.2.rand; // delayt and decayt
-				sig = AllpassN.ar(sig, del, del, 5);
-			};
-
-			Out.ar(loop, sig); // feedback loop before the main output
-
-			sig = Limiter.ar(sig * vol.lag(0.1), 1);
-
-			Out.ar(out, sig * on)
-		}).send;
-
-		SynthDef(\outmon, {|out=2| // separated to monitor the absolute signal going out of SC after utils etc...
-			SendPeakRMS.kr(In.ar(out, 2), 10, 3, '/outlvl');
-		}).send;
-
-		Server.default.sync; // wait until synthdef is loaded
-
-		inOSCFunc = OSCFunc({|msg| {
-			levels[..1].do({|lvl, i| // in levels
-				lvl.peakLevel = msg[3..][i*2].ampdb.linlin(-80, 0, 0, 1, \min);
-				lvl.value = msg[3..][(i*2)+1].ampdb.linlin(-80, 0, 0, 1);
-			});
-		}.defer;
-		}, '/inlvl', Server.default.addr);
-
-		outOSCFunc = OSCFunc({|msg| {
-			levels[2..].do({|lvl, i| // out levels
-				lvl.peakLevel = msg[3..][i*2].ampdb.linlin(-80, 0, 0, 1, \min);
-				lvl.value = msg[3..][(i*2)+1].ampdb.linlin(-80, 0, 0, 1);
-			});
-		}.defer;
-		}, '/outlvl', Server.default.addr);
-
-		outmon = Synth.tail(Server.default, \outmon); // TO TAIL to monitor the absolute sound out
-		synth = Synth(\feed, [\chord, chord]);
-
-		Server.default.sync;
-	}
-
-
-	gui {
-		super.gui("Feedback unit", 430@215); // init super gui buttons
-
-		w.onClose = {
-			"closing down Feedback unit and all opened utils:".postln;
-
-			inOSCFunc.free;
-			outOSCFunc.free;
-			synth.free;
-			outmon.free;
-			utils.do{|ut|
-				("-"+ut).postln;
-				ut.close
-			};
-		};
-
-		StaticText(w, 12@18).align_(\right).string_("In").resize_(7);
-		controls[\in] = PopUpMenu(w, Rect(10, 10, 40, 17))
-		.items_( Array.fill(16, { arg i; i }) )
-		.action_{|m|
-			synth.set(\in, m.value);
-		}.value = 2; // default to sound in
-
-		StaticText(w, 23@18).align_(\right).string_("Out").resize_(7);
-		controls[\out] = PopUpMenu(w, Rect(10, 10, 40, 17))
-		.items_( Array.fill(16, { arg i; i }) )
-		.action_{|m|
-			synth.set(\out, m.value);
-			outmon.set(\out, m.value);
-		}.valueAction = 0; //
-
-		controls[\on] = Button(w, 22@18)
-		.states_([
-			["on", Color.white, Color.black],
-			["off", Color.black, Color.red]
-		])
-		.action_({ arg butt;
-			synth.set(\on, butt.value)
-		});
-
-		StaticText(w, 30@18).align_(\right).string_("Loop").resize_(7);
-		controls[\loop] = PopUpMenu(w, Rect(10, 10, 40, 17))
-		.items_( Array.fill(16, { arg i; i }) )
-		.action_{|m|
-			synth.set(\loop, m.value);
-		}.valueAction = 10;
-
-		vlay = VLayoutView(w, 150@17); // size
-		4.do{|i|
-			levels.add( LevelIndicator(vlay, 4).warning_(0.9).critical_(1.0).drawsPeak_(true) ); // 5 height each
-			if (i==1, {CompositeView(vlay, 1)}); // plus 2px separator
-		};
-
-		w.view.decorator.nextLine;
-
-		ActionButton(w,"auto",{
-			utils.add( AutoGUI.new(this, path) )
-		});
-
-		ActionButton(w,"gneck",{
-			utils.add( GNeckGUI.new(this, path) );
-		});
-
-		ActionButton(w,"chord",{
-			utils.add( ChordGUI.new(this, path, chord) );
-		});
-
-		w.view.decorator.nextLine;
-
-		ActionButton(w,"EQ",{
-			try { utils.add( ChannelEQ.new) }
-			{"cannot find ChannelEQ class. try installing it from http://github.com/enrike/supercollider-channeleq".postln}
-		});
-
-		ActionButton(w,"anotch",{
-			utils.add( AutoNotchGUI.new(this, path) );
-		});
-
-		ActionButton(w,"compander",{
-			utils.add( CompanderGUI.new(this, path) );
-		});
-
-		ActionButton(w,"tremolo",{
-			utils.add( TremoloGUI.new(this, path) );
-		});
-
-		ActionButton(w,"normalizer",{
-			utils.add( NormalizerGUI.new(this, path) );
-		});
-
-		ActionButton(w,"limiter",{
-			utils.add( LimiterGUI.new(this, path) );
-		});
-
-
-		w.view.decorator.nextLine;
-
-		// SLIDERS //
-		order.add(\gainin);
-		controls[\gainin] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"gain in",  // label
-			ControlSpec(0, 2, \lin, 0.001, 0),     // controlSpec
-			{ |ez| synth.set(\gainin, ez.value) } // action
-		);
-		controls[\gainin].numberView.maxDecimals = 3 ;
-
-		order.add(\feedback);
-		controls[\feedback] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"feedback",  // label
-			ControlSpec(0, 1, \lin, 0.001, 0.02),     // controlSpec
-			{ |ez| synth.set(\feedback, ez.value) } // action
-		);
-		controls[\feedback].numberView.maxDecimals = 3 ;
-
-		order.add(\deltime);
-		controls[\deltime] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"deltime",  // label
-			ControlSpec(0, 500, \lin, 0.001, 75),     // controlSpec
-			{ |ez| synth.set(\deltime, ez.value) } // action
-		);
-		controls[\deltime].numberView.maxDecimals = 3 ;
-
-		order.add(\amp);
-		controls[\amp] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"amp",  // label
-			ControlSpec(0, 2, \lin, 0.001, 0.6),     // controlSpec
-			{ |ez| synth.set(\amp, ez.value) } // action
-		);
-		controls[\amp].numberView.maxDecimals = 3 ;
-
-		order.add(\damp);
-		controls[\damp] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"damp",  // label
-			ControlSpec(200, 10000, \lin, 1, 1360),     // controlSpec
-			{ |ez| synth.set(\damping, ez.value) } // action
-		);
-		controls[\damp].numberView.maxDecimals = 3 ;
-
-		order.add(\mod);
-		controls[\mod] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"mod",  // label
-			ControlSpec(0.85, 1.15, \lin, 0.001, 1),     // controlSpec
-			{ |ez| synth.set(\mod, ez.value) } // action
-		);
-		controls[\mod].numberView.maxDecimals = 3 ;
-
-		order.add(\vol);
-		controls[\vol] = EZSlider( w,         // parent
-			420@20,    // bounds
-			"vol",  // label
-			ControlSpec(0, 2, \lin, 0.001, 0.9),     // controlSpec
-			{ |ez| synth.set(\vol, ez.value) } // action
-		);
-		controls[\vol].numberView.maxDecimals = 3 ;
-
-		super.preset( w.name ); // try to load default preset
-
-		w.front;
 	}
 
 	nanok { // old code needs update
 		{
 			var setup = List.new;
-			setup = [[\gainin, 0], [\feedback, 1], [\deltime, 2], [\amp, 3], [\damp, 4], [\mod, 5], [\vol, 6],
-				[\tremolo,16], [\drywet, 17]
-			];
+			setup = [[\gainin, 0], [\feedback, 1], [\deltime, 2], [\amp, 3],
+				[\damp, 4], [\mod, 5], [\vol, 6]		];
 			MIDIClient.init;
 			MIDIIn.connectAll;
 			MIDIdef.freeAll;
@@ -318,9 +285,24 @@ Feedback1 : BaseGUI {
 		}, chanel); // match cc
 	}
 
+	close {
+		MIDIIn.disconnectAll;
+
+		"closing down Feedback unit and all opened utils:".postln;
+		utils.postln;
+
+		inOSCFunc.free;
+		outOSCFunc.free;
+		//outmon.free;
+		utils.do{|ut|
+			("-"+ut).postln;
+			ut.close
+		};
+		super.close;
+	}
 	// control
 
-	scramble { chord = chord.scramble }
+	scramble { this.chord(chord.scramble) }
 
 	setc {|control, val| {controls[control].valueAction = val}.defer}
 

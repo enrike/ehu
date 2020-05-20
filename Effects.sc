@@ -12,23 +12,24 @@ AutoNotch.new;
 Launcher : BaseGUI {
 	var utils;
 
-	*new {|exepath="", preset|
-		^super.new.initLaunchertGUI(exepath, preset);
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
 	}
 
-	initLaunchertGUI {|exepath, preset|
+	init {|exepath, preset|
+		super.init(exepath);
 
 		utils = List.new;//refs to GUI windows
 
 		super.gui("Launcher", 120@100);
 
-		w.onClose = {
+/*		w.onClose = {
 			utils.do{|ut|
 				("-"+ut).postln;
 				ut.close
 			};
 			super.close;
-		};
+		};*/
 
 		w.view.decorator.nextLine;
 
@@ -42,42 +43,40 @@ Launcher : BaseGUI {
 		});
 
 		ActionButton(w,"anotch",{
-			utils.add( AutoNotchGUI.new(this, path) );
+			utils.add( AutoNotchGUI.new(path) );
 		});
 
 		ActionButton(w,"compander",{
-			utils.add( CompanderGUI.new(this, path) );
+			utils.add( CompanderGUI.new(path) );
 		});
 
 		ActionButton(w,"tremolo",{
-			utils.add( TremoloGUI.new(this, path) );
+			utils.add( TremoloGUI.new(path) );
 		});
 
 		ActionButton(w,"normalizer",{
-			utils.add( NormalizerGUI.new(this, path) );
+			utils.add( NormalizerGUI.new(path) );
 		});
 
 		ActionButton(w,"limiter",{
-			utils.add( LimiterGUI.new(this, path) );
+			utils.add( LimiterGUI.new(path) );
 		});
 
 		super.preset( w.name ); // try to load default preset
-
-		w.front;
 	}
+
+	close {}
 }
 
 
 TremoloGUI : EffectGUI {
 
-	var <synth;
-
-	*new {|main=nil, path="", preset=""|
-		^super.new.initTremoloGUI(main, path, preset);
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
 	}
 
-	initTremoloGUI {|amain, path, preset|
-		super.initEffectGUI(path);
+	init {|exepath, preset|
+		super.init(exepath);
 
 		Server.default.waitForBoot{
 			SynthDef(\trem, {|in=0, out=0, freq=0, drywet=1|
@@ -117,8 +116,6 @@ TremoloGUI : EffectGUI {
 		if (preset.isNil.not, { // not loading a preset file by default
 			super.preset( w.name, preset ); // try to read and apply the default preset
 		});
-
-		w.front
 	}
 }
 
@@ -139,14 +136,12 @@ TremoloGUI : EffectGUI {
 ////////////////////////////////////////////////
 NormalizerGUI : EffectGUI {
 
-	var <synth;
-
-	*new {|main=nil, path="", preset=""|
-		^super.new.initNormalizerGUI(main, path, preset);
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
 	}
 
-	initNormalizerGUI {|amain, path, preset|
-		super.initEffectGUI(path);
+	init {|exepath, preset|
+		super.init(exepath);
 
 		Server.default.waitForBoot{
 			SynthDef(\norm, {|in=0, out=0, level=0, drywet=1|
@@ -184,23 +179,28 @@ NormalizerGUI : EffectGUI {
 		if (preset.isNil.not, { // not loading a preset file by default
 			super.preset( w.name, preset ); // try to read and apply the default preset
 		});
-
-		w.front
 	}
 }
 
 
 
+/*LimiterGUI : EffectGUI {
+
+*new {|exepath, preset=\default|
+^super.new.init(exepath, preset);
+}
+
+init {|exepath, preset|
+super.init(path);*/
+
 LimiterGUI : EffectGUI {
 
-	var <synth;
-
-	*new {|main=nil, path="", preset=""|
-		^super.new.initLimiterGUI(main, path, preset);
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
 	}
 
-	initLimiterGUI {|amain, path, preset|
-		super.initEffectGUI(path);
+	init {|exepath, preset|
+		super.init(exepath);
 
 		Server.default.waitForBoot{
 			SynthDef(\lim, {|in=0, out=0, level=0, drywet=1|
@@ -235,9 +235,7 @@ LimiterGUI : EffectGUI {
 
 		if (preset.isNil.not, { // not loading a preset file by default
 			super.preset( w.name, preset ); // try to read and apply the default preset
-		});
-
-		w.front
+		})
 	}
 }
 
@@ -247,12 +245,12 @@ LimiterGUI : EffectGUI {
 
 CompanderGUI : EffectGUI {
 
-	*new {|main=nil, path="", preset=""|
-		^super.new.initCompanderGUI(main, path, preset);
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
 	}
 
-	initCompanderGUI {|amain, path, preset|
-		super.initEffectGUI(path);
+	init {|exepath, preset|
+		super.init(exepath);
 
 		Server.default.waitForBoot{
 
@@ -335,8 +333,6 @@ CompanderGUI : EffectGUI {
 		if (preset.isNil.not, { // not loading a preset file by default
 			super.preset( w.name, preset ); // try to read and apply the default preset
 		});
-
-		w.front;
 	}
 }
 
@@ -345,12 +341,12 @@ AutoNotchGUI : EffectGUI {
 
 	var synth, pitchOSCF, label;
 
-	*new {|main=nil, path="", preset=""|
-		^super.new.init(main, path, preset);
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
 	}
 
-	init {|amain, path, preset|
-		super.initEffectGUI(path);
+	init {|exepath, preset|
+		super.init(exepath);
 
 		Server.default.waitForBoot{
 			SynthDef(\autonotch, {|in=0, out=0, rq=0.2, db= -24, xf=0.5, lag=5|
@@ -407,8 +403,6 @@ AutoNotchGUI : EffectGUI {
 		if (preset.isNil.not, { // not loading a preset file by default
 			super.preset( w.name, preset ); // try to read and apply the default preset
 		});
-
-		w.front;
 	}
 
 	close { // extend

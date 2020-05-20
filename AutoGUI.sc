@@ -62,11 +62,11 @@ AutoGUI : BaseGUI {
 	var auto, values;
 
 	*new {|main, path, preset|
-		^super.new.initAutomationGUI(main, path, preset);
+		^super.new.init(main, path, preset);
 	}
 
-	initAutomationGUI {|main, path, preset|
-		super.initBaseGUI(path);
+	init {|main, path, preset|
+		super.init(path);
 
 		auto = Auto.new(main);
 

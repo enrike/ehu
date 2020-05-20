@@ -13,7 +13,7 @@ ChordGUI : BaseGUI {
 	}
 
 	init {|amain, path, achord, preset|
-		super.initBaseGUI(path);
+		super.init(path);
 
 		main = amain;
 

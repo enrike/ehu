@@ -22,7 +22,7 @@ GNeckGUI : BaseGUI {
 	}
 
 	init {|amain, path, preset| //////////////////////
-		super.initBaseGUI(path);
+		super.init(path);
 
 		main = amain;
 
