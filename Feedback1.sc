@@ -1,7 +1,7 @@
 // synthdef based on https://sccode.org/1-U by Nathaniel Virgo
 
 // to do:
-// interpolate values?
+// interpolate slider values?
 
 // connect MIDI keyboard to \base
 // connect S M R buttons in nanokontrol to actions R -> single random
@@ -27,10 +27,8 @@ Feedback1 : EffectGUI {
 		Server.default.waitForBoot{
 
 			// BASED ON https://sccode.org/1-U by Nathaniel Virgo
-			SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75,
-				revtimes=5, amp=0.6, damping=1360, mod=1, vol=0.9, chord=#[ 40, 47, 52, 55, 59, 64 ],
-				//thresh=0.5, slopeBelow=1, slopeAbove=0.5, clampTime=0.01, relaxTime=0.01,
-				norm=0, normlvl= -1, freq=0, drywet= -1, on=0|
+			SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75, revtimes=5,
+				amp=0.6, damping=1360, mod=1, vol=0.9, chord=#[ 40, 47, 52, 55, 59, 64 ], on=0|
 
 				var del, minfreqs, freqs, dry, nsig, sig, in_sig, outmon; //VARS
 				var imp, delimp;
@@ -77,10 +75,6 @@ Feedback1 : EffectGUI {
 
 				Out.ar(out, sig * on)
 			}).send;
-/*
-			SynthDef(\outmon, {|out=2| // to monitor the signal going out of SC after utils etc...
-				SendPeakRMS.kr(In.ar(out, 2), 10, 3, '/outlvl');
-			}).send;*/
 
 			Server.default.sync; // wait until synthdef is loaded
 
@@ -100,11 +94,9 @@ Feedback1 : EffectGUI {
 			}.defer;
 			}, '/outlvl', Server.default.addr);
 
-			//outmon = Synth.tail(Server.default, \outmon); // TO TAIL to monitor the absolute sound out
 			synth = Synth(\feed, [\chord, chord]);
 
 			Server.default.sync;
-
 
 			super.gui("Feedback unit", 430@215); // init super gui buttons
 
@@ -145,6 +137,11 @@ Feedback1 : EffectGUI {
 			ActionButton(w,"chord",{
 				utils.add( ChordGUI.new(this, path, chord) );
 			});
+
+			ActionButton(w,"nanokontrol",{
+				this.nanok;
+			});
+
 
 			w.view.decorator.nextLine;
 
@@ -196,15 +193,6 @@ Feedback1 : EffectGUI {
 			);
 			controls[\feedback].numberView.maxDecimals = 3 ;
 
-			order.add(\deltime);
-			controls[\deltime] = EZSlider( w,         // parent
-				420@20,    // bounds
-				"deltime",  // label
-				ControlSpec(0, 500, \lin, 0.001, 75),     // controlSpec
-				{ |ez| synth.set(\deltime, ez.value) } // action
-			);
-			controls[\deltime].numberView.maxDecimals = 3 ;
-
 			order.add(\amp);
 			controls[\amp] = EZSlider( w,         // parent
 				420@20,    // bounds
@@ -213,6 +201,15 @@ Feedback1 : EffectGUI {
 				{ |ez| synth.set(\amp, ez.value) } // action
 			);
 			controls[\amp].numberView.maxDecimals = 3 ;
+
+			order.add(\deltime);
+			controls[\deltime] = EZSlider( w,         // parent
+				420@20,    // bounds
+				"deltime",  // label
+				ControlSpec(0, 500, \lin, 0.001, 75),     // controlSpec
+				{ |ez| synth.set(\deltime, ez.value) } // action
+			);
+			controls[\deltime].numberView.maxDecimals = 3 ;
 
 			order.add(\damp);
 			controls[\damp] = EZSlider( w,         // parent
@@ -269,7 +266,7 @@ Feedback1 : EffectGUI {
 			}, 17); // match cc*/
 
 			setup.do{|pair, i|
-				("MIDI"+pair[1].asString+">"+pair[0].asString).postln;
+				("MIDI"+pair[1].asString+">"+pair[0].asString).postln;utils.add( ChordGUI.new(this, path, chord) );
 				this.setupControl(pair[0], pair[1]);
 			}
 		}.defer(0.5);
@@ -322,15 +319,6 @@ Feedback1 : EffectGUI {
 	norm {|val| this.setc(\norm, val) }
 	normlvl {|val| this.setc(\normlvl, val) }
 	vol {|val| this.setc(\vol, val) }
-
-	thresh {|val| this.setc(\thresh, val) }
-	slopeBelow {|val| this.setc(\slopeBelow, val) }
-	slopeAbove {|val| this.setc(\slopeAbove, val) }
-	clampTime {|val| this.setc(\clampTime, val) }
-	relaxTime {|val| this.setc(\relaxTime, val) }
-
-	tremolo {|val| this.setc(\tremolo, val) }
-	drywet {|val| this.setc(\drywet, val) }
 
 	chord {|achord|
 		if (achord.isNil, {^chord}, {
