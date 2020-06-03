@@ -72,7 +72,7 @@ AutoGUI : BaseGUI {
 
 		values = Dictionary.new;
 
-		this.gui("Auto", Rect(430,0, 380, 22+(main.order.size*22)));
+		this.gui("Auto"+main.class, Rect(430,0, 380, 22+(main.order.size*22)));
 
 		w.onClose = {
 			auto.kill;
@@ -141,7 +141,7 @@ AutoGUI : BaseGUI {
 					});
 				});
 
-				ActionButton(w,"r",{
+				ActionButton(w,"rr",{
 					var rmin = controls[name.asSymbol].controlSpec.clipLo.asFloat;
 					var rmax = controls[name.asSymbol].controlSpec.clipHi.asFloat;
 					var min = rrand(rmin, rmax);
