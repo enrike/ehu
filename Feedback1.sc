@@ -1,17 +1,19 @@
 // synthdef based on https://sccode.org/1-U by Nathaniel Virgo
 
 // to do:
+// amp jumps when opening tremolo and other effects
+// f.midi not connecting the midi channels
 // interpolate slider values?
+// range sliders not to trigger action when selection is dragged, only when mouse up after drag
 
 // connect MIDI keyboard to \base
-// connect S M R buttons in nanokontrol to actions R -> single random
-// delegate slider/knobs conexions to a user editable json file
+// delegate slider/knobs conexions to a user editable json file?
 // Bend MIDI vales use the correct ranges
 
 
 Feedback1 : EffectGUI {
-	var auto, chord, utils;
-	var vlay, levels, inOSCFunc, outOSCFunc, outmon;
+	var auto, chord, utils, notchsynth, notchosc, notchlabel;
+	var vlay, levels, inOSCFunc, outOSCFunc;
 
 	*new {|path, preset|
 		^super.new.init(path, preset);
@@ -22,15 +24,17 @@ Feedback1 : EffectGUI {
 
 		chord = [0,7,12,15,19,24]+40; //[0, 6.1, 10, 15.2, 22, 24 ];
 		utils = List.new;//refs to GUI windows
-		levels = List.new;
+		levels = List.new;ç
+
+		midisetup = [[\gainin, 0], [\feedback, 1], [\amp, 2], [\deltime, 3],
+			[\damp, 4], [\mod, 5], [\vol, 6]]; // control, MIDI effect channel
 
 		Server.default.waitForBoot{
-
 			// BASED ON https://sccode.org/1-U by Nathaniel Virgo
 			SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75, revtimes=5,
 				amp=0.6, damping=1360, mod=1, vol=0.9, chord=#[ 40, 47, 52, 55, 59, 64 ], on=0|
 
-				var del, minfreqs, freqs, dry, nsig, sig, in_sig, outmon; //VARS
+				var del, minfreqs, freqs, sig, in_sig; //VARS
 				var imp, delimp;
 
 				imp = Impulse.kr(10);
@@ -38,8 +42,7 @@ Feedback1 : EffectGUI {
 
 				in_sig = ((InFeedback.ar(loop, 2) + WhiteNoise.ar(0.001!2)) * feedback) + (In.ar(in, 2) * gainin);
 
-				// measure rms and Peak
-				SendPeakRMS.kr(in_sig, 10, 3, '/inlvl'); // this is to monitor the signal that enters the feedback unit
+				SendPeakRMS.kr(in_sig, 10, 3, '/inlvl'); // to monitor incoming feedback signal
 
 				// delay due to distance from amp - I chose 0.05s, or 20Hz
 				sig = DelayN.ar(in_sig, 1/10-ControlDur.ir, 1/deltime-ControlDur.ir);
@@ -55,10 +58,10 @@ Feedback1 : EffectGUI {
 
 				// a little filtering
 				sig = LPF.ar(sig, 8000);
-				sig = HPF.ar(sig * amp.lag(0.1), 80);
+				sig = HPF.ar(sig * amp.lag(0.05), 80);
 
 				// and some not too harsh distortion
-				sig = RLPFD.ar(sig, damping.lag(0.1) * [1, 1.1], 0.1, 0.5);
+				sig = RLPFD.ar(sig, damping.lag(0.05) * [1, 1.1], 0.1, 0.5);
 				sig = sig + sig.mean;
 
 				// and finally a spot of reverb
@@ -69,7 +72,7 @@ Feedback1 : EffectGUI {
 
 				Out.ar(loop, sig); // feedback loop before the main output
 
-				sig = Limiter.ar(sig * vol.lag(0.1), 1);
+				sig = Limiter.ar(sig * vol.lag(0.05), 1);
 
 				SendPeakRMS.kr(sig, 10, 3, '/outlvl');
 
@@ -98,7 +101,9 @@ Feedback1 : EffectGUI {
 
 			Server.default.sync;
 
-			super.gui("Feedback unit", 430@215); // init super gui buttons
+			super.gui("Feedback unit", 430@220); // init super gui buttons
+
+			w.view.decorator.nextLine;
 
 			controls[\play] = Button(w, 22@18)
 			.states_([
@@ -111,24 +116,50 @@ Feedback1 : EffectGUI {
 				});
 			}).valueAction=1;
 
-			StaticText(w, 30@18).align_(\right).string_("Loop").resize_(7);
+			controls[\notch] = Button(w, 40@18)
+			.states_([
+				["notch:", Color.white, Color.black],
+				["notch:", Color.black, Color.red]
+			])
+			.action_({ arg butt;
+				if (notchsynth.isNil, {
+					var uid = UniqueID.next;
+					notchsynth = Synth.tail(Server.default, \autonotch,
+						[\uid, uid, \rq, 0.15, \db, -60, \lag, 0.1,
+							\in, controls[\loop].value, \out, controls[\loop].value]);
+					notchosc = OSCFunc({|msg|
+						//synth.set(\uid, uid); // very bad code. make sure it is the right one
+						if (msg[2] == uid, {
+							{ notchlabel.string = msg[3].asString.split($.)[0] }.defer;
+						})
+					}, '/pitch', Server.default.addr);
+				}, {
+					notchsynth.free; notchosc.free; notchsynth=nil
+				});
+			});
+			AutoNotchGUI.send;// load to s the synth this buttons uses
+
+			notchlabel = StaticText(w, 30@18).string_("--");
+
+
+			StaticText(w, 30@15).align_(\right).string_("Loop").resize_(7);
 			controls[\loop] = PopUpMenu(w, Rect(10, 10, 40, 17))
 			.items_( Array.fill(16, { arg i; i }) )
 			.action_{|m|
 				synth.set(\loop, m.value);
 			}.valueAction = 10;
 
-			vlay = VLayoutView(w, 118@17); // size
+
+
+			vlay = VLayoutView(w, 200@17); // size
 			4.do{|i|
 				levels.add( LevelIndicator(vlay, 4).warning_(0.9).critical_(1.0).drawsPeak_(true) ); // 5 height each
 				if (i==1, {CompositeView(vlay, 1)}); // plus 2px separator
 			};
 
 			w.view.decorator.nextLine;
+			StaticText(w, 40@18).string_("Tools:").resize_(3);
 
-			ActionButton(w,"auto",{
-				utils.add( AutoGUI.new(this, path) )
-			});
 
 			ActionButton(w,"gneck",{
 				utils.add( GNeckGUI.new(this, path) );
@@ -138,12 +169,8 @@ Feedback1 : EffectGUI {
 				utils.add( ChordGUI.new(this, path, chord) );
 			});
 
-			ActionButton(w,"nanokontrol",{
-				this.nanok;
-			});
-
-
-			w.view.decorator.nextLine;
+			//w.view.decorator.nextLine;
+			StaticText(w, 5@18).string_("    ");
 
 			ActionButton(w,"EQ",{
 				try { utils.add( ChannelEQ.new) }
@@ -155,8 +182,12 @@ Feedback1 : EffectGUI {
 				utils.add( AutoNotchGUI.new(path) );
 			});
 
-			ActionButton(w,"compander",{
+			ActionButton(w,"comp",{
 				utils.add( CompanderGUI.new(path) );
+			});
+
+			ActionButton(w,"Dcomp",{
+				utils.add( DCompanderGUI.new(path) );
 			});
 
 			ActionButton(w,"tremolo",{
@@ -167,9 +198,9 @@ Feedback1 : EffectGUI {
 				utils.add( NormalizerGUI.new(path) );
 			});
 
-			ActionButton(w,"limiter",{
-				utils.add( LimiterGUI.new(path) );
-			});
+			/*			ActionButton(w,"limiter",{
+			utils.add( LimiterGUI.new(path) );
+			});*/
 
 
 			w.view.decorator.nextLine;
@@ -177,7 +208,7 @@ Feedback1 : EffectGUI {
 			// SLIDERS //
 			order.add(\gainin);
 			controls[\gainin] = EZSlider( w,         // parent
-				420@20,    // bounds
+				slbounds,    // bounds
 				"gain in",  // label
 				ControlSpec(0, 2, \lin, 0.001, 0),     // controlSpec
 				{ |ez| synth.set(\gainin, ez.value) } // action
@@ -186,7 +217,7 @@ Feedback1 : EffectGUI {
 
 			order.add(\feedback);
 			controls[\feedback] = EZSlider( w,         // parent
-				420@20,    // bounds
+				slbounds,    // bounds
 				"feedback",  // label
 				ControlSpec(0, 1, \lin, 0.001, 0.02),     // controlSpec
 				{ |ez| synth.set(\feedback, ez.value) } // action
@@ -195,7 +226,7 @@ Feedback1 : EffectGUI {
 
 			order.add(\amp);
 			controls[\amp] = EZSlider( w,         // parent
-				420@20,    // bounds
+				slbounds,    // bounds
 				"amp",  // label
 				ControlSpec(0, 2, \lin, 0.001, 0.6),     // controlSpec
 				{ |ez| synth.set(\amp, ez.value) } // action
@@ -204,7 +235,7 @@ Feedback1 : EffectGUI {
 
 			order.add(\deltime);
 			controls[\deltime] = EZSlider( w,         // parent
-				420@20,    // bounds
+				slbounds,    // bounds
 				"deltime",  // label
 				ControlSpec(0, 500, \lin, 0.001, 75),     // controlSpec
 				{ |ez| synth.set(\deltime, ez.value) } // action
@@ -213,7 +244,7 @@ Feedback1 : EffectGUI {
 
 			order.add(\damp);
 			controls[\damp] = EZSlider( w,         // parent
-				420@20,    // bounds
+				slbounds,    // bounds
 				"damp",  // label
 				ControlSpec(200, 10000, \lin, 1, 1360),     // controlSpec
 				{ |ez| synth.set(\damping, ez.value) } // action
@@ -222,7 +253,7 @@ Feedback1 : EffectGUI {
 
 			order.add(\mod);
 			controls[\mod] = EZSlider( w,         // parent
-				420@20,    // bounds
+				slbounds,    // bounds
 				"mod",  // label
 				ControlSpec(0.85, 1.15, \lin, 0.001, 1),     // controlSpec
 				{ |ez| synth.set(\mod, ez.value) } // action
@@ -231,7 +262,7 @@ Feedback1 : EffectGUI {
 
 			order.add(\vol);
 			controls[\vol] = EZSlider( w,         // parent
-				420@20,    // bounds
+				slbounds,    // bounds
 				"vol",  // label
 				ControlSpec(0, 2, \lin, 0.001, 0.9),     // controlSpec
 				{ |ez| synth.set(\vol, ez.value) } // action
@@ -245,44 +276,12 @@ Feedback1 : EffectGUI {
 		}
 	}
 
-	nanok { // old code needs update
-		{
-			var setup = List.new;
-			setup = [[\gainin, 0], [\feedback, 1], [\deltime, 2], [\amp, 3],
-				[\damp, 4], [\mod, 5], [\vol, 6]		];
-			MIDIClient.init;
-			MIDIIn.connectAll;
-			MIDIdef.freeAll;
-
-
-			// nanokontrol knobs
-
-			/*			// effects
-			MIDIdef.cc(\tremolo, {arg ...args;
-			{ controls[\tremolo].valueAction_(args[0].linlin(0,127, 0, 60)) }.defer;
-			}, 16); // match cc
-			MIDIdef.cc(\drywet, {arg ...args;
-			{ controls[\drywet].valueAction_(args[0].linlin(0,127, 1.neg, 1)) }.defer;
-			}, 17); // match cc*/
-
-			setup.do{|pair, i|
-				("MIDI"+pair[1].asString+">"+pair[0].asString).postln;utils.add( ChordGUI.new(this, path, chord) );
-				this.setupControl(pair[0], pair[1]);
-			}
-		}.defer(0.5);
-	}
-
-	setupControl {|control, chanel|
-		MIDIdef.cc(control, {arg ...args;
-			{
-				var min = controls[control].controlSpec.minval;
-				var max = controls[control].controlSpec.maxval;
-				controls[control].valueAction_(args[0].linlin(0,127, min, max))
-			}.defer;
-		}, chanel); // match cc
+	midi {
+		super.midi(midisetup);
 	}
 
 	close {
+		"disconnecting MIDIin".postln;
 		MIDIIn.disconnectAll;
 
 		"closing down Feedback unit and all opened utils:".postln;
@@ -290,18 +289,18 @@ Feedback1 : EffectGUI {
 
 		inOSCFunc.free;
 		outOSCFunc.free;
-		//outmon.free;
+		notchsynth.free;
 		utils.do{|ut|
 			("-"+ut).postln;
 			ut.close
 		};
 		super.close;
 	}
-	// control
 
+	// control
 	scramble { this.chord(chord.scramble) }
 
-	setc {|control, val| {controls[control].valueAction = val}.defer}
+	setc {|control, val| { controls[control].valueAction = val}.defer }
 
 	on {|val| this.setc(\on, 1) }
 	off {|val| this.setc(\on, 0) }
@@ -326,6 +325,12 @@ Feedback1 : EffectGUI {
 			chord = achord;
 			synth.set(\chord, chord)
 		});
+	}
+
+	rcontrol {|name|
+		var rmin = controls[name.asSymbol].controlSpec.clipLo.asFloat;
+		var rmax = controls[name.asSymbol].controlSpec.clipHi.asFloat;
+		controls[name.asSymbol].valueAction = rrand(rmin, rmax)
 	}
 
 	gneck {|config|
