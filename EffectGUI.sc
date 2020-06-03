@@ -3,7 +3,7 @@ BaseGUI {
 
 	//classvar effectsGroup;
 
-	var <controls, path, <w, <order;
+	var <controls, path, <w, <order, slbounds;
 
 	/*
 	a base class for a GUI window with widgets that can save/restore the configuration of the widgets.
@@ -41,6 +41,8 @@ BaseGUI {
 		w = Window.new(name, bounds).alwaysOnTop=true;
 		w.view.decorator = FlowLayout(w.view.bounds);
 		w.view.decorator.gap=2@2;
+
+		slbounds = (w.bounds.width-10)@20;
 
 		w.onClose = {
 			this.close;
@@ -85,7 +87,7 @@ BaseGUI {
 		data.writeArchive(path ++ Platform.pathSeparator ++ "presets" ++ Platform.pathSeparator ++ filename);
 	}
 
-	close {}
+	close {w.close}
 
 	open {
 		FileDialog({ |apath|
@@ -112,13 +114,15 @@ BaseGUI {
 
 
 EffectGUI : BaseGUI {
-	var <synth;
+	var <synth, midisetup, synthdef;
 
 	/*	*new {|exepath=""|
 	^super.new.initEffectGUI(exepath);
 	}*/
 
 	init {|exepath|
+		midisetup = List.new;
+		synthdef = SynthDef(\default, {});
 		super.init(exepath);
 	}
 
@@ -147,6 +151,14 @@ EffectGUI : BaseGUI {
 		}
 		.value_(0); // default to sound in
 
+		ActionButton(w,"midi",{
+			this.midi(midisetup);
+		});
+
+		ActionButton(w,"auto",{
+			AutoGUI.new(this, path);
+		});
+
 		controls[\on] = Button(w, 22@18)
 		.states_([
 			["on", Color.white, Color.black],
@@ -154,18 +166,59 @@ EffectGUI : BaseGUI {
 		])
 		.action_({ arg butt;
 			if (synth.isNil.not, {
-				var sname = synth.defName;
 				synth.free;
 				if (butt.value==1, {
-					Server.default.waitForBoot{
-						synth = Synth.tail(Server.default, sname);
-						Server.default.sync;
-						("run"+sname+"synth").postln;
-					};
+					this.audio
 				}, {
-					("kill"+sname+"synth").postln;
+					("kill"+synth.defName+"synth").postln;
 				})
 			});
 		}).value=1;
+	}
+
+	audio {|argarr=#[]|
+		Server.default.waitForBoot{
+			synthdef.load;
+			Server.default.sync;
+			synth = Synth.tail(Server.default, synthdef.name, argarr);
+			Server.default.sync;
+			("run"+synth.defName+"synth").postln;
+		}
+	}
+
+	midi {|setup|
+		"Connecting MIDI...".postln;
+
+		if (MIDIClient.initialized==false, {
+			MIDIClient.init;
+			MIDIIn.connectAll;
+			MIDIdef.freeAll;
+		});
+		setup.do{|pair, i|
+			("MIDI"+pair[1].asString+">"+pair[0].asString).postln;
+			this.setupControl(pair[0], pair[1]);
+		}
+	}
+
+	setupControl {|control, channel|
+		// sliders and knobs
+		MIDIdef.cc(control, {arg ...args;
+			{
+				var min = controls[control].controlSpec.minval;
+				var max = controls[control].controlSpec.maxval;
+				controls[control].valueAction_(args[0].linlin(0,127, min, max))
+			}.defer;
+		}, channel); // match cc
+
+		// R buttons random for sliders
+		MIDIdef.cc(control++"_r", {arg ...args;
+			{
+				if (args[0]==127, {
+					var min = controls[control].controlSpec.minval;
+					var max = controls[control].controlSpec.maxval;
+					controls[control].valueAction_( rrand(min.asFloat, max.asFloat) )
+				});
+			}.defer;
+		}, channel+64); // R buttons in nanokontrol
 	}
 }
