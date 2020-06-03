@@ -4,7 +4,7 @@
 ( // run here the basic setup
 f = Feedback1.new;
 f.chord.postln;
-f.nanok; // connect to nanokontrol2
+f.midi; // connect to nanokontrol2
 
 // other utils I use
 {// wait until everything is ready to go
@@ -16,31 +16,12 @@ f.nanok; // connect to nanokontrol2
 	//f.auto;
 	//f.anotch;
 	//f.trem;
-	//f.comp;
+	f.comp;
 }.defer(4) // for instance
 )
+
 
 Launcher.new; // experimental
-
-
-(// in an instalation
-f = Feedback1.new; // this opens feedback_unit_default.preset
-//f = Feedback1.new(preset: \noisy); // this opens feedback_unit_noisy.preset
-
-{// wait until everything is ready to go
-	f.eq; // download and install from https://github.com/enrike/supercollider-channeleq requieres wslib and tabbed views
-	//f.eq(10); // you can use the loop bus value to control the internal feedback EQ
-	//f.gneck;
-	//f.ch; // it takes the chord from main
-	//f.ch(config: \default); //loads "chords_default.preset" config file
-	//f.auto;
-	//f.anotch;
-	//f.trem;
-	f.comp(\installation1);
-}.defer(4) // for instance
-)
-
-
 
 
 
@@ -49,7 +30,7 @@ f.scramble; // chord
 
 f.on;
 f.off;
-f.chord( ([0, 6.1, 10, 15.2, 22, 24 ]+40).scramble );
+f.chord( ([0, 6.1, 10, 15.2, 22, 24 ]+40) );
 f.feedback(0.2);
 f.deltime(61);
 f.amp(0.3);
@@ -58,26 +39,11 @@ f.mod(1);
 f.vol(0.7);
 
 f.in(10); // in channel
-f.out(8); // out channel
 f.gainin(0.5); // how much signal from the line in
+f.out(8); // out channel
 f.loop(8); // channel used to do the feedback loop
 
-// compressor expander
-f.thresh(1);
-f.slopeBelow(1);
-f.slopeAbove(1);
-f.clampTime(1);
-f.relaxTime(1);
-
-//tremolo
-f.tremolo(0.2);
-f.drywet(0.4);
-
-// normalizer
-f.norm(0.4);
-f.normlvl(0.4);
-
-
+f.rcontrol(\feedback);
 
 // some examples playing with chord. Must run first f = Feedback1.new;
 
@@ -85,7 +51,7 @@ f.normlvl(0.4);
 t.stop;
 t = Task({
 	inf.do({|i|
-		f.chord( GuitarChords.chords.choose );
+		f.chord( GuitarChords.chords.choose+40 );
 		[0.1, 2.7, 1.2].wrapAt(i).wait;
 	});
 });
@@ -100,6 +66,34 @@ t = Task({
 	inf.do({|i|
 		f.chord(Array.fill(6, { 40+([0,3,6].choose+(0.1.rand)) }));
 		[4, 3, 0.3].choose.wait
+	})
+});
+t.start
+)
+t.stop
+
+
+( // scramble once in a while
+t = Task({
+	inf.do({|i|
+		f.scramble;
+		[4, 10, 8.3].choose.wait
+	})
+});
+t.start
+)
+t.stop
+
+
+
+( // scramble once in a while
+var ch = [ 0, 7, 12, 15, 19, 24 ];
+var mel = [40, 45, 43, 43.5];
+var times = [3, 6, 8.3];
+t = Task({
+	inf.do({|i|
+		f.chord( ch + mel.wrapAt(i) );
+		times.wrapAt(i).wait
 	})
 });
 t.start
@@ -128,7 +122,7 @@ t.stop
 //~chord = [0,7,12,15,19,24]; // mi menor si 64
 ~chord = [0, 6.1, 10, 15.2, 22, 24 ]; // chord
 //~mel = [59, 64, 67, 69]/2;//
-~mel = [64, 66, 70, 71]/4;
+~mel = [64, 66, 70, 71]/2;
 //~mel = [62, 64, 66, 76];
 //~mel = [64,66,67];
 ~times = [10, 8.5, 7.7, 6, 5.1, 2.1];
@@ -139,7 +133,6 @@ t.stop
 
 
 ( // now launch task
-f.normlvl(-1); //off
 f.feedback(0.155);
 f.amp(0.2);
 
