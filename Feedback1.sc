@@ -24,7 +24,7 @@ Feedback1 : EffectGUI {
 
 		chord = [0,7,12,15,19,24]+40; //[0, 6.1, 10, 15.2, 22, 24 ];
 		utils = List.new;//refs to GUI windows
-		levels = List.new;ç
+		levels = List.new;
 
 		midisetup = [[\gainin, 0], [\feedback, 1], [\amp, 2], [\deltime, 3],
 			[\damp, 4], [\mod, 5], [\vol, 6]]; // control, MIDI effect channel
@@ -103,7 +103,6 @@ Feedback1 : EffectGUI {
 
 			super.gui("Feedback unit", 430@220); // init super gui buttons
 
-			w.view.decorator.nextLine;
 
 			controls[\play] = Button(w, 22@18)
 			.states_([
@@ -115,6 +114,8 @@ Feedback1 : EffectGUI {
 					synth.set(\on, butt.value)
 				});
 			}).valueAction=1;
+
+			w.view.decorator.nextLine;
 
 			controls[\notch] = Button(w, 40@18)
 			.states_([
@@ -211,7 +212,7 @@ Feedback1 : EffectGUI {
 				slbounds,    // bounds
 				"gain in",  // label
 				ControlSpec(0, 2, \lin, 0.001, 0),     // controlSpec
-				{ |ez| synth.set(\gainin, ez.value) } // action
+				{ |ez| synth.set(\gainin, ez.value) }
 			);
 			controls[\gainin].numberView.maxDecimals = 3 ;
 
@@ -220,7 +221,7 @@ Feedback1 : EffectGUI {
 				slbounds,    // bounds
 				"feedback",  // label
 				ControlSpec(0, 1, \lin, 0.001, 0.02),     // controlSpec
-				{ |ez| synth.set(\feedback, ez.value) } // action
+				{ |ez| synth.set(\feedback, ez.value) }
 			);
 			controls[\feedback].numberView.maxDecimals = 3 ;
 

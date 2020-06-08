@@ -9,63 +9,77 @@ AutoNotch.new;
 */
 
 
-Launcher : BaseGUI {
-	var utils;
+Launcher {
+	var path, w;
 
 	*new {|exepath, preset=\default|
 		^super.new.init(exepath, preset);
 	}
 
 	init {|exepath, preset|
-		super.init(exepath);
+		if (exepath.isNil, {
+			try { path = thisProcess.nowExecutingPath.dirname} { path=Platform.userHomeDir}
+		},{
+			path = exepath;
+		});
 
-		utils = List.new;//refs to GUI windows
+		path.postln;
 
-		w.gui("Launcher", 120@100);
+		this.close;
+		~utils = List.new;//refs to GUI windows
 
-		/*		w.onClose = {
-		utils.do{|ut|
-		("-"+ut).postln;
-		ut.close
+		"find launched utils --> ~utils".postln;
+
+		w = Window.new("Launcher", 120@100).alwaysOnTop=true;
+		w.view.decorator = FlowLayout(w.view.bounds);
+		w.view.decorator.gap=2@2;
+		w.onClose = {
+			this.close;
 		};
-		super.close;
-		};*/
 
 		w.view.decorator.nextLine;
 
 		ActionButton(w,"feedback",{
-			utils.add( Feedback1.new(path) );
+			~utils.add( Feedback1.new(path) );
 		});
 
 		ActionButton(w,"EQ",{
-			try { utils.add( ChannelEQ.new) }
+			try { ~utils.add( ChannelEQ.new) }
 			{"cannot find ChannelEQ class. try installing it from http://github.com/enrike/supercollider-channeleq".postln}
 		});
 
 		ActionButton(w,"anotch",{
-			utils.add( AutoNotchGUI.new(path) );
+			~utils.add( AutoNotchGUI.new(path) );
 		});
 
 		ActionButton(w,"compander",{
-			utils.add( CompanderGUI.new(path) );
+			~utils.add( CompanderGUI.new(path) );
 		});
 
 		ActionButton(w,"tremolo",{
-			utils.add( TremoloGUI.new(path) );
+			~utils.add( TremoloGUI.new(path) );
 		});
 
 		ActionButton(w,"normalizer",{
-			utils.add( NormalizerGUI.new(path) );
+			~utils.add( NormalizerGUI.new(path) );
 		});
 
 		ActionButton(w,"limiter",{
-			utils.add( LimiterGUI.new(path) );
+			~utils.add( LimiterGUI.new(path) );
 		});
 
-		super.preset( w.name ); // try to load default preset
+		ActionButton(w,"player",{
+			~utils.add( BufferPlayerGUI.new );
+		});
+
+		w.front
 	}
 
-	close {}
+	close {
+		~utils.do{|ut|
+			("-"+ut).postln;
+			ut.close
+	};}
 }
 
 
@@ -80,18 +94,16 @@ TremoloGUI : EffectGUI {
 
 		midisetup = [[\tremolo, 16], [\drywet, 17]]; // control, MIDI effect channel
 
-		Server.default.waitForBoot{
-			SynthDef(\trem, {|in=0, out=0, freq=0, drywet= -1|
-				var sig = In.ar(in, 2);
-				var dry = sig;
-				sig = sig * SinOsc.ar(freq);
-				sig = XFade2.ar(dry, sig, drywet);
-				Out.ar(out, sig);
-			}).load;
-			Server.default.sync;
-			synth = Synth.tail(Server.default, \trem) ;
-			Server.default.sync;
+		synthdef = SynthDef(\trem, {|in=0, out=0, freq=0, drywet= -1|
+			var sig = In.ar(in, 2);
+			var dry = sig;
+			sig = sig * SinOsc.ar(freq);
+			sig = XFade2.ar(dry, sig, drywet);
+			Out.ar(out, sig);
+		});
 
+		Server.default.waitForBoot{
+			this.audio;
 
 			super.gui("Tremolo", 430@70); // init super gui w
 
@@ -379,7 +391,7 @@ AutoNotchGUI : EffectGUI {
 		uid = UniqueID.next;
 
 		Server.default.waitForBoot{
-			super.send;
+			super.audio;
 
 			Server.default.sync;
 

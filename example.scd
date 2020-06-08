@@ -17,6 +17,7 @@ f.midi; // connect to nanokontrol2
 	//f.anotch;
 	//f.trem;
 	f.comp;
+	//BufferPlayerGUI.new;
 }.defer(4) // for instance
 )
 
@@ -100,7 +101,7 @@ t.start
 )
 t.stop
 
-
+f.scramble
 
 
 // different situations to be used with the task below
@@ -114,7 +115,7 @@ t.stop
 //~chord = [0,7,12,15,19,24]; // mi menor si 64
 ~chord = [0, 6.1, 10, 15.2, 22, 24 ]; // chord
 //~chord = [0, 0.1, 0.15, 0.25, 0.5 ]; // chord
-~mel = [45,48, 46]/4;//
+~mel = [45,48, 46]/2;//
 ~times = [1, 7.1, 3.5];
 )
 
@@ -125,7 +126,7 @@ t.stop
 ~mel = [64, 66, 70, 71]/2;
 //~mel = [62, 64, 66, 76];
 //~mel = [64,66,67];
-~times = [10, 8.5, 7.7, 6, 5.1, 2.1];
+~times = [10, 8.5, 7.7, 6, 15.1, 12.1];
 //~times = [10, 8.5, 3.7, 3, 3.1, 1.1];
 //~times = [1.7, 3, 2.1, 1.1];
 //~times = [8, 8.1,8.2, 8.3, 8.4, 8.5];
