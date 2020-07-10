@@ -8,6 +8,7 @@ f.midi; // connect to nanokontrol2
 
 // other utils I use
 {// wait until everything is ready to go
+	f.dcomp;
 	f.eq; // download and install from https://github.com/enrike/supercollider-channeleq requieres wslib and tabbed views
 	//f.eq(10); // you can use the loop bus value to control the internal feedback EQ
 	//f.gneck;
@@ -16,18 +17,17 @@ f.midi; // connect to nanokontrol2
 	//f.auto;
 	//f.anotch;
 	//f.trem;
-	f.comp;
+	//f.comp;
 	//BufferPlayerGUI.new;
 }.defer(4) // for instance
 )
+LimiterGUI.new
 
-
-Launcher.new; // experimental
+Launcher.new; // experimental GUI to launch all utils included
 
 
 
 // other controls
-f.scramble; // chord
 
 f.on;
 f.off;
@@ -44,9 +44,13 @@ f.gainin(0.5); // how much signal from the line in
 f.out(8); // out channel
 f.loop(8); // channel used to do the feedback loop
 
-f.rcontrol(\feedback);
+f.scramble; // chord
+f.rcontrol(\feedback); // random value for that control
 
-// some examples playing with chord. Must run first f = Feedback1.new;
+
+
+
+// some examples playing with Feedback1 chord. It assumes f = Feedback1.new;
 
 ( // chooses chords from GuitarChords class
 t.stop;
@@ -157,6 +161,20 @@ t = nil
 
 
 
+(
+~mel = [40, 45, 47];
+~times = [2, 3.5, 2.7, 1, 5.1, 2.1];
+t = Task({
+	var notes=Array.new(6), base=64, time=0;
+	inf.do({ arg i;
+		f.chord(base+[0,7,12,15,19,24]);
+		base = ~mel.choose;
+		time = ~times.choose;
+		time.wait;
+	});
+});
+t.start
+)
 
 
 
