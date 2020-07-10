@@ -138,7 +138,7 @@ Feedback1 : EffectGUI {
 					notchsynth.free; notchosc.free; notchsynth=nil
 				});
 			});
-			AutoNotchGUI.send;// load to s the synth this buttons uses
+			//AutoNotchGUI.send;// load to s the synth this buttons uses
 
 			notchlabel = StaticText(w, 30@18).string_("--");
 
@@ -199,9 +199,9 @@ Feedback1 : EffectGUI {
 				utils.add( NormalizerGUI.new(path) );
 			});
 
-			/*			ActionButton(w,"limiter",{
-			utils.add( LimiterGUI.new(path) );
-			});*/
+			ActionButton(w,"fshift",{
+				utils.add( FreqShiftGUI.new(path) );
+			});
 
 
 			w.view.decorator.nextLine;
@@ -216,6 +216,10 @@ Feedback1 : EffectGUI {
 			);
 			controls[\gainin].numberView.maxDecimals = 3 ;
 
+			ActionButton(w,"p",{
+				ParamWinNew.new("gainin", controls[\gainin].controlSpec, controls[\gainin], presetspath:path);
+			});
+
 			order.add(\feedback);
 			controls[\feedback] = EZSlider( w,         // parent
 				slbounds,    // bounds
@@ -224,6 +228,11 @@ Feedback1 : EffectGUI {
 				{ |ez| synth.set(\feedback, ez.value) }
 			);
 			controls[\feedback].numberView.maxDecimals = 3 ;
+
+
+			ActionButton(w,"p",{
+				ParamWinNew.new("feedback", controls[\feedback].controlSpec, controls[\feedback], presetspath:path);
+			});
 
 			order.add(\amp);
 			controls[\amp] = EZSlider( w,         // parent
@@ -234,6 +243,11 @@ Feedback1 : EffectGUI {
 			);
 			controls[\amp].numberView.maxDecimals = 3 ;
 
+
+			ActionButton(w,"p",{
+				ParamWinNew.new("amp", controls[\amp].controlSpec, controls[\amp], presetspath:path);
+			});
+
 			order.add(\deltime);
 			controls[\deltime] = EZSlider( w,         // parent
 				slbounds,    // bounds
@@ -242,6 +256,10 @@ Feedback1 : EffectGUI {
 				{ |ez| synth.set(\deltime, ez.value) } // action
 			);
 			controls[\deltime].numberView.maxDecimals = 3 ;
+
+			ActionButton(w,"p",{
+				ParamWinNew.new("deltime", controls[\deltime].controlSpec, controls[\deltime], presetspath:path);
+			});
 
 			order.add(\damp);
 			controls[\damp] = EZSlider( w,         // parent
@@ -252,6 +270,10 @@ Feedback1 : EffectGUI {
 			);
 			controls[\damp].numberView.maxDecimals = 3 ;
 
+			ActionButton(w,"p",{
+				ParamWinNew.new("damp", controls[\damp].controlSpec, controls[\damp], presetspath:path);
+			});
+
 			order.add(\mod);
 			controls[\mod] = EZSlider( w,         // parent
 				slbounds,    // bounds
@@ -260,6 +282,10 @@ Feedback1 : EffectGUI {
 				{ |ez| synth.set(\mod, ez.value) } // action
 			);
 			controls[\mod].numberView.maxDecimals = 3 ;
+
+			ActionButton(w,"p",{
+				ParamWinNew.new("mod", controls[\mod].controlSpec, controls[\mod], presetspath:path);
+			});
 
 			order.add(\vol);
 			controls[\vol] = EZSlider( w,         // parent
@@ -270,6 +296,10 @@ Feedback1 : EffectGUI {
 			);
 			controls[\vol].numberView.maxDecimals = 3 ;
 
+			ActionButton(w,"p",{
+				ParamWinNew.new("vol", controls[\vol].controlSpec, controls[\vol], presetspath:path);
+			});
+
 			if (preset.isNil.not, { // not loading a config file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
 			});
@@ -279,6 +309,17 @@ Feedback1 : EffectGUI {
 
 	midi {
 		super.midi(midisetup);
+		MIDIdef.cc(\scramble, {arg ...args;
+			if (args[0]==127, {
+				{ this.scramble }.defer;
+			})
+		}, 46); // match cc
+		"MIDI 26 > scramble chord".postln;
+
+		MIDIdef.noteOn(\noteon, {arg ...args; // match any noteOn
+			var notes = chord - chord[0];
+			this.chord(notes + args[1])
+		});
 	}
 
 	close {
@@ -316,8 +357,6 @@ Feedback1 : EffectGUI {
 	amp {|val| this.setc(\amp, val) }
 	damp {|val| this.setc(\damp, val) }
 	mod {|val| this.setc(\mod, val) }
-	norm {|val| this.setc(\norm, val) }
-	normlvl {|val| this.setc(\normlvl, val) }
 	vol {|val| this.setc(\vol, val) }
 
 	chord {|achord|
@@ -352,5 +391,19 @@ Feedback1 : EffectGUI {
 
 	anotch {|config|
 		utils.add( AutoNotchGUI.new(this, path, config) )
+	}
+
+	comp {|config|
+		utils.add( CompanderGUI.new(this, path, config) )
+	}
+	dcomp {|config|
+		utils.add( DCompanderGUI.new(this, path, config) )
+	}
+	trem {|config|
+		utils.add( TremoloGUI.new(this, path, config) )
+	}
+
+	fshift {|config|
+		utils.add( FreqShiftGUI.new(this, path, config) )
 	}
 }
