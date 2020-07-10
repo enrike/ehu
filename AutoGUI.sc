@@ -34,6 +34,7 @@ Auto {
 
 		atask = Task({
 			inf.do({|index|
+				// option to ease the jump between values
 				{ widget.valueAction = rrand(range[0], range[1]) }.defer;
 				time.wait;
 			});
@@ -72,7 +73,7 @@ AutoGUI : BaseGUI {
 
 		values = Dictionary.new;
 
-		this.gui("Auto"+main.class, Rect(430,0, 380, 22+(main.order.size*22)));
+		this.gui("Auto"+main.class, Rect(430,0, 375, 22+(main.order.size*22)));
 
 		w.onClose = {
 			auto.kill;
@@ -104,8 +105,8 @@ AutoGUI : BaseGUI {
 				values[name] = Dictionary.new;
 				values[name][\range] = [0,1];
 				values[name][\time] = 1;
+
 				//slider
-				//EZRanger(nil, 400@16," test  ", \freq, { |v| v.value.postln }, [50,2000])
 				controls[name] = EZRanger( w,  // parent
 					290@20,    // bounds
 					name,  // label
@@ -146,7 +147,6 @@ AutoGUI : BaseGUI {
 					var rmax = controls[name.asSymbol].controlSpec.clipHi.asFloat;
 					var min = rrand(rmin, rmax);
 					var max = min + rrand(min, rmax);
-					//controls[name.asSymbol].postln;
 					controls[name.asSymbol].valueAction = [min, max]
 				});
 			})
@@ -165,12 +165,10 @@ AutoGUI : BaseGUI {
 	randsliders{
 		controls.do{|control|
 			if (control.isKindOf(EZRanger), {
-				//control.valueAction = [control.controlSpec.minval.asFloat.rand, control.controlSpec.maxval.asFloat.rand]
 				var rmin = control.controlSpec.clipLo.asFloat;
 				var rmax = control.controlSpec.clipHi.asFloat;
 				var min = rrand(rmin, rmax);
 				var max = min + rrand(min, rmax);
-				//controls[name.asSymbol].postln;
 				control.valueAction = [min, max]
 			})
 		}
