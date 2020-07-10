@@ -42,7 +42,7 @@ BaseGUI {
 		w.view.decorator = FlowLayout(w.view.bounds);
 		w.view.decorator.gap=2@2;
 
-		slbounds = (w.bounds.width-10)@20;
+		slbounds = (w.bounds.width-30)@20;
 
 		w.onClose = {
 			this.close;
@@ -220,5 +220,18 @@ EffectGUI : BaseGUI {
 				});
 			}.defer;
 		}, channel+64); // R buttons in nanokontrol
+
+		// S buttons random short jump for sliders
+		MIDIdef.cc(control++"_r", {arg ...args;
+			{
+				if (args[0]==127, {
+					var current = controls[control].value;
+					var min = controls[control].controlSpec.minval;
+					var max = controls[control].controlSpec.maxval;
+					controls[control].valueAction_( rrand(min.asFloat, max.asFloat) );
+					{controls[control].valueAction_( current )}.defer(0.2) // back after 0.2
+				});
+			}.defer;
+		}, channel+32); // R buttons in nanokontrol
 	}
 }
