@@ -52,7 +52,11 @@ Launcher {
 			~utils.add( AutoNotchGUI.new(path) );
 		});
 
-		ActionButton(w,"compander",{
+		ActionButton(w,"Dcomp",{
+			~utils.add( DCompanderGUI.new(path) );
+		});
+
+		ActionButton(w,"comp",{
 			~utils.add( CompanderGUI.new(path) );
 		});
 
@@ -70,6 +74,10 @@ Launcher {
 
 		ActionButton(w,"player",{
 			~utils.add( BufferPlayerGUI.new );
+		});
+
+		ActionButton(w,"fshift",{
+			~utils.add( FreqShiftGUI.new );
 		});
 
 		w.front
@@ -372,7 +380,7 @@ AutoNotchGUI : EffectGUI {
 		^super.new.init(exepath, preset);
 	}
 
-	*send {
+	send {
 		synthdef = SynthDef(\autonotch, {|in=0, out=0, rq=0.2, db= -24, lag=5, uid=666|
 			var freq=1000, has_freq, sig, env;
 			sig = In.ar(in, 2);
@@ -390,12 +398,17 @@ AutoNotchGUI : EffectGUI {
 
 		uid = UniqueID.next;
 
+
 		Server.default.waitForBoot{
+			this.send;
+
+			Server.default.sync;
+
 			super.audio;
 
 			Server.default.sync;
 
-			synth = Synth.tail(Server.default, \autonotch, [\uid, uid]);
+			synth = Synth.tail(Server.default, \autonotch, [\uid, uid]);// ovewrite
 
 			Server.default.sync;
 
@@ -456,7 +469,61 @@ AutoNotchGUI : EffectGUI {
 
 
 
+FreqShiftGUI : EffectGUI {
+
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
+	}
+
+	init {|exepath, preset|
+		super.init(exepath);
+
+		midisetup = [[\freq, 23]];
+
+		synthdef = SynthDef(\fshift, {|in=0, out=0, freq=0, phase=0, drywet= -1| //(0..2pi)
+			var dry, signal;
+			signal = In.ar(in, 2);
+			dry = signal;
+			signal = FreqShift.ar(signal, freq, phase);
+			Out.ar(out, XFade2.ar(dry, signal, drywet) )
+		});
+
+		Server.default.waitForBoot{
+			this.audio;
+			super.gui("FreqShift", Rect(310,0, 430, 75));
+
+			w.view.decorator.nextLine;
+
+			////////////////////////
+
+			order.add(\freq);
+			controls[\freq] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"freq",  // label
+				ControlSpec(-100, 100, \lin, 0.001, 0),     // controlSpec
+				{ |ez| synth.set(\freq, ez.value) } // action
+			);
+			controls[\freq].numberView.maxDecimals = 3 ;
+
+			controls[\drywet] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"dry/wet",  // label
+				ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
+				{ |ez| synth.set(\drywet, ez.value) } // action
+			).valueAction_(-1);
+
+			if (preset.isNil.not, { // not loading a preset file by default
+				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+		};
+	}
+
+}
+
+
 DCompanderGUI : EffectGUI {
+
+	var freqs, rqs;
 
 	*new {|exepath, preset=\default|
 		^super.new.init(exepath, preset);
@@ -466,17 +533,17 @@ DCompanderGUI : EffectGUI {
 		var numBands = 10; // try with more bands.
 		var startFreq = 30; // freq of the first band.
 		var endFreq = 15360; // freq of the last one.
-		var freqs = Array.geom(numBands, startFreq, ((endFreq*2)/startFreq)**(1/numBands));
-		var rqs = 1.0/numBands; // tweak this
+
+		freqs = Array.geom(numBands, startFreq, ((endFreq*2)/startFreq)**(1/numBands));
+		rqs = 1.0/numBands; // tweak this
 
 		super.init(exepath);
 
 		midisetup = [[\thresh, 18], [\slopeBelow, 19], [\slopeAbove, 20], [\clampTime, 21],
-			[\relaxTime, 22], [\numBands, 23], [\drywet, 24]]; // control, MIDI effect channel
+			[\relaxTime, 22], [\numBands, 23]]; // control, MIDI effect channel
 
 		synthdef = SynthDef(\dcomp, {|in=0, out=0, thresh=0.5, slopeBelow=1, slopeAbove=1, clampTime=0.01,
-			relaxTime=0.01, drywet= -1,
-			freqs=#[0,0], rqs=1|
+			relaxTime=0.01, drywet= -1|
 			var dry, limited, signal;
 
 			signal = In.ar(in, 2);
@@ -489,9 +556,11 @@ DCompanderGUI : EffectGUI {
 				rqs
 			);
 
+			//signal.size.poll;
+
 			signal = Compander.ar(signal, signal, thresh, slopeBelow.lag(0.05),
 				slopeAbove.lag(0.05), clampTime.lag(0.05), relaxTime.lag(0.05));
-			signal = Mix(signal);
+			signal = Mix.fill(2, signal);
 			signal = XFade2.ar(dry, signal, drywet);
 
 			Out.ar(out, signal)
@@ -579,11 +648,14 @@ DCompanderGUI : EffectGUI {
 					var numBands = ez.value; // try with more bands.
 					var startFreq = 30; // freq of the first band.
 					var endFreq = 15360; // freq of the last one.
-					var freqs = Array.geom(numBands, startFreq, ((endFreq*2)/startFreq)**(1/numBands));
-					var rqs = controls[\rqs].value/numBands; // tweak this
+					freqs = Array.geom(numBands, startFreq, ((endFreq*2)/startFreq)**(1/numBands));
+					rqs = controls[\rqs].value/numBands; // tweak this
 
-					synth.set(\freqs, freqs);
-					synth.set(\rqs, rqs)
+					synth.free;
+					this.audio;
+
+					//synth.set(\freqs, freqs);
+					//synth.set(\rqs, rqs)
 				} // action
 			);
 
