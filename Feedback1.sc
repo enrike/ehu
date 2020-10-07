@@ -217,7 +217,9 @@ Feedback1 : EffectGUI {
 			controls[\gainin].numberView.maxDecimals = 3 ;
 
 			ActionButton(w,"p",{
-				ParamWinNew.new("gainin", controls[\gainin].controlSpec, controls[\gainin], presetspath:path);
+				ParamWinGUI.new(path:path, name:"gainin", func:{|data|
+					controls[\gainin].valueAction = controls[\gainin].controlSpec.map(data.asFloat);
+				} );
 			});
 
 			order.add(\feedback);
@@ -231,7 +233,9 @@ Feedback1 : EffectGUI {
 
 
 			ActionButton(w,"p",{
-				ParamWinNew.new("feedback", controls[\feedback].controlSpec, controls[\feedback], presetspath:path);
+				ParamWinGUI.new(path:path, name:"feedback", func:{|data|
+					controls[\feedback].valueAction = controls[\feedback].controlSpec.map(data.asFloat);
+				} );
 			});
 
 			order.add(\amp);
@@ -245,7 +249,9 @@ Feedback1 : EffectGUI {
 
 
 			ActionButton(w,"p",{
-				ParamWinNew.new("amp", controls[\amp].controlSpec, controls[\amp], presetspath:path);
+				ParamWinGUI.new(path:path, name:"amp", func:{|data|
+					controls[\amp].valueAction = controls[\amp].controlSpec.map(data.asFloat);
+				} );
 			});
 
 			order.add(\deltime);
@@ -258,7 +264,9 @@ Feedback1 : EffectGUI {
 			controls[\deltime].numberView.maxDecimals = 3 ;
 
 			ActionButton(w,"p",{
-				ParamWinNew.new("deltime", controls[\deltime].controlSpec, controls[\deltime], presetspath:path);
+				ParamWinGUI.new(path:path, name:"deltime", func:{|data|
+					controls[\deltime].valueAction = controls[\deltime].controlSpec.map(data.asFloat);
+				} );
 			});
 
 			order.add(\damp);
@@ -271,7 +279,9 @@ Feedback1 : EffectGUI {
 			controls[\damp].numberView.maxDecimals = 3 ;
 
 			ActionButton(w,"p",{
-				ParamWinNew.new("damp", controls[\damp].controlSpec, controls[\damp], presetspath:path);
+				ParamWinGUI.new(path:path, name:"damp", func:{|data|
+					controls[\damp].valueAction = controls[\damp].controlSpec.map(data.asFloat);
+				} );
 			});
 
 			order.add(\mod);
@@ -284,7 +294,9 @@ Feedback1 : EffectGUI {
 			controls[\mod].numberView.maxDecimals = 3 ;
 
 			ActionButton(w,"p",{
-				ParamWinNew.new("mod", controls[\mod].controlSpec, controls[\mod], presetspath:path);
+				ParamWinGUI.new(path:path, name:"mod", func:{|data|
+					controls[\mod].valueAction = controls[\mod].controlSpec.map(data.asFloat);
+				} );
 			});
 
 			order.add(\vol);
@@ -297,7 +309,9 @@ Feedback1 : EffectGUI {
 			controls[\vol].numberView.maxDecimals = 3 ;
 
 			ActionButton(w,"p",{
-				ParamWinNew.new("vol", controls[\vol].controlSpec, controls[\vol], presetspath:path);
+				ParamWinGUI.new(path:path, name:"vol", func:{|data|
+					controls[\vol].valueAction = controls[\vol].controlSpec.map(data.asFloat);
+				} );
 			});
 
 			if (preset.isNil.not, { // not loading a config file by default
@@ -359,6 +373,10 @@ Feedback1 : EffectGUI {
 	mod {|val| this.setc(\mod, val) }
 	vol {|val| this.setc(\vol, val) }
 
+	notch {|flag=1|
+		controls[\notch].valueAction_(flag)
+	}
+
 	chord {|achord|
 		if (achord.isNil, {^chord}, {
 			chord.postln;
@@ -373,37 +391,37 @@ Feedback1 : EffectGUI {
 		controls[name.asSymbol].valueAction = rrand(rmin, rmax)
 	}
 
-	gneck {|config|
-		utils.add( GNeckGUI.new(this, path, config) )
+	gneck {|config=\default|
+		utils.add( GNeckGUI.new(path, config) )
 	}
 
 	eq {|bus|
 		utils.add( ChannelEQ.new(bus:bus) )
 	}
 
-	auto {|config|
-		utils.add( AutoGUI.new(this, path, config) )
+	auto {|config=\default|
+		utils.add( AutoGUI.new(path, config) )
 	}
 
-	ch {|config|
-		utils.add( ChordGUI.new(this, path, chord, config) )
+	ch {|config=\default|
+		utils.add( ChordGUI.new(path, chord, config) )
 	}
 
-	anotch {|config|
-		utils.add( AutoNotchGUI.new(this, path, config) )
+	anotch {|config=\default|
+		utils.add( AutoNotchGUI.new(path, config) )
 	}
 
-	comp {|config|
-		utils.add( CompanderGUI.new(this, path, config) )
+	comp {|config=\default|
+		utils.add( CompanderGUI.new(path, config) )
 	}
-	dcomp {|config|
-		utils.add( DCompanderGUI.new(this, path, config) )
+	dcomp {|config=\default|
+		utils.add( DCompanderGUI.new(path, config) )
 	}
-	trem {|config|
-		utils.add( TremoloGUI.new(this, path, config) )
+	trem {|config=\default|
+		utils.add( TremoloGUI.new(path, config) )
 	}
 
-	fshift {|config|
-		utils.add( FreqShiftGUI.new(this, path, config) )
+	fshift {|config=\default|
+		utils.add( FreqShiftGUI.new(path, config) )
 	}
 }
