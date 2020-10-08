@@ -20,7 +20,8 @@ Feedback1 : EffectGUI {
 	}
 
 	init  {|apath, preset|
-		super.init(path);
+		super.init(apath);
+		"Feedback1 init".postln;
 
 		chord = [0,7,12,15,19,24]+40; //[0, 6.1, 10, 15.2, 22, 24 ];
 		utils = List.new;//refs to GUI windows
@@ -97,9 +98,9 @@ Feedback1 : EffectGUI {
 			}.defer;
 			}, '/outlvl', Server.default.addr);
 
-			synth = Synth(\feed, [\chord, chord]);
-
-			Server.default.sync;
+/*			synth = Synth(\feed, [\chord, chord]);
+			Server.default.sync;*/
+			this.audio;
 
 			super.gui("Feedback unit", 430@220); // init super gui buttons
 
@@ -318,7 +319,18 @@ Feedback1 : EffectGUI {
 				super.preset( w.name, preset ); // try to read and apply the default preset
 			});
 			controls.postln;
+
+/*			synth = Synth(\feed, [\chord, chord]);
+
+			Server.default.sync;*/
+
+			["FEEDBACK1 READY", synth].postln;
 		}
+	}
+
+	audio {
+		synth = Synth(\feed, [\chord, chord]);
+		Server.default.sync;
 	}
 
 	midi {
