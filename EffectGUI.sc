@@ -102,6 +102,8 @@ BaseGUI {
 		var	data = Object.readArchive(apath);
 		("reading preset"+apath).postln;
 
+		//Server.default.sync;
+
 		data.keysValuesDo{ |key, value|
 			[key, value].postln;
 			try {
@@ -168,6 +170,7 @@ EffectGUI : BaseGUI {
 			if (synth.isNil.not, {
 				synth.free;
 				if (butt.value==1, {
+					"running audio".postln;
 					this.audio
 				}, {
 					("kill"+synth.defName+"synth").postln;
@@ -177,13 +180,13 @@ EffectGUI : BaseGUI {
 	}
 
 	audio {|argarr=#[]|
-		Server.default.waitForBoot{
+		//Server.default.waitForBoot{
 			synthdef.load;
 			Server.default.sync;
 			synth = Synth.tail(Server.default, synthdef.name, argarr);
 			Server.default.sync;
 			("run"+synth.defName+"synth").postln;
-		}
+		//}
 	}
 
 	midi {|setup|

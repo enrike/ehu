@@ -98,8 +98,6 @@ Feedback1 : EffectGUI {
 			}.defer;
 			}, '/outlvl', Server.default.addr);
 
-/*			synth = Synth(\feed, [\chord, chord]);
-			Server.default.sync;*/
 			this.audio;
 
 			super.gui("Feedback unit", 430@220); // init super gui buttons
@@ -139,10 +137,8 @@ Feedback1 : EffectGUI {
 					notchsynth.free; notchosc.free; notchsynth=nil
 				});
 			});
-			//AutoNotchGUI.send;// load to s the synth this buttons uses
 
 			notchlabel = StaticText(w, 30@18).string_("--");
-
 
 			StaticText(w, 30@15).align_(\right).string_("Loop").resize_(7);
 			controls[\loop] = PopUpMenu(w, Rect(10, 10, 40, 17))
@@ -317,19 +313,22 @@ Feedback1 : EffectGUI {
 
 			if (preset.isNil.not, { // not loading a config file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
+				this.updateall; // make sure synth is updated AFTER all presets are read
 			});
-			controls.postln;
-
-/*			synth = Synth(\feed, [\chord, chord]);
-
-			Server.default.sync;*/
 
 			["FEEDBACK1 READY", synth].postln;
 		}
 	}
 
+	updateall {//
+		[\gainin, \feedback, \amp, \deltime, \damp, \mod, \vol, \in, \out].do{|ctrl|
+			synth.set(ctrl, controls[ctrl].value);
+		}
+	}
+
 	audio {
 		synth = Synth(\feed, [\chord, chord]);
+		synth.postln;
 		Server.default.sync;
 	}
 
