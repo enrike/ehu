@@ -78,7 +78,7 @@ Feedback1 : EffectGUI {
 				SendPeakRMS.kr(sig, 10, 3, '/outlvl');
 
 				Out.ar(out, sig * on)
-			}).send;
+			}).load;
 
 			Server.default.sync; // wait until synthdef is loaded
 
@@ -100,7 +100,7 @@ Feedback1 : EffectGUI {
 
 			this.audio;
 
-			super.gui("Feedback unit", 430@220); // init super gui buttons
+			super.gui("Feedback unit", 430@240); // init super gui buttons
 
 
 			controls[\play] = Button(w, 22@18)
@@ -176,7 +176,6 @@ Feedback1 : EffectGUI {
 			});
 
 			ActionButton(w,"anotch",{
-				path.postln;
 				utils.add( AutoNotchGUI.new(path) );
 			});
 
@@ -188,6 +187,8 @@ Feedback1 : EffectGUI {
 				utils.add( DCompanderGUI.new(path) );
 			});
 
+					w.view.decorator.nextLine;
+
 			ActionButton(w,"tremolo",{
 				utils.add( TremoloGUI.new(path) );
 			});
@@ -198,6 +199,10 @@ Feedback1 : EffectGUI {
 
 			ActionButton(w,"fshift",{
 				utils.add( FreqShiftGUI.new(path) );
+			});
+
+			ActionButton(w,"gain",{
+				utils.add( GainLimiterGUI.new(path) );
 			});
 
 
@@ -434,5 +439,9 @@ Feedback1 : EffectGUI {
 
 	fshift {|config=\default|
 		utils.add( FreqShiftGUI.new(path, config) )
+	}
+
+	gain {|config=\default|
+		utils.add( GainLimiterGUI.new(path, config) )
 	}
 }
