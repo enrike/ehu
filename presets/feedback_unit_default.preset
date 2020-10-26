@@ -4,23 +4,23 @@ o = [
 ];
 p = [
 	// Dictionary
-	0, [ array: o[1],  size: 11 ],  
+	0, [ array: o[1],  size: 13 ],  
 	// Array
-	1, [ nil,  nil,  nil,  nil,  
+	1, [ 'notch',  1,  nil,  nil,  
 		nil,  nil,  nil,  nil,  
 		nil,  nil,  nil,  nil,  
-		'amp',  0.062,  'loop',  10,  
-		'on',  1,  'damp',  2642.0,  
-		nil,  nil,  'in',  2,  
+		'amp',  0.014,  'loop',  10,  
+		'on',  1,  'damp',  2472.0,  
+		nil,  nil,  'in',  0,  
 		nil,  nil,  nil,  nil,  
-		nil,  nil,  'deltime',  221.453,  
-		'out',  0,  'vol',  0.9,  
+		nil,  nil,  'deltime',  142.127,  
+		'out',  0,  'vol',  2.0,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  'play',  1,  
 		nil,  nil,  nil,  nil,  
 		nil,  nil,  nil,  nil,  
+		'gainin',  2.0,  nil,  nil,  
 		nil,  nil,  nil,  nil,  
-		nil,  nil,  nil,  nil,  
-		'gainin',  0.0,  nil,  nil,  
-		nil,  nil,  nil,  nil,  
-		'feedback',  0.024,  'mod',  1.0 ]
+		'feedback',  0.003,  'mod',  0.994 ]
 ];
 prUnarchive(o,p);

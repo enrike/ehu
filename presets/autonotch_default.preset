@@ -4,11 +4,11 @@ o = [
 ];
 p = [
 	// Dictionary
-	0, [ array: o[1],  size: 5 ],  
+	0, [ array: o[1],  size: 6 ],  
 	// Array
 	1, [ 'out',  10,  nil,  nil,  
-		'db',  7.151,  nil,  nil,  
-		nil,  nil,  nil,  nil,  
+		'db',  -24.554,  nil,  nil,  
+		'lag',  0.492,  nil,  nil,  
 		nil,  nil,  nil,  nil,  
 		'on',  1,  nil,  nil,  
 		nil,  nil,  'in',  10,  
