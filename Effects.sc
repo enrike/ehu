@@ -371,6 +371,9 @@ CompanderGUI : EffectGUI {
 }
 
 
+
+
+
 AutoNotchGUI : EffectGUI {
 
 	var synth, pitchOSCF, label, uid;
@@ -404,7 +407,7 @@ AutoNotchGUI : EffectGUI {
 
 			Server.default.sync;
 
-			super.audio;
+			//this.audio;
 
 			Server.default.sync;
 
@@ -519,6 +522,124 @@ FreqShiftGUI : EffectGUI {
 	}
 
 }
+
+
+
+
+PitchShiftGUI : EffectGUI {
+
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
+	}
+
+	init {|exepath, preset|
+		super.init(exepath);
+
+		midisetup = [[\freq, 23]];
+
+		synthdef = SynthDef(\pshift, {|in=0, out=0, freq=1, drywet= -1| //(0..2pi)
+			var dry, signal;
+			signal = In.ar(in, 2);
+			dry = signal;
+			signal = PitchShift.ar(signal, pitchRatio:freq);
+			Out.ar(out, XFade2.ar(dry, signal, drywet) )
+		});
+
+		Server.default.waitForBoot{
+			this.audio;
+			super.gui("PitchShift", Rect(310,0, 430, 75));
+
+			w.view.decorator.nextLine;
+
+			////////////////////////
+
+			order.add(\freq);
+			controls[\freq] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"freq",  // label
+				ControlSpec(0, 5, \lin, 0.001, 1),     // controlSpec
+				{ |ez| synth.set(\freq, ez.value) } // action
+			);
+			controls[\freq].numberView.maxDecimals = 3 ;
+
+			controls[\drywet] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"dry/wet",  // label
+				ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
+				{ |ez| synth.set(\drywet, ez.value) } // action
+			).valueAction_(-1);
+
+			if (preset.isNil.not, { // not loading a preset file by default
+				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+		};
+	}
+
+}
+
+
+
+ChaosPitchShiftGUI : EffectGUI {
+
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
+	}
+
+	init {|exepath, preset|
+		super.init(exepath);
+
+		//midisetup = [[\freq, 23]];
+
+		synthdef = SynthDef(\chaoticPitchShift, {|in=0, out=0, a=1.4, b=0.3, drywet= -1|
+			var dry, signal;
+			signal = In.ar(in, 2);
+			dry = signal;
+			signal = PitchShift.ar(signal, pitchRatio:HenonN.ar(SampleRate.ir, a, b));
+			Out.ar(out, XFade2.ar(dry, signal, drywet) )
+		}).add;
+
+		Server.default.waitForBoot{
+			this.audio;
+			super.gui("ChaosPitchShift", Rect(310,0, 430, 100));
+
+			w.view.decorator.nextLine;
+
+			////////////////////////
+
+			order.add(\a);
+			controls[\a] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"a",  // label
+				ControlSpec(1, 1.4, \lin, 0.001, 1),     // controlSpec
+				{ |ez| synth.set(\a, ez.value) } // action
+			);
+			controls[\a].numberView.maxDecimals = 3 ;
+
+			order.add(\b);
+			controls[\b] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"b",  // label
+				ControlSpec(0, 0.3, \lin, 0.001, 0.31),     // controlSpec
+				{ |ez| synth.set(\b, ez.value) } // action
+			);
+			controls[\b].numberView.maxDecimals = 3 ;
+
+			controls[\drywet] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"dry/wet",  // label
+				ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
+				{ |ez| synth.set(\drywet, ez.value) } // action
+			).valueAction_(-1);
+
+			if (preset.isNil.not, { // not loading a preset file by default
+				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+		};
+	}
+
+}
+
+
 
 
 DCompanderGUI : EffectGUI {
@@ -682,5 +803,78 @@ DCompanderGUI : EffectGUI {
 				super.preset( w.name, preset ); // try to read and apply the default preset
 			});
 		};
+	}
+}
+
+
+GainLimiterGUI : EffectGUI {
+	var vlay, levels, inOSCFunc, outOSCFunc;
+
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
+	}
+
+	init {|exepath, preset|
+		super.init(exepath);
+
+		midisetup = [[\gain, 16], [\limiter, 17]]; // control, MIDI effect channel
+
+		synthdef = 	SynthDef(\gain, {|in=0, out=0, gain=1, limiter=1, xfade=1|
+			var signal = In.ar(in, 2) ;
+			SendPeakRMS.kr(signal, 10, 3, '/gaininlvl'); // to monitor incoming feedback signal
+			signal = Limiter.ar(signal, limiter) * gain;
+			SendPeakRMS.kr(signal, 10, 3, '/gainoutlvl'); // to monitor incoming feedback signal
+			XOut.ar(out, xfade, signal);
+		});
+
+		Server.default.waitForBoot{
+			this.audio;
+
+			super.gui("Gain_Limiter", 430@70); // init super gui w
+
+			levels = List.new;
+
+			inOSCFunc = OSCFunc({|msg| {
+				levels[..1].do({|lvl, i| // in levels
+					lvl.peakLevel = msg[3..][i*2].ampdb.linlin(-80, 0, 0, 1, \min);
+					lvl.value = msg[3..][(i*2)+1].ampdb.linlin(-80, 0, 0, 1);
+				});
+			}.defer;
+			}, '/gaininlvl', Server.default.addr);
+
+			outOSCFunc = OSCFunc({|msg| {
+				levels[2..].do({|lvl, i| // out levels
+					lvl.peakLevel = msg[3..][i*2].ampdb.linlin(-80, 0, 0, 1, \min);
+					lvl.value = msg[3..][(i*2)+1].ampdb.linlin(-80, 0, 0, 1);
+				});
+			}.defer;
+			}, '/gainoutlvl', Server.default.addr);
+
+			vlay = VLayoutView(w, 150@17); // size
+			4.do{|i|
+				levels.add( LevelIndicator(vlay, 4).warning_(0.9).critical_(1.0).drawsPeak_(true) ); // 5 height each
+				if (i==1, {CompositeView(vlay, 1)}); // plus 2px separator
+			};
+
+			w.view.decorator.nextLine; //////////////////
+
+			order.add(\gain);
+			controls[\gain] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"gain",  // label
+				ControlSpec(0, 20, \lin, 0.1, 1),     // controlSpec
+				{ |ez| synth.set(\gain, ez.value) } // action
+			);
+			order.add(\limiter);
+			controls[\limiter] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"limit",  // label
+				ControlSpec(0.001, 1, \lin, 0.01, 1),     // controlSpec
+				{ |ez| synth.set(\limiter, ez.value) } // action
+			);
+			if (preset.isNil.not, { // not loading a preset file by default
+				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+		}
 	}
 }

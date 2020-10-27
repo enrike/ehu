@@ -76,7 +76,7 @@ BaseGUI {
 		if (w.isNil.not, {name=w.name.replace(" ", "_").toLower}); //prepend the windows name
 		filename = name++"_"++Date.getDate.stamp++".preset";
 
-		//data.put(\loc, w.bounds);
+		data.put(\bounds, w.bounds);
 
 		controls.keysValuesDo { |key, widget|
 			data.put(key, widget.value)
@@ -102,10 +102,12 @@ BaseGUI {
 		var	data = Object.readArchive(apath);
 		("reading preset"+apath).postln;
 
-		//Server.default.sync;
+		[\bounds, data[\bounds]].postln; //make sure it first deals with ON
+		{ w.bounds = data[\bounds] }.defer; // wait for QT
+		data.removeAt(\bounds); // we are done with this
 
 		data.keysValuesDo{ |key, value|
-			[key, value].postln;
+			[key, value].postln; // we must first run ON button to trigger the synth. then do the rest.
 			try {
 				{controls[key].valueAction = value}.defer // wait for QT
 			}{|er| er.postln}
@@ -170,7 +172,7 @@ EffectGUI : BaseGUI {
 			if (synth.isNil.not, {
 				synth.free;
 				if (butt.value==1, {
-					"running audio".postln;
+					("running audio:"+name).postln;
 					this.audio
 				}, {
 					("kill"+synth.defName+"synth").postln;
@@ -180,13 +182,11 @@ EffectGUI : BaseGUI {
 	}
 
 	audio {|argarr=#[]|
-		//Server.default.waitForBoot{
-			synthdef.load;
-			Server.default.sync;
-			synth = Synth.tail(Server.default, synthdef.name, argarr);
-			Server.default.sync;
-			("run"+synth.defName+"synth").postln;
-		//}
+		synthdef.load;
+		Server.default.sync;
+		synth = Synth.tail(Server.default, synthdef.name, argarr);
+		Server.default.sync;
+		("run"+synth.defName+"synth").postln;
 	}
 
 	midi {|setup|
@@ -236,5 +236,30 @@ EffectGUI : BaseGUI {
 				});
 			}.defer;
 		}, channel+32); // R buttons in nanokontrol
+	}
+
+	read {|apath| //overwrite super.read
+		var	data = Object.readArchive(apath);
+		("reading preset"+apath).postln;
+
+		[\on, data[\on]].postln; //make sure it first deals with ON
+		try {
+			{ controls[\on].valueAction = data[\on] }.defer; // wait for QT
+		}{|er| er.postln};
+		data.removeAt(\on); // we are done with this
+
+		[\bounds, data[\bounds]].postln; //bounds
+
+		if (data[\bounds].isNil.not, {
+			{ w.bounds = data[\bounds] }.defer; // wait for QT
+		});
+		data.removeAt(\bounds); // we are done with this
+
+		data.keysValuesDo{ |key, value|
+			[key, value].postln;
+			try {
+				{controls[key].valueAction = value}.defer // wait for QT
+			}{|er| er.postln}
+		};
 	}
 }
