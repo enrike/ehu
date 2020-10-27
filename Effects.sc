@@ -100,13 +100,13 @@ TremoloGUI : EffectGUI {
 	init {|exepath, preset|
 		super.init(exepath);
 
-		midisetup = [[\tremolo, 16], [\drywet, 17]]; // control, MIDI effect channel
+		midisetup = [[\tremolo, 16], [\xfade, 17]]; // control, MIDI effect channel
 
-		synthdef = SynthDef(\trem, {|in=0, out=0, freq=0, drywet= -1|
+		synthdef = SynthDef(\trem, {|in=0, out=0, freq=0, xfade= 0|
 			var sig = In.ar(in, 2);
 			var dry = sig;
 			sig = sig * SinOsc.ar(freq);
-			sig = XFade2.ar(dry, sig, drywet);
+			sig = XFade2.ar(dry, sig, xfade);
 			Out.ar(out, sig);
 		});
 
@@ -126,14 +126,14 @@ TremoloGUI : EffectGUI {
 			);
 			controls[\tremolo].numberView.maxDecimals = 3 ;
 
-			order.add(\drywet);
-			controls[\drywet] = EZSlider( w,         // parent
+			order.add(\xfade);
+			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
-				"dry/wet",  // label
-				ControlSpec(-1, 1, \lin, 0.01, -1),     // controlSpec
-				{ |ez| synth.set(\drywet, ez.value) } // action
-			).valueAction_(-1);
-			controls[\drywet].numberView.maxDecimals = 3 ;
+				"xfade",  // label
+				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+				{ |ez| synth.set(\xfade, ez.value) } // action
+			).valueAction_(0);
+			controls[\xfade].numberView.maxDecimals = 3 ;
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
@@ -166,12 +166,10 @@ NormalizerGUI : EffectGUI {
 	init {|exepath, preset|
 		super.init(exepath);
 
-		synthdef = SynthDef(\norm, {|in=0, out=0, level=0, drywet= -1|
+		synthdef = SynthDef(\norm, {|in=0, out=0, level=0, xfade= 0|
 			var sig = In.ar(in, 2) ;
-			var dry = sig;
 			sig = Normalizer.ar(sig, level, 0.01);
-			sig = XFade2.ar(dry, sig, drywet);
-			Out.ar(out, sig);
+			XOut.ar(out, xfade, sig);
 		});
 
 		Server.default.waitForBoot{
@@ -187,12 +185,12 @@ NormalizerGUI : EffectGUI {
 				ControlSpec(0, 1, \lin, 0.001, 1),     // controlSpec
 				{ |ez| synth.set(\level, ez.value) } // action
 			);
-			controls[\drywet] = EZSlider( w,         // parent
+			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
-				"dry/wet",  // label
-				ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
-				{ |ez| synth.set(\drywet, ez.value) } // action
-			).valueAction_(-1);
+				"xfade",  // label
+				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+				{ |ez| synth.set(\xfade, ez.value) } // action
+			).valueAction_(0);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
@@ -221,12 +219,10 @@ LimiterGUI : EffectGUI {
 	init {|exepath, preset|
 		super.init(exepath);
 
-		synthdef = SynthDef(\lim, {|in=0, out=0, level=0, drywet= -1|
+		synthdef = SynthDef(\lim, {|in=0, out=0, level=0, xfade= 0|
 			var sig = In.ar(in, 2) ;
-			var dry = sig;
 			sig = Limiter(sig, level);
-			sig = XFade2.ar(dry, sig, drywet);
-			Out.ar(out, sig);
+			XOut.ar(out, xfade, sig);
 		});
 
 		Server.default.waitForBoot{
@@ -242,12 +238,12 @@ LimiterGUI : EffectGUI {
 				ControlSpec(0, 1, \lin, 0.001, 1),     // controlSpec
 				{ |ez| synth.set(\level, ez.value) } // action
 			);
-			controls[\drywet] = EZSlider( w,         // parent
+			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
-				"dry/wet",  // label
-				ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
-				{ |ez| synth.set(\drywet, ez.value) } // action
-			).valueAction_(-1);
+				"xfade",  // label
+				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+				{ |ez| synth.set(\xfade, ez.value) } // action
+			).valueAction_(0);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
@@ -270,17 +266,16 @@ CompanderGUI : EffectGUI {
 		super.init(exepath);
 
 		midisetup = [[\thresh, 18], [\slopeBelow, 19], [\slopeAbove, 20], [\clampTime, 21],
-			[\relaxTime, 22], [\drywet, 23]]; // control, MIDI effect channel
+			[\relaxTime, 22], [\xfade, 23]]; // control, MIDI effect channel
 
 		synthdef = SynthDef(\comp, {|in=0, out=0, thresh=0.5, slopeBelow=1, slopeAbove=1, clampTime=0.01,
-			relaxTime=0.01, drywet= -1|
-			var dry, limited, signal = In.ar(in, 2);
-			dry = signal;
+			relaxTime=0.01, xfade= 0|
+			var signal = In.ar(in, 2);
+
 			signal = Compander.ar(signal, signal, thresh, slopeBelow.lag(0.05),
 				slopeAbove.lag(0.05), clampTime.lag(0.05), relaxTime.lag(0.05));
-			signal = XFade2.ar(dry, signal, drywet);
 
-			Out.ar(out, signal)
+			XOut.ar(out, xfade, signal)
 		});
 
 		Server.default.waitForBoot{
@@ -356,12 +351,12 @@ CompanderGUI : EffectGUI {
 			);
 			controls[\relaxTime].numberView.maxDecimals = 3 ;
 
-			controls[\drywet] = EZSlider( w,         // parent
+			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
-				"dry/wet",  // label
-				ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
-				{ |ez| synth.set(\drywet, ez.value) } // action
-			).valueAction_(-1);
+				"xfade",  // label
+				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+				{ |ez| synth.set(\xfade, ez.value) } // action
+			).valueAction_(0);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
@@ -483,12 +478,10 @@ FreqShiftGUI : EffectGUI {
 
 		midisetup = [[\freq, 23]];
 
-		synthdef = SynthDef(\fshift, {|in=0, out=0, freq=0, phase=0, drywet= -1| //(0..2pi)
-			var dry, signal;
-			signal = In.ar(in, 2);
-			dry = signal;
+		synthdef = SynthDef(\fshift, {|in=0, out=0, freq=0, phase=0, xfade= 0| //(0..2pi)
+			var signal = In.ar(in, 2);
 			signal = FreqShift.ar(signal, freq, phase);
-			Out.ar(out, XFade2.ar(dry, signal, drywet) )
+			XOut.ar(out, xfade, signal)
 		});
 
 		Server.default.waitForBoot{
@@ -508,12 +501,12 @@ FreqShiftGUI : EffectGUI {
 			);
 			controls[\freq].numberView.maxDecimals = 3 ;
 
-			controls[\drywet] = EZSlider( w,         // parent
+			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
-				"dry/wet",  // label
-				ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
-				{ |ez| synth.set(\drywet, ez.value) } // action
-			).valueAction_(-1);
+				"xfade",  // label
+				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+				{ |ez| synth.set(\xfade, ez.value) } // action
+			).valueAction_(0);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
@@ -537,12 +530,10 @@ PitchShiftGUI : EffectGUI {
 
 		midisetup = [[\freq, 23]];
 
-		synthdef = SynthDef(\pshift, {|in=0, out=0, freq=1, drywet= -1| //(0..2pi)
-			var dry, signal;
-			signal = In.ar(in, 2);
-			dry = signal;
+		synthdef = SynthDef(\pshift, {|in=0, out=0, freq=1, xfade= 0| //(0..2pi)
+			var signal = In.ar(in, 2);
 			signal = PitchShift.ar(signal, pitchRatio:freq);
-			Out.ar(out, XFade2.ar(dry, signal, drywet) )
+			XOut.ar(out, xfade, signal )
 		});
 
 		Server.default.waitForBoot{
@@ -562,12 +553,12 @@ PitchShiftGUI : EffectGUI {
 			);
 			controls[\freq].numberView.maxDecimals = 3 ;
 
-			controls[\drywet] = EZSlider( w,         // parent
+			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
-				"dry/wet",  // label
-				ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
-				{ |ez| synth.set(\drywet, ez.value) } // action
-			).valueAction_(-1);
+				"xfade",  // label
+				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+				{ |ez| synth.set(\xfade, ez.value) } // action
+			).valueAction_(0);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
@@ -590,12 +581,10 @@ ChaosPitchShiftGUI : EffectGUI {
 
 		//midisetup = [[\freq, 23]];
 
-		synthdef = SynthDef(\chaoticPitchShift, {|in=0, out=0, a=1.4, b=0.3, drywet= -1|
-			var dry, signal;
-			signal = In.ar(in, 2);
-			dry = signal;
+		synthdef = SynthDef(\chaoticPitchShift, {|in=0, out=0, a=1.4, b=0.3, xfade= 0|
+			var signal = In.ar(in, 2);
 			signal = PitchShift.ar(signal, pitchRatio:HenonN.ar(SampleRate.ir, a, b));
-			Out.ar(out, XFade2.ar(dry, signal, drywet) )
+			XOut.ar(out, xfade, signal )
 		}).add;
 
 		Server.default.waitForBoot{
@@ -624,12 +613,12 @@ ChaosPitchShiftGUI : EffectGUI {
 			);
 			controls[\b].numberView.maxDecimals = 3 ;
 
-			controls[\drywet] = EZSlider( w,         // parent
+			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
-				"dry/wet",  // label
-				ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
-				{ |ez| synth.set(\drywet, ez.value) } // action
-			).valueAction_(-1);
+				"xfade",  // label
+				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+				{ |ez| synth.set(\xfade, ez.value) } // action
+			).valueAction_(0);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
@@ -664,12 +653,8 @@ DCompanderGUI : EffectGUI {
 			[\relaxTime, 22], [\numBands, 23]]; // control, MIDI effect channel
 
 		synthdef = SynthDef(\dcomp, {|in=0, out=0, thresh=0.5, slopeBelow=1, slopeAbove=1, clampTime=0.01,
-			relaxTime=0.01, drywet= -1|
-			var dry, limited, signal;
-
-			signal = In.ar(in, 2);
-
-			dry = signal;
+			relaxTime=0.01, xfade= 0|
+			var signal = In.ar(in, 2);
 
 			signal = BBandPass.ar(
 				[signal], //needs to be a 2D array: [ [ left, right ] ]
@@ -677,14 +662,11 @@ DCompanderGUI : EffectGUI {
 				rqs
 			);
 
-			//signal.size.poll;
-
 			signal = Compander.ar(signal, signal, thresh, slopeBelow.lag(0.05),
 				slopeAbove.lag(0.05), clampTime.lag(0.05), relaxTime.lag(0.05));
 			signal = Mix.fill(2, signal);
-			signal = XFade2.ar(dry, signal, drywet);
 
-			Out.ar(out, signal)
+			XOut.ar(out, xfade, signal)
 		});
 
 		Server.default.waitForBoot{
@@ -792,12 +774,12 @@ DCompanderGUI : EffectGUI {
 			);
 			controls[\rqs].numberView.maxDecimals = 3 ;
 
-			controls[\drywet] = EZSlider( w,         // parent
+			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
-				"dry/wet",  // label
-				ControlSpec(-1, 1, \lin, 0.01, 1.neg),     // controlSpec
-				{ |ez| synth.set(\drywet, ez.value) } // action
-			).valueAction_(-1);
+				"xfade",  // label
+				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+				{ |ez| synth.set(\xfade, ez.value) } // action
+			).valueAction_(0);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
