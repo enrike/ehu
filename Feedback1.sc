@@ -100,7 +100,7 @@ Feedback1 : EffectGUI {
 
 			this.audio;
 
-			super.gui("Feedback unit", 430@240); // init super gui buttons
+			super.gui("Feedback unit", 430@200); // init super gui buttons
 
 
 			controls[\play] = Button(w, 22@18)
@@ -113,6 +113,17 @@ Feedback1 : EffectGUI {
 					synth.set(\on, butt.value)
 				});
 			}).valueAction=1;
+
+						StaticText(w, 40@18).string_("Tools:").resize_(3);
+
+
+			ActionButton(w,"gneck",{
+				utils.add( GNeckGUI.new(this, path) );
+			});
+
+			ActionButton(w,"chord",{
+				utils.add( ChordGUI.new(this, path, chord) );
+			});
 
 			w.view.decorator.nextLine;
 
@@ -148,65 +159,11 @@ Feedback1 : EffectGUI {
 			}.valueAction = 10;
 
 
-
 			vlay = VLayoutView(w, 200@17); // size
 			4.do{|i|
 				levels.add( LevelIndicator(vlay, 4).warning_(0.9).critical_(1.0).drawsPeak_(true) ); // 5 height each
 				if (i==1, {CompositeView(vlay, 1)}); // plus 2px separator
 			};
-
-			w.view.decorator.nextLine;
-			StaticText(w, 40@18).string_("Tools:").resize_(3);
-
-
-			ActionButton(w,"gneck",{
-				utils.add( GNeckGUI.new(this, path) );
-			});
-
-			ActionButton(w,"chord",{
-				utils.add( ChordGUI.new(this, path, chord) );
-			});
-
-			//w.view.decorator.nextLine;
-			StaticText(w, 5@18).string_("    ");
-
-			ActionButton(w,"EQ",{
-				try { utils.add( ChannelEQ.new) }
-				{"cannot find ChannelEQ class. try installing it from http://github.com/enrike/supercollider-channeleq".postln}
-			});
-
-			ActionButton(w,"anotch",{
-				utils.add( AutoNotchGUI.new(path) );
-			});
-
-			ActionButton(w,"comp",{
-				utils.add( CompanderGUI.new(path) );
-			});
-
-			ActionButton(w,"Dcomp",{
-				utils.add( DCompanderGUI.new(path) );
-			});
-
-					w.view.decorator.nextLine;
-
-			ActionButton(w,"tremolo",{
-				utils.add( TremoloGUI.new(path) );
-			});
-
-			ActionButton(w,"normalizer",{
-				utils.add( NormalizerGUI.new(path) );
-			});
-
-			ActionButton(w,"fshift",{
-				utils.add( FreqShiftGUI.new(path) );
-			});
-
-			ActionButton(w,"gain",{
-				utils.add( GainLimiterGUI.new(path) );
-			});
-
-
-			w.view.decorator.nextLine;
 
 			// SLIDERS //
 			order.add(\gainin);
@@ -411,37 +368,11 @@ Feedback1 : EffectGUI {
 		utils.add( GNeckGUI.new(path, config) )
 	}
 
-	eq {|bus|
-		utils.add( ChannelEQ.new(bus:bus) )
-	}
-
 	auto {|config=\default|
 		utils.add( AutoGUI.new(path, config) )
 	}
 
 	ch {|config=\default|
 		utils.add( ChordGUI.new(path, chord, config) )
-	}
-
-	anotch {|config=\default|
-		utils.add( AutoNotchGUI.new(path, config) )
-	}
-
-	comp {|config=\default|
-		utils.add( CompanderGUI.new(path, config) )
-	}
-	dcomp {|config=\default|
-		utils.add( DCompanderGUI.new(path, config) )
-	}
-	trem {|config=\default|
-		utils.add( TremoloGUI.new(path, config) )
-	}
-
-	fshift {|config=\default|
-		utils.add( FreqShiftGUI.new(path, config) )
-	}
-
-	gain {|config=\default|
-		utils.add( GainLimiterGUI.new(path, config) )
 	}
 }

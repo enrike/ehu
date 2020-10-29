@@ -80,6 +80,10 @@ Launcher {
 			~utils.add( FreqShiftGUI.new );
 		});
 
+		ActionButton(w,"gain",{
+			~utils.add( GainLimiterGUI.new );
+		});
+
 		w.front
 	}
 
