@@ -17,7 +17,7 @@ Launcher {
 	}
 
 	init {|exepath, preset|
-		if (exepath.isNil, {
+		if (exepath.isNil, { // MUST FIND ANOTHER SOLUTION. it does not work if new inside a defer
 			try { path = thisProcess.nowExecutingPath.dirname} { path=Platform.userHomeDir}
 		},{
 			path = exepath;
@@ -205,14 +205,6 @@ NormalizerGUI : EffectGUI {
 
 
 
-/*LimiterGUI : EffectGUI {
-
-*new {|exepath, preset=\default|
-^super.new.init(exepath, preset);
-}
-
-init {|exepath, preset|
-super.init(path);*/
 
 LimiterGUI : EffectGUI {
 

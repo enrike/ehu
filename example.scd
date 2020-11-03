@@ -4,31 +4,29 @@
 ( // run here the basic setup
 f = Feedback1.new;
 f.chord.postln;
+
 f.midi; // connect to nanokontrol2
 
-// other utils I use
-{// wait until everything is ready to go
-	f.dcomp;
-	f.eq; // download and install from https://github.com/enrike/supercollider-channeleq requieres wslib and tabbed views
-	//f.eq(10); // you can use the loop bus value to control the internal feedback EQ
-	//f.gneck;
-	//f.ch; // it takes the chord from main
-	//f.ch(\default); //loads "chords_default.preset" config file
-	//f.auto;
-	//f.anotch;
-	//f.trem;
-	//f.comp;
-	//BufferPlayerGUI.new;
-}.defer(4) // for instance
-)
-LimiterGUI.new
+f.gneck; // gui to change the chord
+f.ch; // another gui to change the chord
+f.ch(\default); //loads "chords_default.preset" config file
 
-Launcher.new; // experimental GUI to launch all utils included
+// effects I use in combination with the feedback unit
+//ChannelEQ.new; // download and install from https://github.com/enrike/supercollider-channeleq requieres wslib and tabbed views
+//ChannelEQ.new(10); // you can use the loop bus value to control the internal feedback EQ
+//AutoNotchGUI.new;
+//TremoloGUI.new;
+//CompanderGUI.new;
+//BufferPlayerGUI.new;
+//LimiterGUI.new
+//ChaosPitchShiftGUI.new
+//PitchShiftGUI.new;
+//GainLimiterGUI.new;
+Launcher.new; // simple GUI to launch all utils
 
 
 
-// other controls
-
+// control manually
 f.on;
 f.off;
 f.chord( ([0, 6.1, 10, 15.2, 22, 24 ]+40) );
@@ -39,14 +37,16 @@ f.damp(1300);
 f.mod(1);
 f.vol(0.7);
 
+f.notch; // activate autonotch eq
+f.notch(0);
+
 f.in(10); // in channel
 f.gainin(0.5); // how much signal from the line in
 f.out(8); // out channel
 f.loop(8); // channel used to do the feedback loop
 
 f.scramble; // chord
-f.rcontrol(\feedback); // random value for that control
-
+f.rcontrol(\feedback); // random value for \feedback control. other controls can be used too
 
 
 
@@ -178,4 +178,35 @@ t.start
 
 
 
+(
+~mel =  [41, 39, 42.5];
+~times = [13, 2, 19];
+t = Task({
+	var notes=Array.new(6), base=64, time=0;
+	inf.do({ arg i;
+		f.chord(base+[ 0, 6, 10, 15, 22, 24 ]);
+		base = ~mel.choose;
+		time = ~times.choose;
+		time.wait;
+	});
+});
+t.start
+)
+
+
+
+(
+//~mel = GuitarChords.chords[\Am7]+20;
+~times = [37, 57, 44];
+~chords = [ [ 0, 6, 10, 15, 22, 24 ], [ 0, 6.5, 10, 15, 20, 24 ] ];
+t = Task({
+	var base=30;
+	inf.do({ arg i;
+		f.chord(base+~chords.wchoose([0.85, 0.15]));
+		~times.choose.wait;
+	});
+});
+t.start
+)
+t.stop
 
