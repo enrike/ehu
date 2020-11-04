@@ -53,16 +53,16 @@ GNeckGUI : BaseGUI {
 				if (main.isNil.not, { main.chord(chord) }); // update chord in main object
 		}, 0, false, 32);
 
-		ActionButton(w,"choose",{
+		SimpleButton(w,"choose",{
 			this.choose
 		});
 
 		w.view.decorator.nextLine;
 
-		ActionButton(w,"clear",{
+		SimpleButton(w,"clear",{
 			this.clear
 		});
-		ActionButton(w,"rand",{
+		SimpleButton(w,"rand",{
 			this.rand
 		});
 
