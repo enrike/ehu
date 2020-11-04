@@ -2,19 +2,20 @@
 */
 f = Feedback1.new;
 
-/* EFFECTS
+/* EFFECTS // effects I use in combination with the feedback unit
 */
 AutoNotchGUI.new;
 TremoloGUI.new;
+NormalizerGUI.new;
 CompanderGUI.new;
-BufferPlayerGUI.new;
+FreqShiftGUI.new
 LimiterGUI.new
 ChaosPitchShiftGUI.new
 PitchShiftGUI.new;
 GainLimiterGUI.new;
+
 Launcher.new; // simple GUI to launch all effects
 
-// effects I use in combination with the feedback unit
 ChannelEQ.new; // download and install from https://github.com/enrike/supercollider-channeleq requieres wslib and tabbed views quarks
 ChannelEQ.new(10); // you can use the loop bus value to control the internal feedback EQ
 
@@ -41,4 +42,5 @@ x = thisProcess.nowExecutingPath.dirname;
 	GainLimiterGUI.new(exepath:x, preset:"201026_122001");
 }.defer(3); // for instance
 )
+
 

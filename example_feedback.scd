@@ -1,3 +1,5 @@
+/* a more detailed example explaining details of Feedback system can be used
+*/
 
 f = Feedback1.new;
 f = Feedback1.new(preset: "201026_121925");
@@ -33,7 +35,7 @@ f.rcontrol(\feedback); // random value for \feedback control. other controls can
 
 
 
-// some examples playing with Feedback1 chord. It assumes f = Feedback1.new;
+// some examples playing with Feedback1 chord. They assume f = Feedback1.new;
 
 ( // chooses chords from GuitarChords class
 t.stop;

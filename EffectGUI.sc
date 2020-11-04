@@ -48,10 +48,10 @@ BaseGUI {
 			this.close;
 		};
 
-		ActionButton(w,"S",{
+		SimpleButton(w,"S",{
 			this.save;
 		});
-		ActionButton(w,"O",{
+		SimpleButton(w,"O",{
 			this.open;
 		});
 		w.front;
@@ -131,6 +131,23 @@ BaseGUI {
 }
 
 
+SimpleButton {
+	*new {|parent, label, action|
+		^super.new.init(parent, label, action);
+	}
+
+	init {|parent, label, action|
+		var skin=GUI.skin;
+		var font = GUI.font.new(*skin.fontSpecs);
+		var w = (label.bounds(font).width + 10).max(20); // (optimalWidth + 10).max(minWidth?20)
+		Button.new(parent, w@GUI.skin.buttonHeight)
+		.states_([
+			[label, Color.black, Color.grey(0.5, 0.2)]
+		])
+		.action_(action);
+	}
+}
+
 
 EffectGUI : BaseGUI {
 	var <synth, midisetup, synthdef;
@@ -170,11 +187,11 @@ EffectGUI : BaseGUI {
 		}
 		.value_(0); // default to sound in
 
-		ActionButton(w,"midi",{
+		SimpleButton(w,"midi",{
 			this.midi(midisetup);
 		});
 
-		ActionButton(w,"auto",{
+		SimpleButton(w,"auto",{
 			AutoGUI.new(this, path);
 		});
 

@@ -39,49 +39,49 @@ Launcher {
 
 		w.view.decorator.nextLine;
 
-		ActionButton(w,"feedback",{
+		SimpleButton(w,"feedback",{
 			~utils.add( Feedback1.new(path) );
 		});
 
-		ActionButton(w,"EQ",{
+		SimpleButton(w,"EQ",{
 			try { ~utils.add( ChannelEQ.new) }
 			{"cannot find ChannelEQ class. try installing it from http://github.com/enrike/supercollider-channeleq".postln}
 		});
 
-		ActionButton(w,"anotch",{
+		SimpleButton(w,"anotch",{
 			~utils.add( AutoNotchGUI.new(path) );
 		});
 
-		ActionButton(w,"Dcomp",{
+		SimpleButton(w,"Dcomp",{
 			~utils.add( DCompanderGUI.new(path) );
 		});
 
-		ActionButton(w,"comp",{
+		SimpleButton(w,"comp",{
 			~utils.add( CompanderGUI.new(path) );
 		});
 
-		ActionButton(w,"tremolo",{
+		SimpleButton(w,"tremolo",{
 			~utils.add( TremoloGUI.new(path) );
 		});
 
-		ActionButton(w,"normalizer",{
+		SimpleButton(w,"normalizer",{
 			~utils.add( NormalizerGUI.new(path) );
 		});
 
-		ActionButton(w,"limiter",{
+		SimpleButton(w,"limiter",{
 			~utils.add( LimiterGUI.new(path) );
 		});
 
-		ActionButton(w,"player",{
-			~utils.add( BufferPlayerGUI.new );
+		SimpleButton(w,"player",{
+			~utils.add( BufferPlayerGUI.new(path) );
 		});
 
-		ActionButton(w,"fshift",{
-			~utils.add( FreqShiftGUI.new );
+		SimpleButton(w,"fshift",{
+			~utils.add( FreqShiftGUI.new(path) );
 		});
 
-		ActionButton(w,"gain",{
-			~utils.add( GainLimiterGUI.new );
+		SimpleButton(w,"gain",{
+			~utils.add( GainLimiterGUI.new(path) );
 		});
 
 		w.front
@@ -90,7 +90,7 @@ Launcher {
 	close {
 		~utils.do{|ut|
 			("-"+ut).postln;
-			ut.close
+			try {ut.close}
 	};}
 }
 
@@ -281,19 +281,19 @@ CompanderGUI : EffectGUI {
 
 			StaticText(w, 20@18);
 
-			ActionButton(w,"comp",{
+			SimpleButton(w,"comp",{
 				controls[\slopeBelow].valueAction_(1);
 				controls[\slopeAbove].valueAction_(0.5);
 			});
-			ActionButton(w,"gate",{
+			SimpleButton(w,"gate",{
 				controls[\slopeBelow].valueAction_(5);
 				controls[\slopeAbove].valueAction_(1);
 			});
-			ActionButton(w,"lim",{
+			SimpleButton(w,"lim",{
 				controls[\slopeBelow].valueAction_(1);
 				controls[\slopeAbove].valueAction_(0.1);
 			});
-			ActionButton(w,"sust",{
+			SimpleButton(w,"sust",{
 				controls[\slopeBelow].valueAction_(0.1);
 				controls[\slopeAbove].valueAction_(1);
 			});
@@ -672,19 +672,19 @@ DCompanderGUI : EffectGUI {
 
 			StaticText(w, 20@18);
 
-			ActionButton(w,"comp",{
+			SimpleButton(w,"comp",{
 				controls[\slopeBelow].valueAction_(1);
 				controls[\slopeAbove].valueAction_(0.5);
 			});
-			ActionButton(w,"gate",{
+			SimpleButton(w,"gate",{
 				controls[\slopeBelow].valueAction_(5);
 				controls[\slopeAbove].valueAction_(1);
 			});
-			ActionButton(w,"lim",{
+			SimpleButton(w,"lim",{
 				controls[\slopeBelow].valueAction_(1);
 				controls[\slopeAbove].valueAction_(0.1);
 			});
-			ActionButton(w,"sust",{
+			SimpleButton(w,"sust",{
 				controls[\slopeBelow].valueAction_(0.1);
 				controls[\slopeAbove].valueAction_(1);
 			});

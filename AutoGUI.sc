@@ -81,19 +81,19 @@ AutoGUI : BaseGUI {
 
 		StaticText(w, Rect(0,0, 40, 15)).string="  Rand:";
 
-		ActionButton(w,"all",{
+		SimpleButton(w,"all",{
 			this.rand;
 		});
 
-		ActionButton(w,"sliders",{
+		SimpleButton(w,"sliders",{
 			this.randsliders;
 		});
 
-		ActionButton(w,"times",{
+		SimpleButton(w,"times",{
 			this.randtimes;
 		});
 
-		ActionButton(w,"reset",{
+		SimpleButton(w,"reset",{
 			this.reset;
 		});
 
@@ -142,7 +142,7 @@ AutoGUI : BaseGUI {
 					});
 				});
 
-				ActionButton(w,"rr",{
+				SimpleButton(w,"rr",{
 					var rmin = controls[name.asSymbol].controlSpec.clipLo.asFloat;
 					var rmax = controls[name.asSymbol].controlSpec.clipHi.asFloat;
 					var min = rrand(rmin, rmax);

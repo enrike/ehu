@@ -89,25 +89,6 @@ IxiWin {
 
 
 
-IxiSimpleButton {
-	*new {|parent, label, action|
-		^super.new.init(parent, label, action);
-	}
-
-	init {|parent, label, action|
-		var skin=GUI.skin;
-		var font = GUI.font.new(*skin.fontSpecs);
-		var w = (label.bounds(font).width + 10).max(18); // (optimalWidth + 10).max(minWidth?20)
-		Button.new(parent, w@GUI.skin.buttonHeight)
-		.states_([
-			[label, Color.black, Color.grey(0.5, 0.2)]
-		])
-		.action_(action);
-	}
-}
-
-
-
 
 IxiSelection {
 	var main, selectables, <selected, winRect;

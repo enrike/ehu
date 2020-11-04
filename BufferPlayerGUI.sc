@@ -94,12 +94,12 @@ BufferPlayerGUI  {
 				})
 			}).valueAction=0;
 
-			ActionButton(w,"<<",{
+			SimpleButton(w,"<<",{
 				synth.set(\trig, 0); // go back to start
 				{synth.set(\trig, 1)}.defer(0.05)
 			});
 
-			ActionButton(w,"reset",{
+			SimpleButton(w,"reset",{
 				plotview.selectNone(0);
 				synth.set(\start, 0);
 				synth.set(\end, 1);
@@ -115,7 +115,7 @@ BufferPlayerGUI  {
 			synth.set(\loop, butt.value);// this cannot be modulated once it is playing
 			}).valueAction=0;*/
 
-			ActionButton(w,"LOAD",{
+			SimpleButton(w,"LOAD",{
 				this.choosefile;
 			});
 

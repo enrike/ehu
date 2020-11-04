@@ -24,23 +24,23 @@ ChordGUI : BaseGUI {
 
 		StaticText(w, Rect(0,0, 40, 15)).string="  Rand:";
 
-		ActionButton(w,"all",{
+		SimpleButton(w,"all",{
 			this.rand;
 		});
-		ActionButton(w,"octave",{
+		SimpleButton(w,"octave",{
 			this.roctave;
 		});
-		ActionButton(w,"notes",{
+		SimpleButton(w,"notes",{
 			this.rnotes;
 		});
-		ActionButton(w,"bend",{
+		SimpleButton(w,"bend",{
 			this.rbend;
 		});
-		ActionButton(w,"scramble",{
+		SimpleButton(w,"scramble",{
 			this.scramble;
 		});
 
-		ActionButton(w,"reset bend",{
+		SimpleButton(w,"reset bend",{
 			this.resetbend;
 		});
 

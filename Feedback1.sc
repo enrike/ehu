@@ -117,11 +117,11 @@ Feedback1 : EffectGUI {
 						StaticText(w, 40@18).string_("Tools:").resize_(3);
 
 
-			ActionButton(w,"gneck",{
+			SimpleButton(w,"gneck",{
 				utils.add( GNeckGUI.new(this, path) );
 			});
 
-			ActionButton(w,"chord",{
+			SimpleButton(w,"chord",{
 				utils.add( ChordGUI.new(this, path, chord) );
 			});
 
@@ -175,7 +175,7 @@ Feedback1 : EffectGUI {
 			);
 			controls[\gainin].numberView.maxDecimals = 3 ;
 
-			ActionButton(w,"p",{
+			SimpleButton(w,"p",{
 				ParamWinGUI.new(path:path, name:"gainin", func:{|data|
 					controls[\gainin].valueAction = controls[\gainin].controlSpec.map(data.asFloat);
 				} );
@@ -191,7 +191,7 @@ Feedback1 : EffectGUI {
 			controls[\feedback].numberView.maxDecimals = 3 ;
 
 
-			ActionButton(w,"p",{
+			SimpleButton(w,"p",{
 				ParamWinGUI.new(path:path, name:"feedback", func:{|data|
 					controls[\feedback].valueAction = controls[\feedback].controlSpec.map(data.asFloat);
 				} );
@@ -207,7 +207,7 @@ Feedback1 : EffectGUI {
 			controls[\amp].numberView.maxDecimals = 3 ;
 
 
-			ActionButton(w,"p",{
+			SimpleButton(w,"p",{
 				ParamWinGUI.new(path:path, name:"amp", func:{|data|
 					controls[\amp].valueAction = controls[\amp].controlSpec.map(data.asFloat);
 				} );
@@ -222,7 +222,7 @@ Feedback1 : EffectGUI {
 			);
 			controls[\deltime].numberView.maxDecimals = 3 ;
 
-			ActionButton(w,"p",{
+			SimpleButton(w,"p",{
 				ParamWinGUI.new(path:path, name:"deltime", func:{|data|
 					controls[\deltime].valueAction = controls[\deltime].controlSpec.map(data.asFloat);
 				} );
@@ -237,7 +237,7 @@ Feedback1 : EffectGUI {
 			);
 			controls[\damp].numberView.maxDecimals = 3 ;
 
-			ActionButton(w,"p",{
+			SimpleButton(w,"p",{
 				ParamWinGUI.new(path:path, name:"damp", func:{|data|
 					controls[\damp].valueAction = controls[\damp].controlSpec.map(data.asFloat);
 				} );
@@ -252,7 +252,7 @@ Feedback1 : EffectGUI {
 			);
 			controls[\mod].numberView.maxDecimals = 3 ;
 
-			ActionButton(w,"p",{
+			SimpleButton(w,"p",{
 				ParamWinGUI.new(path:path, name:"mod", func:{|data|
 					controls[\mod].valueAction = controls[\mod].controlSpec.map(data.asFloat);
 				} );
@@ -267,7 +267,7 @@ Feedback1 : EffectGUI {
 			);
 			controls[\vol].numberView.maxDecimals = 3 ;
 
-			ActionButton(w,"p",{
+			SimpleButton(w,"p",{
 				ParamWinGUI.new(path:path, name:"vol", func:{|data|
 					controls[\vol].valueAction = controls[\vol].controlSpec.map(data.asFloat);
 				} );
