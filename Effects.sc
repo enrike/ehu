@@ -108,10 +108,8 @@ TremoloGUI : EffectGUI {
 
 		synthdef = SynthDef(\trem, {|in=0, out=0, freq=0, xfade= 0|
 			var sig = In.ar(in, 2);
-			var dry = sig;
 			sig = sig * SinOsc.ar(freq);
-			sig = XFade2.ar(dry, sig, xfade);
-			Out.ar(out, sig);
+			XOut.ar(out, xfade, sig);
 		});
 
 		Server.default.waitForBoot{
@@ -217,7 +215,7 @@ LimiterGUI : EffectGUI {
 
 		synthdef = SynthDef(\lim, {|in=0, out=0, level=0, xfade= 0|
 			var sig = In.ar(in, 2) ;
-			sig = Limiter(sig, level);
+			sig = Limiter(sig, level.asFloat);
 			XOut.ar(out, xfade, sig);
 		});
 
@@ -232,7 +230,7 @@ LimiterGUI : EffectGUI {
 				slbounds,    // bounds
 				"level",  // label
 				ControlSpec(0, 1, \lin, 0.001, 1),     // controlSpec
-				{ |ez| synth.set(\level, ez.value) } // action
+				{ |ez| synth.set(\level, ez.value.asFloat) } // action
 			);
 			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
