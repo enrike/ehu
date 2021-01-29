@@ -1,5 +1,5 @@
 # ehu
-Experiments on with supercollider by ixi-audio.net under the Ikersoinu research group at the Art and Technology department of the University of the Basque Country (EHU/UPV).
+Experimental tools to make music based in supercollider by ixi-audio.net under the Ikersoinu research group at the Art and Technology department of the University of the Basque Country (EHU/UPV).
 
 This project grew around the Feedback1.sc system.
 
