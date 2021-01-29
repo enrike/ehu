@@ -249,6 +249,44 @@ LimiterGUI : EffectGUI {
 
 
 
+PatcherGUI : EffectGUI { // just read a bus and send that signal to another bus
+
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
+	}
+
+	init {|exepath, preset|
+		super.init(exepath);
+
+		synthdef = SynthDef(\patcher, {|in=0, out=0, level=0|
+			Out.ar(out, In.ar(in, 2)*level);
+		});
+
+		Server.default.waitForBoot{
+			this.audio;
+
+			super.gui("Patcher", Rect(310,250, 430, 50)); // init super gui w
+
+			w.view.decorator.nextLine;
+
+			controls[\level] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"level",  // label
+				ControlSpec(0, 1, \lin, 0.001, 1),     // controlSpec
+				{ |ez| synth.set(\level, ez.value.asFloat) } // action
+			);
+
+			if (preset.isNil.not, { // not loading a preset file by default
+				super.preset( w.name, preset ); // try to read and apply the default preset
+			})
+		};
+	}
+}
+
+
+
+
+
 
 CompanderGUI : EffectGUI {
 

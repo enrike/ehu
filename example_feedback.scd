@@ -13,6 +13,7 @@ f.ch(\default); //loads "chords_default.preset" config file
 // control manually
 f.on;
 f.off;
+f.chord( [ 40, 47, 52, 55, 59, 64 ]);
 f.chord( ([0, 6.1, 10, 15.2, 22, 24 ]+40) );
 f.feedback(0.2);
 f.deltime(61);

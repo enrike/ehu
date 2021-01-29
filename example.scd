@@ -2,7 +2,8 @@
 */
 f = Feedback1.new;
 
-/* EFFECTS // effects I use in combination with the feedback unit
+/* EFFECTS
+// effects I use in combination with the feedback unit. some are just quick tests
 */
 AutoNotchGUI.new;
 TremoloGUI.new;
@@ -27,13 +28,16 @@ BufferPlayerGUI.new
 // PRESET SYSTEM.
 /* the save/open buttons allow to save and load the current state of the window and GUI inside the "presets" directory.
 Save will name the preset like EFFECTNAME_yearmothday_hourminsecs.preset
-When the window opens it tries to load a prest named "presets/NAMEOFTHEWINDOW_default.preset"
-they can be loaded on init too like this
+When the window opens it tries to load a prest named "presets/EFFECTNAME_default.preset"
+they can be loaded like this too
 */
 CompanderGUI.new(preset:"201024_182949"); // will load "presets/compander_201024_182949.preset"
 GainLimiterGUI.new(preset:"201024_160150"); // will load "presets/gainlimiter_201024_160150.preset"
 
-( // if you want to use defer you must pass the ref to nowExecutingPath
+
+
+// presets + defer
+( // if you use defer you must pass the ref to nowExecutingPath to find the presets folder
 x = thisProcess.nowExecutingPath.dirname;
 {
 	CompanderGUI.new(exepath:x, preset:"201024_182949"); //make sure the presets are there

@@ -10,7 +10,7 @@ IxiWin {
 		rect ?? {rect = Rect(0, 0, 1012, 740)};
 
 		run = true;
-		gap = 1/12.0;
+		gap = 1/20.0;
 		frame = 1;
 
 		win = Window(name, rect, resizable: false);

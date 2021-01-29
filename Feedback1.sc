@@ -289,7 +289,7 @@ Feedback1 : EffectGUI {
 	}
 
 	audio {
-		synth = Synth(\feed, [\chord, chord]);
+		synth = Synth.tail(Server.default, \feed, [\chord, chord]);
 		synth.postln;
 		Server.default.sync;
 	}

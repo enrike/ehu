@@ -7,6 +7,148 @@ license GPL
 no loop play?
 */
 
+
+ChaosPlayerGUI : EffectGUI {
+	var b;
+
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
+	}
+
+	init {|exepath, preset|
+		super.init(exepath);
+
+		//midisetup = [[\tremolo, 16], [\xfade, 17]]; // control, MIDI effect channel
+
+		synthdef = SynthDef(\chaosplayer, {|out = 0, bufnum, rate = 1, trig = 0,
+			start=0, end=1, reset=0, loop=1, level=1,
+			offset=0.005, spread=0.2, wobble=0.05|
+
+			var dur, phasorL, phasorR, ls, rs, signal;
+			dur = BufFrames.kr(bufnum);
+			phasorL = Phasor.ar( trig, (rate + wobble.rand2.lag(0.001)) * BufRateScale.kr(bufnum), start*dur, end*dur, resetPos: reset*dur);
+			phasorR = Phasor.ar( trig, (rate + offset + wobble.rand2.lag(0.001)) * BufRateScale.kr(bufnum), start*dur, end*dur, resetPos: reset*dur);
+			ls = BufRd.ar( 2, bufnum, phasorL, loop:loop );
+			rs = BufRd.ar( 2, bufnum, phasorR, loop:loop );
+			signal = Pan2.ar(ls, spread) + Pan2.ar(rs, spread.neg);
+			// HPF? or EQ?
+			//signal = HPF.ar(signal, 50);
+			Out.ar(out,  signal * level * 0.5);
+		});
+
+		Server.default.waitForBoot{
+			this.audio;
+
+			super.gui("ChaosPlayer", 430@140); // init super gui w
+
+			SimpleButton(w,"LOAD",{
+				this.choosefile;
+			});
+
+
+			controls[\play] = Button(w, 22@18)
+			.states_([
+				[">", Color.white, Color.black],
+				["||", Color.black, Color.red]
+			])
+			.action_({ arg butt;
+				if (butt.value==0, {
+					synth.set(\rate, 0);
+					synth.set(\amp, 0);
+				},{
+					if (synth.isNil, {
+						synth = Synth.new(synthdef.name, [\bufnum, b,
+							//\loop, controls[\loop].value,
+							\out, controls[\out].value,
+							\rate, controls[\pitch].value,
+							\level, controls[\level].value]);
+					}, { // already there
+						synth.set(\rate, controls[\pitch].value);
+						synth.set(\level, controls[\level].value);
+					});
+
+				})
+			}).valueAction=0;
+
+			w.view.decorator.nextLine;
+
+			order.add(\rate);
+			controls[\rate] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"rate",  // label
+				ControlSpec(0, 1, \lin, 0.01, 1),     // controlSpec
+				{ |ez| synth.set(\rate, ez.value) } // action
+			);
+			controls[\rate].numberView.maxDecimals = 4 ;
+
+			order.add(\offset);
+			controls[\offset] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"\offset",  // label
+				ControlSpec(0.001, 1, \lin, 0.01, 0),     // controlSpec
+				{ |ez| synth.set(\offset, ez.value) } // action
+			);
+			controls[\offset].numberView.maxDecimals = 4 ;
+
+			order.add(\spread);
+			controls[\spread] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"\spread",  // label
+				ControlSpec(0.001, 1, \lin, 0.01, 0),     // controlSpec
+				{ |ez| synth.set(\offset, ez.value) } // action
+			);
+			controls[\spread].numberView.maxDecimals = 4 ;
+
+			order.add(\wooble);
+			controls[\wooble] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"\wooble",  // label
+				ControlSpec(0.001, 1, \lin, 0.001, 0),     // controlSpec
+				{ |ez| synth.set(\wooble, ez.value) } // action
+			);
+			controls[\spread].numberView.maxDecimals = 4 ;
+
+			order.add(\level);
+			controls[\level] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"level",  // label
+				ControlSpec(0.001, 2, \lin, 0.001, 1),     // controlSpec
+				{ |ez| synth.set(\level, ez.value) } // action
+			);
+			controls[\level].numberView.maxDecimals = 3 ;
+
+			if (preset.isNil.not, { // not loading a preset file by default
+				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+		};
+	}
+
+		choosefile {
+		FileDialog({ |apath|
+			this.load(apath)
+		},
+		fileMode: 0,
+		stripResult: true
+		);
+	}
+
+	load {|path|
+		synth.free;
+		synth = nil;
+		b.free;
+		b = Buffer.read(Server.default, path, action: {
+			/*if (w.isNil.not, {
+				var f = { |b,v|
+					b.loadToFloatArray(action: { |a| { v.setData(a, channels:b.numChannels) }.defer });
+					//v.gridResolution(b.duration/10); // I would like to divide the window in 10 parts no matter what the sound dur is. Cannot change gridRes on the fly?
+				};
+				if (b.isNil.not, {
+					f.(b, plotview)}); // only if a buf is provided
+			});*/
+		});
+	}
+}
+
 BufferPlayerGUI  {
 	var <controls, <w;
 	var synthdef, synth;

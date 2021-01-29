@@ -107,17 +107,13 @@ BaseGUI {
 	read {|apath|
 		var	data = Object.readArchive(apath);
 		("reading preset"+apath).postln;
-		"XXXXXXXXXXX".postln;
 
 		[\bounds, data[\bounds]].postln; //make sure it first deals with ON
 		{ w.bounds = data[\bounds] }.defer; // wait for QT
 		data.removeAt(\bounds); // we are done with this
 
 		data.keysValuesDo{ |key, value|
-			[key, value].postln; // we must first run ON button to trigger the synth. then do the rest.
-			"YYYYYYYYYYY".postln;
-			(key==\drywet).postln;
-			(key=="drywet").postln;
+			//[key, value].postln; // we must first run ON button to trigger the synth. then do the rest.
 			try {
 				if(key==\drywet, { // this is for backwards compatibility
 					{controls[\xfade].valueAction = value}.defer // wait for QT
