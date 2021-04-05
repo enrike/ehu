@@ -892,3 +892,157 @@ GainLimiterGUI : EffectGUI {
 		}
 	}
 }
+
+
+
+
+
+DelayGUI : EffectGUI {
+
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
+	}
+
+	init {|exepath, preset|
+		super.init(exepath);
+
+		//midisetup = [[\freq, 23]];
+
+		synthdef = SynthDef(\delay, {|in=0, out=0, delt=0.25, dect=2, xfade=1|
+			var signal = In.ar(in, 2);
+			signal = CombL.ar(signal, maxdelaytime: 2.5, delaytime: delt, decaytime: dect);
+			XOut.ar(out, xfade, signal )
+		}).add;
+
+		Server.default.waitForBoot{
+			this.audio;
+			super.gui("Delay", Rect(310,0, 430, 100));
+
+			w.view.decorator.nextLine;
+
+			////////////////////////
+
+			order.add(\delt);
+			controls[\delt] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"delay",  // label
+				ControlSpec(0.01, 2.5, \lin, 0.01, 0.25),     // controlSpec
+				{ |ez| synth.set(\delt, ez.value) } // action
+			);
+			controls[\delt].numberView.maxDecimals = 3 ;
+
+			order.add(\dect);
+			controls[\dect] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"decay",  // label
+				ControlSpec(0.01, 10, \lin, 0.01, 2),     // controlSpec
+				{ |ez| synth.set(\dect, ez.value) } // action
+			);
+			controls[\dect].numberView.maxDecimals = 3 ;
+
+			controls[\xfade] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"xfade",  // label
+				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+				{ |ez| synth.set(\xfade, ez.value) } // action
+			).valueAction_(0);
+
+			if (preset.isNil.not, { // not loading a preset file by default
+				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+		};
+	}
+
+}
+
+
+
+
+
+
+
+FreeverbGUI : EffectGUI {
+
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
+	}
+
+	init {|exepath, preset|
+		super.init(exepath);
+
+		//midisetup = [[\freq, 23]];
+
+		synthdef = SynthDef(\freeverb, {|in=0, out=0, mix= 1, room= 0.5, damp= 0.5, xfade=1|
+			var signal = In.ar(in, 2);
+			signal = FreeVerb.ar(signal, mix, room, damp);
+			XOut.ar(out, xfade, signal )
+		}).add;
+
+		Server.default.waitForBoot{
+			this.audio;
+			super.gui("Freeverb", Rect(310,0, 430, 100));
+
+			w.view.decorator.nextLine;
+
+			////////////////////////
+
+			order.add(\room);
+			controls[\room] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"room",  // label
+				ControlSpec(0, 1, \lin, 0, 2),     // controlSpec
+				{ |ez| synth.set(\room, ez.value) } // action
+			);
+			controls[\room].numberView.maxDecimals = 3 ;
+
+			order.add(\damp);
+			controls[\damp] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"damp",  // label
+				ControlSpec(0, 1, \lin, 0, 0),     // controlSpec
+				{ |ez| synth.set(\damp, ez.value) } // action
+			);
+			controls[\damp].numberView.maxDecimals = 3 ;
+
+			controls[\xfade] = EZSlider( w,         // parent
+				slbounds,    // bounds
+				"xfade",  // label
+				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+				{ |ez| synth.set(\xfade, ez.value) } // action
+			).valueAction_(0);
+
+			if (preset.isNil.not, { // not loading a preset file by default
+				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+		};
+	}
+
+}
+
+
+
+M2stGUI : EffectGUI {
+	*new {|exepath, preset=\default|
+		^super.new.init(exepath, preset);
+	}
+
+	init {|exepath, preset|
+		super.init(exepath);
+
+		//midisetup = [[\freq, 23]];
+
+		synthdef = SynthDef(\m2st, {|in=3, out=0|
+			Out.ar(out, In.ar(in, 1)!2);
+		}).add;
+
+		Server.default.waitForBoot{
+			this.audio;
+			super.gui("M2st", Rect(310,0, 330, 30));
+
+			if (preset.isNil.not, { // not loading a preset file by default
+				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+		};
+	}
+
+}
