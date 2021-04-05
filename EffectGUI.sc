@@ -197,19 +197,19 @@ EffectGUI : BaseGUI {
 			["off", Color.black, Color.red]
 		])
 		.action_({ arg butt;
-			if (synth.isNil.not, {
+			if (butt.value==1, {
+				("running audio:"+name).postln;
+				this.audio
+			}, {
 				synth.free;
-				if (butt.value==1, {
-					("running audio:"+name).postln;
-					this.audio
-				}, {
-					("kill"+synth.defName+"synth").postln;
-				})
-			});
+				synth = nil;
+				("kill"+synthdef.name+"synth").postln;
+			})
 		}).value=1;
 	}
 
 	audio {|argarr=#[]|
+		synth.free;
 		synthdef.load;
 		Server.default.sync;
 		synth = Synth.tail(Server.default, synthdef.name, argarr);
