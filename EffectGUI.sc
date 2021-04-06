@@ -276,7 +276,7 @@ EffectGUI : BaseGUI {
 		}{|er| er.postln};
 		data.removeAt(\on); // we are done with this
 
-		[\bounds, data[\bounds]].postln; //bounds
+		//[\bounds, data[\bounds]].postln; //bounds
 
 		if (data[\bounds].isNil.not, {
 			{ w.bounds = data[\bounds] }.defer; // wait for QT

@@ -14,6 +14,9 @@ LimiterGUI.new
 ChaosPitchShiftGUI.new
 PitchShiftGUI.new;
 GainLimiterGUI.new;
+DelayGUI.new
+FreeverbGUI.new
+M2stGUI.new // takes a mono channel and duplicates it in two channels
 
 Launcher.new; // simple GUI to launch all effects
 
@@ -21,7 +24,7 @@ ChannelEQ.new; // download and install from https://github.com/enrike/supercolli
 ChannelEQ.new(10); // you can use the loop bus value to control the internal feedback EQ
 
 BufferPlayerGUI.new
-
+Pads.new("/path/to/files/*.flac")
 
 
 
@@ -31,10 +34,9 @@ Save will name the preset like EFFECTNAME_yearmothday_hourminsecs.preset
 When the window opens it tries to load a prest named "presets/EFFECTNAME_default.preset"
 they can be loaded like this too
 */
+
 CompanderGUI.new(preset:"201024_182949"); // will load "presets/compander_201024_182949.preset"
 GainLimiterGUI.new(preset:"201024_160150"); // will load "presets/gainlimiter_201024_160150.preset"
-
-
 
 // presets + defer
 ( // if you use defer you must pass the ref to nowExecutingPath to find the presets folder
@@ -46,5 +48,11 @@ x = thisProcess.nowExecutingPath.dirname;
 	GainLimiterGUI.new(exepath:x, preset:"201026_122001");
 }.defer(3); // for instance
 )
+
+// AUTO system and auto presets
+/* auto button just opens a window that allows to set each slider to a rand variable every N secs. Presets can be
+saved and also set on initialization. This below should open Feedback and its auto window with the default auto preset
+*/
+Feedback1.new(autopreset:"default");
 
 

@@ -12,14 +12,14 @@
 
 
 Feedback1 : EffectGUI {
-	var auto, chord, utils, notchsynth, notchosc, notchlabel;
+	var chord, utils, notchsynth, notchosc, notchlabel;
 	var vlay, levels, inOSCFunc, outOSCFunc;
 
-	*new {|path, preset|
-		^super.new.init(path, preset);
+	*new {|path, preset, autopreset|
+		^super.new.init(path, preset, autopreset);
 	}
 
-	init  {|apath, preset|
+	init  {|apath, preset, autopreset|
 		super.init(apath);
 		"Feedback1 init".postln;
 
@@ -114,8 +114,7 @@ Feedback1 : EffectGUI {
 				});
 			}).valueAction=1;
 
-						StaticText(w, 40@18).string_("Tools:").resize_(3);
-
+			StaticText(w, 40@18).string_("Tools:").resize_(3);
 
 			SimpleButton(w,"gneck",{
 				utils.add( GNeckGUI.new(this, path) );
@@ -278,6 +277,10 @@ Feedback1 : EffectGUI {
 				this.updateall; // make sure synth is updated AFTER all presets are read
 			});
 
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
+			});
+
 			["FEEDBACK1 READY", synth].postln;
 		}
 	}
@@ -289,8 +292,9 @@ Feedback1 : EffectGUI {
 	}
 
 	audio {
+		synth.free;
 		synth = Synth.tail(Server.default, \feed, [\chord, chord]);
-		synth.postln;
+		//synth.postln;
 		Server.default.sync;
 	}
 
@@ -369,7 +373,7 @@ Feedback1 : EffectGUI {
 	}
 
 	auto {|config=\default|
-		utils.add( AutoGUI.new(path, config) )
+		utils.add( AutoGUI.new(this, path, config) )
 	}
 
 	ch {|config=\default|
