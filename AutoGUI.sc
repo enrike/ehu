@@ -21,8 +21,8 @@ Auto {
 		procs.collect(_.stop)
 	}
 
-	sch {|control, time, range|
-		var atask, widget;
+	sch {|control, time, range, alag=0|
+		var atask, widget, anim;
 
 		if (procs[control.asSymbol].isNil.not, { this.stop(control.asSymbol) }); // kill if already there before rebirth
 		widget = main.controls[control];
@@ -33,9 +33,25 @@ Auto {
 		range = range.asFloat;
 
 		atask = Task({
-			inf.do({|index|
-				// option to ease the jump between values
+			inf.do({|index|	// option to ease the jump between values using lag or varlag?
 				{ widget.valueAction = rrand(range[0], range[1]) }.defer;
+/*				var target = rrand(range[0], range[1]);
+				var steps = time * 20; //pasos
+				var steplen = (target - widget.value)/steps;
+				anim.stop;
+				anim.free;
+				anim = nil;
+				//[steps, steplen, (time/steps)].postln;
+				anim=Task({
+					steps.do({|index|	// option to ease the jump between values using lag or varlag?
+						try{ { widget.valueAction = widget.value+steplen }.defer };
+							(time/steps).wait;
+					});
+					anim.stop;
+					anim.free;
+					anim = nil;
+				}, AppClock).start;*/
+
 				time.wait;
 			});
 		});
@@ -73,7 +89,7 @@ AutoGUI : BaseGUI {
 
 		values = Dictionary.new;
 
-		this.gui("Auto"+main.class, Rect(430,0, 375, 22+(main.order.size*22)));
+		this.gui("Auto"+main.class, Rect(430,0, 400, 22+(main.order.size*22)));
 
 		w.onClose = {
 			auto.kill;
@@ -105,6 +121,7 @@ AutoGUI : BaseGUI {
 				values[name] = Dictionary.new;
 				values[name][\range] = [0,1];
 				values[name][\time] = 1;
+				values[name][\lag] = 0;
 
 				//slider
 				controls[name] = EZRanger( w,  // parent
@@ -114,7 +131,7 @@ AutoGUI : BaseGUI {
 					{ |ez|
 						values[name][\range] = ez.value;
 						if (auto.procs[name].isNil.not, {
-							auto.sch(name, values[name][\time], ez.value)
+							auto.sch(name, values[name][\time], ez.value, values[name][\lag])
 						});
 					}, initVal:[control.controlSpec.minval, control.controlSpec.maxval], initAction:true // action
 				);
@@ -124,19 +141,29 @@ AutoGUI : BaseGUI {
 					{|ez|
 						values[name][\time] = ez.value;
 						if (auto.procs[name].isNil.not, {
-							auto.sch(name, ez.value, values[name][\range])
+							auto.sch(name, ez.value, values[name][\range], values[name][\lag])
 						})
 				}, 1);
 
+
+				// lag number
+				// controls[name++"_lag"] = EZNumber(w, 30@20, nil, ControlSpec(0, 120, \lin, 0.01, 0),
+				// 	{|ez|
+				// 		values[name][\lag] = ez.value;
+				// 		if (auto.procs[name].isNil.not, {
+				// 			auto.sch(name, values[name][\time], values[name][\range], ez.value)
+				// 		})
+				// });
+
 				//button
-				Button(w, Rect(20, 20, 20, 20))
+				controls[name++"_button"] = Button(w, Rect(20, 20, 20, 20))
 				.states_([
 					[">", Color.white, Color.black],
 					["||", Color.black, Color.red],
 				])
 				.action_({ arg butt;
 					if (butt.value==1, {
-						auto.sch(name, values[name][\time], values[name][\range]);
+						auto.sch(name, values[name][\time], values[name][\range], values[name][\lag]);
 					},{
 						auto.stop(name)
 					});
