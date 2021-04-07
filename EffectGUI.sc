@@ -146,7 +146,7 @@ SimpleButton {
 
 
 EffectGUI : BaseGUI {
-	var <synth, midisetup, synthdef;
+	var <synth, midisetup, synthdef, utils;
 
 	/*	*new {|exepath=""|
 	^super.new.initEffectGUI(exepath);
@@ -156,12 +156,24 @@ EffectGUI : BaseGUI {
 		midisetup = List.new;
 		synthdef = SynthDef(\default, {});
 		super.init(exepath);
+		utils = List.new;
 	}
 
 	close {
 		("freeing"+synth).postln;
 		synth.free;
 		super.close;
+		utils.do{|ut|
+			ut.close
+		};
+	}
+
+	pbut {|controlname|
+		SimpleButton(w,"p",{
+			ParamWinGUI.new(path:path, name:controls[controlname].label, func:{|data|
+				controls[controlname].valueAction = controls[controlname].controlSpec.map(data.asFloat);
+			} );
+		});
 	}
 
 	gui {|name, bounds|
@@ -215,6 +227,10 @@ EffectGUI : BaseGUI {
 		synth = Synth.tail(Server.default, synthdef.name, argarr);
 		Server.default.sync;
 		("run"+synth.defName+"synth").postln;
+	}
+
+	auto {|config=\default|
+		utils.add( AutoGUI.new(this, path, config) )
 	}
 
 	midi {|setup|

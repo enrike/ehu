@@ -12,11 +12,11 @@ AutoNotch.new;
 Launcher {
 	var path, w;
 
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		if (exepath.isNil, { // MUST FIND ANOTHER SOLUTION. it does not work if new inside a defer
 			try { path = thisProcess.nowExecutingPath.dirname} { path=Platform.userHomeDir}
 		},{
@@ -97,11 +97,11 @@ Launcher {
 
 TremoloGUI : EffectGUI {
 
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		super.init(exepath);
 
 		midisetup = [[\tremolo, 16], [\xfade, 17]]; // control, MIDI effect channel
@@ -127,6 +127,7 @@ TremoloGUI : EffectGUI {
 				{ |ez| synth.set(\freq, ez.value) } // action
 			);
 			controls[\tremolo].numberView.maxDecimals = 3 ;
+			this.pbut(\tremolo);
 
 			order.add(\xfade);
 			controls[\xfade] = EZSlider( w,         // parent
@@ -136,9 +137,14 @@ TremoloGUI : EffectGUI {
 				{ |ez| synth.set(\xfade, ez.value) } // action
 			).valueAction_(0);
 			controls[\xfade].numberView.maxDecimals = 3 ;
+			this.pbut(\xfade);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
 			});
 		};
 	}
@@ -161,11 +167,11 @@ TremoloGUI : EffectGUI {
 ////////////////////////////////////////////////
 NormalizerGUI : EffectGUI {
 
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		super.init(exepath);
 
 		synthdef = SynthDef(\norm, {|in=0, out=0, level=0, xfade= 0|
@@ -187,15 +193,22 @@ NormalizerGUI : EffectGUI {
 				ControlSpec(0, 1, \lin, 0.001, 1),     // controlSpec
 				{ |ez| synth.set(\level, ez.value) } // action
 			);
+			this.pbut(\xfadelevel);
+
 			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
 				"xfade",  // label
 				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
 				{ |ez| synth.set(\xfade, ez.value) } // action
 			).valueAction_(0);
+			this.pbut(\xfade);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
 			});
 		};
 	}
@@ -206,11 +219,11 @@ NormalizerGUI : EffectGUI {
 
 LimiterGUI : EffectGUI {
 
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		super.init(exepath);
 
 		synthdef = SynthDef(\lim, {|in=0, out=0, level=0, xfade= 0|
@@ -232,16 +245,23 @@ LimiterGUI : EffectGUI {
 				ControlSpec(0, 1, \lin, 0.001, 1),     // controlSpec
 				{ |ez| synth.set(\level, ez.value.asFloat) } // action
 			);
+			this.pbut(\level);
+
 			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
 				"xfade",  // label
 				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
 				{ |ez| synth.set(\xfade, ez.value) } // action
 			).valueAction_(0);
+			this.pbut(\xfade);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
-			})
+			});
+
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
+			});
 		};
 	}
 }
@@ -251,11 +271,11 @@ LimiterGUI : EffectGUI {
 
 PatcherGUI : EffectGUI { // just read a bus and send that signal to another bus
 
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		super.init(exepath);
 
 		synthdef = SynthDef(\patcher, {|in=0, out=0, level=0|
@@ -278,7 +298,11 @@ PatcherGUI : EffectGUI { // just read a bus and send that signal to another bus
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
-			})
+			});
+
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
+			});
 		};
 	}
 }
@@ -290,11 +314,11 @@ PatcherGUI : EffectGUI { // just read a bus and send that signal to another bus
 
 CompanderGUI : EffectGUI {
 
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		super.init(exepath);
 
 		midisetup = [[\thresh, 18], [\slopeBelow, 19], [\slopeAbove, 20], [\clampTime, 21],
@@ -346,6 +370,7 @@ CompanderGUI : EffectGUI {
 				{ |ez| synth.set(\thresh, ez.value) } // action
 			);
 			controls[\thresh].numberView.maxDecimals = 3 ;
+			this.pbut(\thresh);
 
 			order.add(\slopeBelow);
 			controls[\slopeBelow] = EZSlider( w,         // parent
@@ -355,6 +380,7 @@ CompanderGUI : EffectGUI {
 				{ |ez| synth.set(\slopeBelow, ez.value) } // action
 			);
 			controls[\slopeBelow].numberView.maxDecimals = 3 ;
+			this.pbut(\slopeBelow);
 
 			order.add(\slopeAbove);
 			controls[\slopeAbove] = EZSlider( w,         // parent
@@ -364,6 +390,7 @@ CompanderGUI : EffectGUI {
 				{ |ez| synth.set(\slopeAbove, ez.value) } // action
 			);
 			controls[\slopeAbove].numberView.maxDecimals = 3 ;
+			this.pbut(\slopeAbove);
 
 			order.add(\clampTime);
 			controls[\clampTime] = EZSlider( w,         // parent
@@ -373,6 +400,7 @@ CompanderGUI : EffectGUI {
 				{ |ez| synth.set(\clampTime, ez.value) } // action
 			);
 			controls[\clampTime].numberView.maxDecimals = 3 ;
+			this.pbut(\clampTime);
 
 			order.add(\relaxTime);
 			controls[\relaxTime] = EZSlider( w,         // parent
@@ -382,6 +410,7 @@ CompanderGUI : EffectGUI {
 				{ |ez| synth.set(\relaxTime, ez.value) } // action
 			);
 			controls[\relaxTime].numberView.maxDecimals = 3 ;
+			this.pbut(\relaxTime);
 
 			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
@@ -389,9 +418,14 @@ CompanderGUI : EffectGUI {
 				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
 				{ |ez| synth.set(\xfade, ez.value) } // action
 			).valueAction_(0);
+			this.pbut(\xfade);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
 			});
 		};
 	}
@@ -406,8 +440,8 @@ AutoNotchGUI : EffectGUI {
 	var synth, pitchOSCF, label, uid;
 	classvar synthdef;
 
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
 	send {
@@ -423,7 +457,7 @@ AutoNotchGUI : EffectGUI {
 		synthdef.load;
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		super.init(exepath);
 
 		uid = UniqueID.next;
@@ -462,6 +496,8 @@ AutoNotchGUI : EffectGUI {
 				{ |ez| synth.set(\rq, ez.value)	}, // action
 				labelWidth:17
 			);
+			this.pbut(\rq);
+
 			controls[\db] = EZSlider( w,         // parent
 				slbounds,    // bounds
 				"db",  // label
@@ -469,6 +505,8 @@ AutoNotchGUI : EffectGUI {
 				{ |ez| synth.set(\db, ez.value) }, // action
 				labelWidth:17
 			);
+			this.pbut(\db);
+
 			controls[\lag] = EZSlider( w,         // parent
 				slbounds,    // bounds
 				"lag",  // label
@@ -476,9 +514,14 @@ AutoNotchGUI : EffectGUI {
 				{ |ez| synth.set(\lag, ez.value)	}, // action
 				labelWidth:17
 			);
+			this.pbut(\lag);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
 			});
 		}
 	}
@@ -501,11 +544,11 @@ AutoNotchGUI : EffectGUI {
 
 FreqShiftGUI : EffectGUI {
 
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		super.init(exepath);
 
 		midisetup = [[\freq, 23]];
@@ -532,6 +575,7 @@ FreqShiftGUI : EffectGUI {
 				{ |ez| synth.set(\freq, ez.value) } // action
 			);
 			controls[\freq].numberView.maxDecimals = 3 ;
+			this.pbut(\freq);
 
 			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
@@ -539,9 +583,14 @@ FreqShiftGUI : EffectGUI {
 				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
 				{ |ez| synth.set(\xfade, ez.value) } // action
 			).valueAction_(0);
+			this.pbut(\xfade);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
 			});
 		};
 	}
@@ -553,11 +602,11 @@ FreqShiftGUI : EffectGUI {
 
 PitchShiftGUI : EffectGUI {
 
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		super.init(exepath);
 
 		midisetup = [[\freq, 23]];
@@ -584,6 +633,7 @@ PitchShiftGUI : EffectGUI {
 				{ |ez| synth.set(\freq, ez.value) } // action
 			);
 			controls[\freq].numberView.maxDecimals = 3 ;
+			this.pbut(\freq);
 
 			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
@@ -591,9 +641,14 @@ PitchShiftGUI : EffectGUI {
 				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
 				{ |ez| synth.set(\xfade, ez.value) } // action
 			).valueAction_(0);
+			this.pbut(\xfade);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
 			});
 		};
 	}
@@ -604,11 +659,11 @@ PitchShiftGUI : EffectGUI {
 
 ChaosPitchShiftGUI : EffectGUI {
 
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		super.init(exepath);
 
 		//midisetup = [[\freq, 23]];
@@ -635,6 +690,7 @@ ChaosPitchShiftGUI : EffectGUI {
 				{ |ez| synth.set(\a, ez.value) } // action
 			);
 			controls[\a].numberView.maxDecimals = 3 ;
+			this.pbut(\a);
 
 			order.add(\b);
 			controls[\b] = EZSlider( w,         // parent
@@ -644,6 +700,7 @@ ChaosPitchShiftGUI : EffectGUI {
 				{ |ez| synth.set(\b, ez.value) } // action
 			);
 			controls[\b].numberView.maxDecimals = 3 ;
+			this.pbut(\b);
 
 			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
@@ -651,9 +708,14 @@ ChaosPitchShiftGUI : EffectGUI {
 				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
 				{ |ez| synth.set(\xfade, ez.value) } // action
 			).valueAction_(0);
+			this.pbut(\xfade);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
 			});
 		};
 	}
@@ -667,11 +729,11 @@ DCompanderGUI : EffectGUI {
 
 	var freqs, rqs;
 
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		var numBands = 10; // try with more bands.
 		var startFreq = 30; // freq of the first band.
 		var endFreq = 15360; // freq of the last one.
@@ -737,6 +799,7 @@ DCompanderGUI : EffectGUI {
 				{ |ez| synth.set(\thresh, ez.value) } // action
 			);
 			controls[\thresh].numberView.maxDecimals = 3 ;
+			this.pbut(\thresh);
 
 			order.add(\slopeBelow);
 			controls[\slopeBelow] = EZSlider( w,         // parent
@@ -746,6 +809,7 @@ DCompanderGUI : EffectGUI {
 				{ |ez| synth.set(\slopeBelow, ez.value) } // action
 			);
 			controls[\slopeBelow].numberView.maxDecimals = 3 ;
+			this.pbut(\slopeBelow);
 
 			order.add(\slopeAbove);
 			controls[\slopeAbove] = EZSlider( w,         // parent
@@ -755,6 +819,7 @@ DCompanderGUI : EffectGUI {
 				{ |ez| synth.set(\slopeAbove, ez.value) } // action
 			);
 			controls[\slopeAbove].numberView.maxDecimals = 3 ;
+			this.pbut(\slopeAbove);
 
 			order.add(\clampTime);
 			controls[\clampTime] = EZSlider( w,         // parent
@@ -764,6 +829,7 @@ DCompanderGUI : EffectGUI {
 				{ |ez| synth.set(\clampTime, ez.value) } // action
 			);
 			controls[\clampTime].numberView.maxDecimals = 3 ;
+			this.pbut(\clampTime);
 
 			order.add(\relaxTime);
 			controls[\relaxTime] = EZSlider( w,         // parent
@@ -773,6 +839,7 @@ DCompanderGUI : EffectGUI {
 				{ |ez| synth.set(\relaxTime, ez.value) } // action
 			);
 			controls[\relaxTime].numberView.maxDecimals = 3 ;
+			this.pbut(\relaxTime);
 
 			order.add(\numBands);
 			controls[\numBands] = EZSlider( w,         // parent
@@ -793,6 +860,7 @@ DCompanderGUI : EffectGUI {
 					//synth.set(\rqs, rqs)
 				} // action
 			);
+			this.pbut(\numBands);
 
 			order.add(\rqs);
 			controls[\rqs] = EZSlider( w,         // parent
@@ -805,6 +873,7 @@ DCompanderGUI : EffectGUI {
 				} // action
 			);
 			controls[\rqs].numberView.maxDecimals = 3 ;
+			this.pbut(\rqs);
 
 			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
@@ -812,9 +881,14 @@ DCompanderGUI : EffectGUI {
 				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
 				{ |ez| synth.set(\xfade, ez.value) } // action
 			).valueAction_(0);
+			this.pbut(\xfade);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
 			});
 		};
 	}
@@ -824,11 +898,11 @@ DCompanderGUI : EffectGUI {
 GainLimiterGUI : EffectGUI {
 	var vlay, levels, inOSCFunc, outOSCFunc;
 
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		super.init(exepath);
 
 		midisetup = [[\gain, 16], [\limiter, 17]]; // control, MIDI effect channel
@@ -879,6 +953,8 @@ GainLimiterGUI : EffectGUI {
 				ControlSpec(0, 20, \lin, 0.1, 1),     // controlSpec
 				{ |ez| synth.set(\gain, ez.value) } // action
 			);
+			this.pbut(\gain);
+
 			order.add(\limiter);
 			controls[\limiter] = EZSlider( w,         // parent
 				slbounds,    // bounds
@@ -886,8 +962,14 @@ GainLimiterGUI : EffectGUI {
 				ControlSpec(0.001, 1, \lin, 0.01, 1),     // controlSpec
 				{ |ez| synth.set(\limiter, ez.value) } // action
 			);
+			this.pbut(\limiter);
+
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
 			});
 		}
 	}
@@ -899,11 +981,11 @@ GainLimiterGUI : EffectGUI {
 
 DelayGUI : EffectGUI {
 
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		super.init(exepath);
 
 		//midisetup = [[\freq, 23]];
@@ -930,6 +1012,7 @@ DelayGUI : EffectGUI {
 				{ |ez| synth.set(\delt, ez.value) } // action
 			);
 			controls[\delt].numberView.maxDecimals = 3 ;
+			this.pbut(\delt);
 
 			order.add(\dect);
 			controls[\dect] = EZSlider( w,         // parent
@@ -939,6 +1022,7 @@ DelayGUI : EffectGUI {
 				{ |ez| synth.set(\dect, ez.value) } // action
 			);
 			controls[\dect].numberView.maxDecimals = 3 ;
+			this.pbut(\dect);
 
 			controls[\xfade] = EZSlider( w,         // parent
 				slbounds,    // bounds
@@ -946,9 +1030,14 @@ DelayGUI : EffectGUI {
 				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
 				{ |ez| synth.set(\xfade, ez.value) } // action
 			).valueAction_(0);
+			this.pbut(\xfade);
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
 			});
 		};
 	}
@@ -963,11 +1052,11 @@ DelayGUI : EffectGUI {
 
 FreeverbGUI : EffectGUI {
 
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		super.init(exepath);
 
 		//midisetup = [[\freq, 23]];
@@ -1014,6 +1103,10 @@ FreeverbGUI : EffectGUI {
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
 			});
+
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
+			});
 		};
 	}
 
@@ -1022,11 +1115,11 @@ FreeverbGUI : EffectGUI {
 
 
 M2stGUI : EffectGUI {
-	*new {|exepath, preset=\default|
-		^super.new.init(exepath, preset);
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
 	}
 
-	init {|exepath, preset|
+	init {|exepath, preset, autopreset|
 		super.init(exepath);
 
 		//midisetup = [[\freq, 23]];
@@ -1041,6 +1134,10 @@ M2stGUI : EffectGUI {
 
 			if (preset.isNil.not, { // not loading a preset file by default
 				super.preset( w.name, preset ); // try to read and apply the default preset
+			});
+
+			if (autopreset.isNil.not, {
+				{ this.auto(autopreset) }.defer(1) // not in a hurry
 			});
 		};
 	}
