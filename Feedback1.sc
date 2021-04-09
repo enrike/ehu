@@ -32,7 +32,7 @@ Feedback1 : EffectGUI {
 
 		Server.default.waitForBoot{
 			// BASED ON https://sccode.org/1-U by Nathaniel Virgo
-			SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75, revtimes=5,
+			synthdef = SynthDef(\feed, {|in=2, out=0, loop=10, gainin=0, feedback=0.02, deltime=75, revtimes=5,
 				amp=0.6, damping=1360, mod=1, vol=0.9, chord=#[ 40, 47, 52, 55, 59, 64 ], on=0|
 
 				var del, minfreqs, freqs, sig, in_sig; //VARS
@@ -293,6 +293,8 @@ Feedback1 : EffectGUI {
 
 	audio {
 		synth.free;
+		synthdef.load;
+		Server.default.sync;
 		synth = Synth.tail(Server.default, \feed, [\chord, chord]);
 		//synth.postln;
 		Server.default.sync;
