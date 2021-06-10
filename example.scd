@@ -16,6 +16,7 @@ PitchShiftGUI.new;
 GainLimiterGUI.new;
 DelayGUI.new
 FreeverbGUI.new
+GVerbGUI.new
 M2stGUI.new // takes a mono channel and duplicates it in two channels
 
 Launcher.new; // simple GUI to launch all effects
