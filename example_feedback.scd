@@ -113,7 +113,7 @@ f.scramble
 //~chord = [0,7,12,15,19,24]; // mi menor si 64
 ~chord = [0, 6.1, 10, 15.2, 22, 24 ]; // chord
 //~mel = [59, 64, 67, 69]/2;//
-~mel = [64, 66, 70, 71]/2;
+~mel = [64.1, 66.3, 70.6, 71]/2;
 //~mel = [62, 64, 66, 76];
 //~mel = [64,66,67];
 ~times = [10, 8.5, 7.7, 6, 15.1, 12.1];
@@ -184,11 +184,11 @@ t.start
 (
 //~mel = GuitarChords.chords[\Am7]+20;
 ~times = [37, 57, 44];
-~chords = [ [ 0, 6, 10, 15, 22, 24 ], [ 0, 6.5, 10, 15, 20, 24 ] ];
+~chords = [ [ 0, 6, 10, 15, 22, 24 ], [ 0, 6.5, 10.1, 15.2, 20, 24 ] ];
 t = Task({
 	var base=30;
 	inf.do({ arg i;
-		f.chord(base+~chords.wchoose([0.85, 0.15]));
+		f.chord(base+~chords.wchoose([0.75, 0.25]));
 		~times.choose.wait;
 	});
 });

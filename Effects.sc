@@ -18,7 +18,7 @@ Launcher {
 
 	init {|exepath, preset, autopreset|
 		if (exepath.isNil, { // MUST FIND ANOTHER SOLUTION. it does not work if new inside a defer
-			try { path = thisProcess.nowExecutingPath.dirname} { path=Platform.userHomeDir}
+			try { path = thisProcess.nowExecutingPath.dirname} { path=Platform.userHomeDir }
 		},{
 			path = exepath;
 		});
@@ -228,7 +228,7 @@ LimiterGUI : EffectGUI {
 
 		synthdef = SynthDef(\lim, {|in=0, out=0, level=0, xfade= 0|
 			var sig = In.ar(in, 2) ;
-			sig = Limiter(sig, level.asFloat);
+			sig = Limiter.ar(sig, level.asFloat);
 			XOut.ar(out, xfade, sig);
 		});
 
@@ -244,7 +244,7 @@ LimiterGUI : EffectGUI {
 				"level",  // label
 				ControlSpec(0, 1, \lin, 0.001, 1),     // controlSpec
 				{ |ez| synth.set(\level, ez.value.asFloat) } // action
-			);
+			).valueAction_(0);
 			this.pbut(\level);
 
 			controls[\xfade] = EZSlider( w,         // parent
@@ -326,12 +326,11 @@ CompanderGUI : EffectGUI {
 
 		synthdef = SynthDef(\comp, {|in=0, out=0, thresh=0.5, slopeBelow=1, slopeAbove=1, clampTime=0.01,
 			relaxTime=0.01, xfade= 0|
-			var signal = In.ar(in, 2);
+			var sig = In.ar(in, 2);
 
-			signal = Compander.ar(signal, signal, thresh, slopeBelow.lag(0.05),
+			sig = Compander.ar(sig, sig, thresh, slopeBelow.lag(0.05),
 				slopeAbove.lag(0.05), clampTime.lag(0.05), relaxTime.lag(0.05));
-
-			XOut.ar(out, xfade, signal)
+			XOut.ar(out, xfade, sig);
 		});
 
 		Server.default.waitForBoot{
@@ -556,7 +555,8 @@ FreqShiftGUI : EffectGUI {
 		synthdef = SynthDef(\fshift, {|in=0, out=0, freq=0, phase=0, xfade= 0| //(0..2pi)
 			var signal = In.ar(in, 2);
 			signal = FreqShift.ar(signal, freq, phase);
-			XOut.ar(out, xfade, signal)
+
+			XOut.ar(out, xfade, signal);
 		});
 
 		Server.default.waitForBoot{
@@ -614,7 +614,7 @@ PitchShiftGUI : EffectGUI {
 		synthdef = SynthDef(\pshift, {|in=0, out=0, freq=1, xfade= 0| //(0..2pi)
 			var signal = In.ar(in, 2);
 			signal = PitchShift.ar(signal, pitchRatio:freq);
-			XOut.ar(out, xfade, signal )
+			XOut.ar(out, xfade, signal);
 		});
 
 		Server.default.waitForBoot{
@@ -671,7 +671,7 @@ ChaosPitchShiftGUI : EffectGUI {
 		synthdef = SynthDef(\chaoticPitchShift, {|in=0, out=0, a=1.4, b=0.3, xfade= 0|
 			var signal = In.ar(in, 2);
 			signal = PitchShift.ar(signal, pitchRatio:HenonN.ar(SampleRate.ir, a, b));
-			XOut.ar(out, xfade, signal )
+			XOut.ar(out, xfade, signal);
 		}).add;
 
 		Server.default.waitForBoot{
@@ -760,7 +760,7 @@ DCompanderGUI : EffectGUI {
 				slopeAbove.lag(0.05), clampTime.lag(0.05), relaxTime.lag(0.05));
 			signal = Mix.fill(2, signal);
 
-			XOut.ar(out, xfade, signal)
+			XOut.ar(out, xfade, signal);
 		});
 
 		Server.default.waitForBoot{
@@ -1065,7 +1065,7 @@ FreeverbGUI : EffectGUI {
 			var signal = In.ar(in, 2);
 			//signal = FreeVerb.ar(signal, mix, room, damp)
 			signal = FreeVerb2.ar(signal[0], signal[1], mix, room, damp);
-			XOut.ar(out, xfade, signal )
+			XOut.ar(out, xfade, signal)
 		}).add;
 
 		Server.default.waitForBoot{
@@ -1130,7 +1130,7 @@ GVerbGUI : EffectGUI {
 		synthdef = SynthDef(\gverb, {|in=0, out=0, roomsize=10, revtime=3, damping=0.5, inputbw=0.5, spread=15, earlyreflevel=0.7, taillevel=0.5, maxroomsize=300 xfade=1|
 			var signal = In.ar(in, 1);//(In.ar(in, 2).sum)/2;
 			signal = GVerb.ar(signal, roomsize, revtime, damping, inputbw, spread, 1, earlyreflevel, taillevel, maxroomsize);
-			XOut.ar(out, xfade, signal )
+			XOut.ar(out, xfade, signal)
 		}).add;
 
 		Server.default.waitForBoot{
@@ -1271,12 +1271,12 @@ M2stGUI : EffectGUI {
 		};
 	}
 
-/*	audio {|argarr=#[]| // CHECK IF THIS IS THE SOLUTION
-		synth.free;
-		synthdef.load;
-		Server.default.sync;
-		synth = Synth(synthdef.name, argarr);
-		Server.default.sync;
-		("run"+synth.defName+"synth").postln;
+	/*	audio {|argarr=#[]| // CHECK IF THIS IS THE SOLUTION
+	synth.free;
+	synthdef.load;
+	Server.default.sync;
+	synth = Synth(synthdef.name, argarr);
+	Server.default.sync;
+	("run"+synth.defName+"synth").postln;
 	}*/
 }
