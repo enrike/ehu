@@ -146,7 +146,15 @@ ChordGUI : BaseGUI {
 			var sl = controls[(i+1).asString++"_oct"];
 			sl.value = values[0];
 			sl = controls[(i+1).asString++"_note"];
-			sl.value = values[1];
+			values.postln;
+			if (i==4, {//5th string error
+				var correct = values[1]+1;
+				if (correct>10, {correct=0});
+				sl.value = correct;
+			},{
+				sl.value = values[1];
+			});
+
 			sl = controls[(i+1).asString++"_bend"];
 			sl.value = values[2];
 		};
