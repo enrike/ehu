@@ -55,6 +55,9 @@ BaseGUI {
 			this.open;
 		});
 		w.front;
+
+		if (~ehuws.isNil, {~ehuws=List.new});
+		~ehuws.add(this)
 	}
 
 	preset {|name, default=\default|
