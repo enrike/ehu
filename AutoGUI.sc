@@ -35,7 +35,7 @@ Auto {
 		atask = Task({
 			inf.do({|index|	// option to ease the jump between values using lag or varlag?
 				{ widget.valueAction = rrand(range[0], range[1]) }.defer;
-/*				var target = rrand(range[0], range[1]);
+				/*				var target = rrand(range[0], range[1]);
 				var steps = time * 20; //pasos
 				var steplen = (target - widget.value)/steps;
 				anim.stop;
@@ -43,13 +43,13 @@ Auto {
 				anim = nil;
 				//[steps, steplen, (time/steps)].postln;
 				anim=Task({
-					steps.do({|index|	// option to ease the jump between values using lag or varlag?
-						try{ { widget.valueAction = widget.value+steplen }.defer };
-							(time/steps).wait;
-					});
-					anim.stop;
-					anim.free;
-					anim = nil;
+				steps.do({|index|	// option to ease the jump between values using lag or varlag?
+				try{ { widget.valueAction = widget.value+steplen }.defer };
+				(time/steps).wait;
+				});
+				anim.stop;
+				anim.free;
+				anim = nil;
 				}, AppClock).start;*/
 
 				time.wait;
@@ -95,6 +95,7 @@ AutoGUI : BaseGUI {
 			auto.kill;
 		};
 
+
 		StaticText(w, Rect(0,0, 40, 15)).string="  Rand:";
 
 		SimpleButton(w,"all",{
@@ -112,6 +113,21 @@ AutoGUI : BaseGUI {
 		SimpleButton(w,"reset",{
 			this.reset;
 		});
+
+/*		StaticText(w, 20@18);
+
+		Button(w, Rect(20, 20, 20, 18))
+				.states_([
+					[">", Color.white, Color.black],
+					["||", Color.black, Color.red],
+				])
+				.action_({ arg butt;
+					if (butt.value==1, {
+						//auto.sch(name, values[name][\time], values[name][\range], values[name][\lag]);
+					},{
+						//auto.stop(name)
+					});
+				});*/
 
 		//auto.main.controls.keysValuesDo{ |name, control, index|
 		main.order.do{|name, index| // order should be a property passed as arg on init
