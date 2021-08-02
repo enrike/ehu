@@ -96,7 +96,10 @@ BaseGUI {
 		data.writeArchive(path ++ Platform.pathSeparator ++ "presets" ++ Platform.pathSeparator ++ filename);
 	}
 
-	close {w.close}
+	close {
+		~ehuws.remove(this);
+		w.close;
+	}
 
 	open {
 		FileDialog({ |apath|
