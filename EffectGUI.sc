@@ -224,15 +224,21 @@ EffectGUI : BaseGUI {
 				("kill"+synthdef.name+"synth").postln;
 			})
 		}).value=1;
+
+		Server.default.waitForBoot{
+		//	controls[\on].valueAction_(1)
+		};//.defer(1.5)
 	}
 
 	audio {|argarr=#[]|
-		synth.free;
-		synthdef.load;
-		Server.default.sync;
-		synth = Synth.tail(Server.default, synthdef.name, argarr);
-		Server.default.sync;
-		("run"+synth.defName+"synth").postln;
+		Server.default.waitForBoot{
+			synth.free;
+			synthdef.load;
+			Server.default.sync;
+			synth = Synth.tail(Server.default, synthdef.name, argarr);
+			Server.default.sync;
+			("run"+synth.defName+"synth").postln;
+		}
 	}
 
 	auto {|config=\default|
@@ -291,6 +297,7 @@ EffectGUI : BaseGUI {
 	read {|apath| //overwrite super.read
 		var	data = Object.readArchive(apath);
 		("reading preset"+apath).postln;
+		synth.postln;
 
 		[\on, data[\on]].postln; //make sure it first deals with ON
 		try {
@@ -304,16 +311,17 @@ EffectGUI : BaseGUI {
 			{ w.bounds = data[\bounds] }.defer; // wait for QT
 		});
 		data.removeAt(\bounds); // we are done with this
-
-		data.keysValuesDo{ |key, value|
-			[key, value].postln;
-			try {
-				if(key==\drywet, { // backwards compatibility. remove when all presets are updated
-					{controls[\xfade].valueAction = value}.defer // wait for QT
-				}, {
-					{controls[key].valueAction = value}.defer // wait for QT
-				});
-			}{|er| er.postln;}
-		};
+		{
+			data.keysValuesDo{ |key, value|
+				[key, value].postln;
+				try {
+					if(key==\drywet, { // backwards compatibility. remove when all presets are updated
+						{controls[\xfade].valueAction = value}.defer // wait for QT
+					}, {
+						{controls[key].valueAction = value}.defer // wait for QT
+					});
+				}{|er| er.postln;}
+			};
+		}.defer(2)
 	}
 }

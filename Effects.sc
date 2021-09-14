@@ -112,41 +112,41 @@ TremoloGUI : EffectGUI {
 			XOut.ar(out, xfade, sig);
 		});
 
-		Server.default.waitForBoot{
-			this.audio;
+		//Server.default.waitForBoot{
+		//this.audio;
 
-			super.gui("Tremolo", 430@70); // init super gui w
+		super.gui("Tremolo", 430@70); // init super gui w
 
-			w.view.decorator.nextLine;
+		w.view.decorator.nextLine;
 
-			order.add(\tremolo);
-			controls[\tremolo] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"freq",  // label
-				ControlSpec(0.001, 50, \lin, 0.001, 0.1),     // controlSpec
-				{ |ez| synth.set(\freq, ez.value) } // action
-			);
-			controls[\tremolo].numberView.maxDecimals = 3 ;
-			this.pbut(\tremolo);
+		order.add(\tremolo);
+		controls[\tremolo] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"freq",  // label
+			ControlSpec(0.001, 50, \lin, 0.001, 0.1),     // controlSpec
+			{ |ez| synth.set(\freq, ez.value) } // action
+		);
+		controls[\tremolo].numberView.maxDecimals = 3 ;
+		this.pbut(\tremolo);
 
-			order.add(\xfade);
-			controls[\xfade] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"xfade",  // label
-				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
-				{ |ez| synth.set(\xfade, ez.value) } // action
-			).valueAction_(0);
-			controls[\xfade].numberView.maxDecimals = 3 ;
-			this.pbut(\xfade);
+		order.add(\xfade);
+		controls[\xfade] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"xfade",  // label
+			ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+			{ |ez| synth.set(\xfade, ez.value) } // action
+		).valueAction_(0);
+		controls[\xfade].numberView.maxDecimals = 3 ;
+		this.pbut(\xfade);
 
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
-			});
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
-			});
-		};
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//};
 	}
 }
 
@@ -180,37 +180,37 @@ NormalizerGUI : EffectGUI {
 			XOut.ar(out, xfade, sig);
 		});
 
-		Server.default.waitForBoot{
-			this.audio;
+		//Server.default.waitForBoot{
+		//this.audio;
 
-			super.gui("Normalizer", Rect(310,320, 430, 70)); // init super gui w
+		super.gui("Normalizer", Rect(310,320, 430, 70)); // init super gui w
 
-			w.view.decorator.nextLine;
+		w.view.decorator.nextLine;
 
-			controls[\level] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"level",  // label
-				ControlSpec(0, 1, \lin, 0.001, 1),     // controlSpec
-				{ |ez| synth.set(\level, ez.value) } // action
-			);
-			this.pbut(\xfadelevel);
+		controls[\level] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"level",  // label
+			ControlSpec(0, 1, \lin, 0.001, 1),     // controlSpec
+			{ |ez| synth.set(\level, ez.value) } // action
+		);
+		this.pbut(\xfadelevel);
 
-			controls[\xfade] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"xfade",  // label
-				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
-				{ |ez| synth.set(\xfade, ez.value) } // action
-			).valueAction_(0);
-			this.pbut(\xfade);
+		controls[\xfade] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"xfade",  // label
+			ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+			{ |ez| synth.set(\xfade, ez.value) } // action
+		).valueAction_(0);
+		this.pbut(\xfade);
 
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
-			});
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
-			});
-		};
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//};
 	}
 }
 
@@ -232,37 +232,37 @@ LimiterGUI : EffectGUI {
 			XOut.ar(out, xfade, sig);
 		});
 
-		Server.default.waitForBoot{
-			this.audio;
+		//Server.default.waitForBoot{
+		//this.audio;
 
-			super.gui("Limiter", Rect(310,250, 430, 70)); // init super gui w
+		super.gui("Limiter", Rect(310,250, 430, 70)); // init super gui w
 
-			w.view.decorator.nextLine;
+		w.view.decorator.nextLine;
 
-			controls[\level] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"level",  // label
-				ControlSpec(0, 1, \lin, 0.001, 1),     // controlSpec
-				{ |ez| synth.set(\level, ez.value.asFloat) } // action
-			).valueAction_(0);
-			this.pbut(\level);
+		controls[\level] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"level",  // label
+			ControlSpec(0, 1, \lin, 0.001, 1),     // controlSpec
+			{ |ez| synth.set(\level, ez.value.asFloat) } // action
+		).valueAction_(0);
+		this.pbut(\level);
 
-			controls[\xfade] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"xfade",  // label
-				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
-				{ |ez| synth.set(\xfade, ez.value) } // action
-			).valueAction_(0);
-			this.pbut(\xfade);
+		controls[\xfade] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"xfade",  // label
+			ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+			{ |ez| synth.set(\xfade, ez.value) } // action
+		).valueAction_(0);
+		this.pbut(\xfade);
 
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
-			});
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
-			});
-		};
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//};
 	}
 }
 
@@ -282,28 +282,28 @@ PatcherGUI : EffectGUI { // just read a bus and send that signal to another bus
 			Out.ar(out, In.ar(in, 2)*level);
 		});
 
-		Server.default.waitForBoot{
-			this.audio;
+		//Server.default.waitForBoot{
+		//this.audio;
 
-			super.gui("Patcher", Rect(310,250, 430, 50)); // init super gui w
+		super.gui("Patcher", Rect(310,250, 430, 50)); // init super gui w
 
-			w.view.decorator.nextLine;
+		w.view.decorator.nextLine;
 
-			controls[\level] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"level",  // label
-				ControlSpec(0, 1, \lin, 0.001, 1),     // controlSpec
-				{ |ez| synth.set(\level, ez.value.asFloat) } // action
-			);
+		controls[\level] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"level",  // label
+			ControlSpec(0, 1, \lin, 0.001, 1),     // controlSpec
+			{ |ez| synth.set(\level, ez.value.asFloat) } // action
+		);
 
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
-			});
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
-			});
-		};
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//};
 	}
 }
 
@@ -333,100 +333,100 @@ CompanderGUI : EffectGUI {
 			XOut.ar(out, xfade, sig);
 		});
 
-		Server.default.waitForBoot{
-			this.audio;
+		//Server.default.waitForBoot{
+		//this.audio;
 
-			super.gui("Compressor_Expander", Rect(310,0, 430, 155));
+		super.gui("Compressor_Expander", Rect(310,0, 430, 155));
 
-			StaticText(w, 20@18);
+		StaticText(w, 20@18);
 
-			SimpleButton(w,"comp",{
-				controls[\slopeBelow].valueAction_(1);
-				controls[\slopeAbove].valueAction_(0.5);
-			});
-			SimpleButton(w,"gate",{
-				controls[\slopeBelow].valueAction_(5);
-				controls[\slopeAbove].valueAction_(1);
-			});
-			SimpleButton(w,"lim",{
-				controls[\slopeBelow].valueAction_(1);
-				controls[\slopeAbove].valueAction_(0.1);
-			});
-			SimpleButton(w,"sust",{
-				controls[\slopeBelow].valueAction_(0.1);
-				controls[\slopeAbove].valueAction_(1);
-			});
+		SimpleButton(w,"comp",{
+			controls[\slopeBelow].valueAction_(1);
+			controls[\slopeAbove].valueAction_(0.5);
+		});
+		SimpleButton(w,"gate",{
+			controls[\slopeBelow].valueAction_(5);
+			controls[\slopeAbove].valueAction_(1);
+		});
+		SimpleButton(w,"lim",{
+			controls[\slopeBelow].valueAction_(1);
+			controls[\slopeAbove].valueAction_(0.1);
+		});
+		SimpleButton(w,"sust",{
+			controls[\slopeBelow].valueAction_(0.1);
+			controls[\slopeAbove].valueAction_(1);
+		});
 
-			w.view.decorator.nextLine;
+		w.view.decorator.nextLine;
 
-			////////////////////////
+		////////////////////////
 
-			order.add(\thresh);
-			controls[\thresh] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"thresh",  // label
-				ControlSpec(0.001, 1, \lin, 0.001, 0.5),     // controlSpec
-				{ |ez| synth.set(\thresh, ez.value) } // action
-			);
-			controls[\thresh].numberView.maxDecimals = 3 ;
-			this.pbut(\thresh);
+		order.add(\thresh);
+		controls[\thresh] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"thresh",  // label
+			ControlSpec(0.001, 1, \lin, 0.001, 0.5),     // controlSpec
+			{ |ez| synth.set(\thresh, ez.value) } // action
+		);
+		controls[\thresh].numberView.maxDecimals = 3 ;
+		this.pbut(\thresh);
 
-			order.add(\slopeBelow);
-			controls[\slopeBelow] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"slpBelow",  // label
-				ControlSpec(-2, 5, \lin, 0.01, 1),     // controlSpec
-				{ |ez| synth.set(\slopeBelow, ez.value) } // action
-			);
-			controls[\slopeBelow].numberView.maxDecimals = 3 ;
-			this.pbut(\slopeBelow);
+		order.add(\slopeBelow);
+		controls[\slopeBelow] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"slpBelow",  // label
+			ControlSpec(-2, 5, \lin, 0.01, 1),     // controlSpec
+			{ |ez| synth.set(\slopeBelow, ez.value) } // action
+		);
+		controls[\slopeBelow].numberView.maxDecimals = 3 ;
+		this.pbut(\slopeBelow);
 
-			order.add(\slopeAbove);
-			controls[\slopeAbove] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"slpAbove",  // label
-				ControlSpec(-2, 5, \lin, 0.01, 0.5),     // controlSpec
-				{ |ez| synth.set(\slopeAbove, ez.value) } // action
-			);
-			controls[\slopeAbove].numberView.maxDecimals = 3 ;
-			this.pbut(\slopeAbove);
+		order.add(\slopeAbove);
+		controls[\slopeAbove] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"slpAbove",  // label
+			ControlSpec(-2, 5, \lin, 0.01, 0.5),     // controlSpec
+			{ |ez| synth.set(\slopeAbove, ez.value) } // action
+		);
+		controls[\slopeAbove].numberView.maxDecimals = 3 ;
+		this.pbut(\slopeAbove);
 
-			order.add(\clampTime);
-			controls[\clampTime] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"clpTime",  // label
-				ControlSpec(0, 0.3, \lin, 0.001, 0.01),     // controlSpec
-				{ |ez| synth.set(\clampTime, ez.value) } // action
-			);
-			controls[\clampTime].numberView.maxDecimals = 3 ;
-			this.pbut(\clampTime);
+		order.add(\clampTime);
+		controls[\clampTime] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"clpTime",  // label
+			ControlSpec(0, 0.3, \lin, 0.001, 0.01),     // controlSpec
+			{ |ez| synth.set(\clampTime, ez.value) } // action
+		);
+		controls[\clampTime].numberView.maxDecimals = 3 ;
+		this.pbut(\clampTime);
 
-			order.add(\relaxTime);
-			controls[\relaxTime] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"rlxTime",  // label
-				ControlSpec(0, 0.3, \lin, 0.001, 0.01),     // controlSpec
-				{ |ez| synth.set(\relaxTime, ez.value) } // action
-			);
-			controls[\relaxTime].numberView.maxDecimals = 3 ;
-			this.pbut(\relaxTime);
+		order.add(\relaxTime);
+		controls[\relaxTime] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"rlxTime",  // label
+			ControlSpec(0, 0.3, \lin, 0.001, 0.01),     // controlSpec
+			{ |ez| synth.set(\relaxTime, ez.value) } // action
+		);
+		controls[\relaxTime].numberView.maxDecimals = 3 ;
+		this.pbut(\relaxTime);
 
-			controls[\xfade] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"xfade",  // label
-				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
-				{ |ez| synth.set(\xfade, ez.value) } // action
-			).valueAction_(0);
-			this.pbut(\xfade);
+		controls[\xfade] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"xfade",  // label
+			ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+			{ |ez| synth.set(\xfade, ez.value) } // action
+		).valueAction_(0);
+		this.pbut(\xfade);
 
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
-			});
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
-			});
-		};
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//};
 	}
 }
 
@@ -462,67 +462,67 @@ AutoNotchGUI : EffectGUI {
 		uid = UniqueID.next;
 
 
-		Server.default.waitForBoot{
-			this.send;
+		//Server.default.waitForBoot{
+		this.send;
 
-			Server.default.sync;
+		Server.default.sync;
 
-			//this.audio;
+		//this.audio;
 
-			Server.default.sync;
+		Server.default.sync;
 
-			synth = Synth.tail(Server.default, \autonotch, [\uid, uid]);// ovewrite
+		synth = Synth.tail(Server.default, \autonotch, [\uid, uid]);// ovewrite
 
-			Server.default.sync;
+		Server.default.sync;
 
-			pitchOSCF = OSCFunc({|msg|
-				//synth.set(\uid, uid); // very bad code. make sure it is the right one
-				if (msg[2] == uid, {
-					{ label.string = msg[3].asString.split($.)[0] }.defer;
-				})
-			}, '/pitch', Server.default.addr);
+		pitchOSCF = OSCFunc({|msg|
+			//synth.set(\uid, uid); // very bad code. make sure it is the right one
+			if (msg[2] == uid, {
+				{ label.string = msg[3].asString.split($.)[0] }.defer;
+			})
+		}, '/pitch', Server.default.addr);
 
-			this.gui("AutoNotch", 320@90);
+		this.gui("AutoNotch", 320@90);
 
-			label = StaticText(w, 40@18).string_("--").resize_(3);
+		label = StaticText(w, 40@18).string_("--").resize_(3);
 
-			w.view.decorator.nextLine;
+		w.view.decorator.nextLine;
 
-			controls[\rq] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"rq",  // label
-				ControlSpec(0.1, 10, \lin, 0.001, 0.1),     // controlSpec
-				{ |ez| synth.set(\rq, ez.value)	}, // action
-				labelWidth:17
-			);
-			this.pbut(\rq);
+		controls[\rq] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"rq",  // label
+			ControlSpec(0.1, 10, \lin, 0.001, 0.1),     // controlSpec
+			{ |ez| synth.set(\rq, ez.value)	}, // action
+			labelWidth:17
+		);
+		this.pbut(\rq);
 
-			controls[\db] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"db",  // label
-				ControlSpec(-100, 20, \lin, 0.001, -24),     // controlSpec
-				{ |ez| synth.set(\db, ez.value) }, // action
-				labelWidth:17
-			);
-			this.pbut(\db);
+		controls[\db] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"db",  // label
+			ControlSpec(-100, 20, \lin, 0.001, -24),     // controlSpec
+			{ |ez| synth.set(\db, ez.value) }, // action
+			labelWidth:17
+		);
+		this.pbut(\db);
 
-			controls[\lag] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"lag",  // label
-				ControlSpec(0.1, 10, \lin, 0.001, 0.1),     // controlSpec
-				{ |ez| synth.set(\lag, ez.value)	}, // action
-				labelWidth:17
-			);
-			this.pbut(\lag);
+		controls[\lag] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"lag",  // label
+			ControlSpec(0.1, 10, \lin, 0.001, 0.1),     // controlSpec
+			{ |ez| synth.set(\lag, ez.value)	}, // action
+			labelWidth:17
+		);
+		this.pbut(\lag);
 
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
-			});
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
-			});
-		}
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//}
 	}
 
 	audio {
@@ -559,40 +559,40 @@ FreqShiftGUI : EffectGUI {
 			XOut.ar(out, xfade, signal);
 		});
 
-		Server.default.waitForBoot{
-			this.audio;
-			super.gui("FreqShift", Rect(310,0, 430, 75));
+		//Server.default.waitForBoot{
+		//this.audio;
+		super.gui("FreqShift", Rect(310,0, 430, 75));
 
-			w.view.decorator.nextLine;
+		w.view.decorator.nextLine;
 
-			////////////////////////
+		////////////////////////
 
-			order.add(\freq);
-			controls[\freq] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"freq",  // label
-				ControlSpec(-100, 100, \lin, 0.001, 0),     // controlSpec
-				{ |ez| synth.set(\freq, ez.value) } // action
-			);
-			controls[\freq].numberView.maxDecimals = 3 ;
-			this.pbut(\freq);
+		order.add(\freq);
+		controls[\freq] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"freq",  // label
+			ControlSpec(-100, 100, \lin, 0.001, 0),     // controlSpec
+			{ |ez| synth.set(\freq, ez.value) } // action
+		);
+		controls[\freq].numberView.maxDecimals = 3 ;
+		this.pbut(\freq);
 
-			controls[\xfade] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"xfade",  // label
-				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
-				{ |ez| synth.set(\xfade, ez.value) } // action
-			).valueAction_(0);
-			this.pbut(\xfade);
+		controls[\xfade] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"xfade",  // label
+			ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+			{ |ez| synth.set(\xfade, ez.value) } // action
+		).valueAction_(0);
+		this.pbut(\xfade);
 
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
-			});
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
-			});
-		};
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//};
 	}
 
 }
@@ -617,40 +617,40 @@ PitchShiftGUI : EffectGUI {
 			XOut.ar(out, xfade, signal);
 		});
 
-		Server.default.waitForBoot{
-			this.audio;
-			super.gui("PitchShift", Rect(310,0, 430, 75));
+		//Server.default.waitForBoot{
+		//this.audio;
+		super.gui("PitchShift", Rect(310,0, 430, 75));
 
-			w.view.decorator.nextLine;
+		w.view.decorator.nextLine;
 
-			////////////////////////
+		////////////////////////
 
-			order.add(\freq);
-			controls[\freq] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"freq",  // label
-				ControlSpec(0, 5, \lin, 0.001, 1),     // controlSpec
-				{ |ez| synth.set(\freq, ez.value) } // action
-			);
-			controls[\freq].numberView.maxDecimals = 3 ;
-			this.pbut(\freq);
+		order.add(\freq);
+		controls[\freq] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"freq",  // label
+			ControlSpec(0, 5, \lin, 0.001, 1),     // controlSpec
+			{ |ez| synth.set(\freq, ez.value) } // action
+		);
+		controls[\freq].numberView.maxDecimals = 3 ;
+		this.pbut(\freq);
 
-			controls[\xfade] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"xfade",  // label
-				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
-				{ |ez| synth.set(\xfade, ez.value) } // action
-			).valueAction_(0);
-			this.pbut(\xfade);
+		controls[\xfade] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"xfade",  // label
+			ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+			{ |ez| synth.set(\xfade, ez.value) } // action
+		).valueAction_(0);
+		this.pbut(\xfade);
 
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
-			});
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
-			});
-		};
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//};
 	}
 
 }
@@ -674,50 +674,50 @@ ChaosPitchShiftGUI : EffectGUI {
 			XOut.ar(out, xfade, signal);
 		}).add;
 
-		Server.default.waitForBoot{
-			this.audio;
-			super.gui("ChaosPitchShift", Rect(310,0, 430, 100));
+		//Server.default.waitForBoot{
+		//this.audio;
+		super.gui("ChaosPitchShift", Rect(310,0, 430, 100));
 
-			w.view.decorator.nextLine;
+		w.view.decorator.nextLine;
 
-			////////////////////////
+		////////////////////////
 
-			order.add(\a);
-			controls[\a] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"a",  // label
-				ControlSpec(1, 1.4, \lin, 0.001, 1),     // controlSpec
-				{ |ez| synth.set(\a, ez.value) } // action
-			);
-			controls[\a].numberView.maxDecimals = 3 ;
-			this.pbut(\a);
+		order.add(\a);
+		controls[\a] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"a",  // label
+			ControlSpec(1, 1.4, \lin, 0.001, 1),     // controlSpec
+			{ |ez| synth.set(\a, ez.value) } // action
+		);
+		controls[\a].numberView.maxDecimals = 3 ;
+		this.pbut(\a);
 
-			order.add(\b);
-			controls[\b] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"b",  // label
-				ControlSpec(0, 0.3, \lin, 0.001, 0.31),     // controlSpec
-				{ |ez| synth.set(\b, ez.value) } // action
-			);
-			controls[\b].numberView.maxDecimals = 3 ;
-			this.pbut(\b);
+		order.add(\b);
+		controls[\b] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"b",  // label
+			ControlSpec(0, 0.3, \lin, 0.001, 0.31),     // controlSpec
+			{ |ez| synth.set(\b, ez.value) } // action
+		);
+		controls[\b].numberView.maxDecimals = 3 ;
+		this.pbut(\b);
 
-			controls[\xfade] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"xfade",  // label
-				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
-				{ |ez| synth.set(\xfade, ez.value) } // action
-			).valueAction_(0);
-			this.pbut(\xfade);
+		controls[\xfade] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"xfade",  // label
+			ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+			{ |ez| synth.set(\xfade, ez.value) } // action
+		).valueAction_(0);
+		this.pbut(\xfade);
 
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
-			});
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
-			});
-		};
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//};
 	}
 
 }
@@ -763,134 +763,134 @@ DCompanderGUI : EffectGUI {
 			XOut.ar(out, xfade, signal);
 		});
 
-		Server.default.waitForBoot{
-			this.audio([\freqs, freqs, \rqs, rqs]);
+		//Server.default.waitForBoot{
+		this.audio([\freqs, freqs, \rqs, rqs]);
 
-			super.gui("D Compressor_Expander", Rect(310,0, 430, 200));
+		super.gui("D Compressor_Expander", Rect(310,0, 430, 200));
 
-			StaticText(w, 20@18);
+		StaticText(w, 20@18);
 
-			SimpleButton(w,"comp",{
-				controls[\slopeBelow].valueAction_(1);
-				controls[\slopeAbove].valueAction_(0.5);
-			});
-			SimpleButton(w,"gate",{
-				controls[\slopeBelow].valueAction_(5);
-				controls[\slopeAbove].valueAction_(1);
-			});
-			SimpleButton(w,"lim",{
-				controls[\slopeBelow].valueAction_(1);
-				controls[\slopeAbove].valueAction_(0.1);
-			});
-			SimpleButton(w,"sust",{
-				controls[\slopeBelow].valueAction_(0.1);
-				controls[\slopeAbove].valueAction_(1);
-			});
+		SimpleButton(w,"comp",{
+			controls[\slopeBelow].valueAction_(1);
+			controls[\slopeAbove].valueAction_(0.5);
+		});
+		SimpleButton(w,"gate",{
+			controls[\slopeBelow].valueAction_(5);
+			controls[\slopeAbove].valueAction_(1);
+		});
+		SimpleButton(w,"lim",{
+			controls[\slopeBelow].valueAction_(1);
+			controls[\slopeAbove].valueAction_(0.1);
+		});
+		SimpleButton(w,"sust",{
+			controls[\slopeBelow].valueAction_(0.1);
+			controls[\slopeAbove].valueAction_(1);
+		});
 
-			w.view.decorator.nextLine;
+		w.view.decorator.nextLine;
 
-			////////////////////////
+		////////////////////////
 
-			order.add(\thresh);
-			controls[\thresh] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"thresh",  // label
-				ControlSpec(0.001, 1, \lin, 0.001, 0.5),     // controlSpec
-				{ |ez| synth.set(\thresh, ez.value) } // action
-			);
-			controls[\thresh].numberView.maxDecimals = 3 ;
-			this.pbut(\thresh);
+		order.add(\thresh);
+		controls[\thresh] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"thresh",  // label
+			ControlSpec(0.001, 1, \lin, 0.001, 0.5),     // controlSpec
+			{ |ez| synth.set(\thresh, ez.value) } // action
+		);
+		controls[\thresh].numberView.maxDecimals = 3 ;
+		this.pbut(\thresh);
 
-			order.add(\slopeBelow);
-			controls[\slopeBelow] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"slpBelow",  // label
-				ControlSpec(-2, 5, \lin, 0.01, 1),     // controlSpec
-				{ |ez| synth.set(\slopeBelow, ez.value) } // action
-			);
-			controls[\slopeBelow].numberView.maxDecimals = 3 ;
-			this.pbut(\slopeBelow);
+		order.add(\slopeBelow);
+		controls[\slopeBelow] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"slpBelow",  // label
+			ControlSpec(-2, 5, \lin, 0.01, 1),     // controlSpec
+			{ |ez| synth.set(\slopeBelow, ez.value) } // action
+		);
+		controls[\slopeBelow].numberView.maxDecimals = 3 ;
+		this.pbut(\slopeBelow);
 
-			order.add(\slopeAbove);
-			controls[\slopeAbove] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"slpAbove",  // label
-				ControlSpec(-2, 5, \lin, 0.01, 0.5),     // controlSpec
-				{ |ez| synth.set(\slopeAbove, ez.value) } // action
-			);
-			controls[\slopeAbove].numberView.maxDecimals = 3 ;
-			this.pbut(\slopeAbove);
+		order.add(\slopeAbove);
+		controls[\slopeAbove] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"slpAbove",  // label
+			ControlSpec(-2, 5, \lin, 0.01, 0.5),     // controlSpec
+			{ |ez| synth.set(\slopeAbove, ez.value) } // action
+		);
+		controls[\slopeAbove].numberView.maxDecimals = 3 ;
+		this.pbut(\slopeAbove);
 
-			order.add(\clampTime);
-			controls[\clampTime] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"clpTime",  // label
-				ControlSpec(0, 0.3, \lin, 0.001, 0.01),     // controlSpec
-				{ |ez| synth.set(\clampTime, ez.value) } // action
-			);
-			controls[\clampTime].numberView.maxDecimals = 3 ;
-			this.pbut(\clampTime);
+		order.add(\clampTime);
+		controls[\clampTime] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"clpTime",  // label
+			ControlSpec(0, 0.3, \lin, 0.001, 0.01),     // controlSpec
+			{ |ez| synth.set(\clampTime, ez.value) } // action
+		);
+		controls[\clampTime].numberView.maxDecimals = 3 ;
+		this.pbut(\clampTime);
 
-			order.add(\relaxTime);
-			controls[\relaxTime] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"rlxTime",  // label
-				ControlSpec(0, 0.3, \lin, 0.001, 0.01),     // controlSpec
-				{ |ez| synth.set(\relaxTime, ez.value) } // action
-			);
-			controls[\relaxTime].numberView.maxDecimals = 3 ;
-			this.pbut(\relaxTime);
+		order.add(\relaxTime);
+		controls[\relaxTime] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"rlxTime",  // label
+			ControlSpec(0, 0.3, \lin, 0.001, 0.01),     // controlSpec
+			{ |ez| synth.set(\relaxTime, ez.value) } // action
+		);
+		controls[\relaxTime].numberView.maxDecimals = 3 ;
+		this.pbut(\relaxTime);
 
-			order.add(\numBands);
-			controls[\numBands] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"numBands",  // label
-				ControlSpec(1, 20, \lin, 1, 10),     // controlSpec
-				{ |ez|
-					var numBands = ez.value; // try with more bands.
-					var startFreq = 30; // freq of the first band.
-					var endFreq = 15360; // freq of the last one.
-					freqs = Array.geom(numBands, startFreq, ((endFreq*2)/startFreq)**(1/numBands));
-					rqs = controls[\rqs].value/numBands; // tweak this
+		order.add(\numBands);
+		controls[\numBands] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"numBands",  // label
+			ControlSpec(1, 20, \lin, 1, 10),     // controlSpec
+			{ |ez|
+				var numBands = ez.value; // try with more bands.
+				var startFreq = 30; // freq of the first band.
+				var endFreq = 15360; // freq of the last one.
+				freqs = Array.geom(numBands, startFreq, ((endFreq*2)/startFreq)**(1/numBands));
+				rqs = controls[\rqs].value/numBands; // tweak this
 
-					synth.free;
-					this.audio;
+				synth.free;
+				this.audio;
 
-					//synth.set(\freqs, freqs);
-					//synth.set(\rqs, rqs)
-				} // action
-			);
-			this.pbut(\numBands);
+				//synth.set(\freqs, freqs);
+				//synth.set(\rqs, rqs)
+			} // action
+		);
+		this.pbut(\numBands);
 
-			order.add(\rqs);
-			controls[\rqs] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"rqs",  // label
-				ControlSpec(0.001, 1, \lin, 0.001, 1),     // controlSpec
-				{ |ez|
-					var rqs = ez.value/controls[\numBands].value; // tweak this
-					synth.set(\rqs, rqs)
-				} // action
-			);
-			controls[\rqs].numberView.maxDecimals = 3 ;
-			this.pbut(\rqs);
+		order.add(\rqs);
+		controls[\rqs] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"rqs",  // label
+			ControlSpec(0.001, 1, \lin, 0.001, 1),     // controlSpec
+			{ |ez|
+				var rqs = ez.value/controls[\numBands].value; // tweak this
+				synth.set(\rqs, rqs)
+			} // action
+		);
+		controls[\rqs].numberView.maxDecimals = 3 ;
+		this.pbut(\rqs);
 
-			controls[\xfade] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"xfade",  // label
-				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
-				{ |ez| synth.set(\xfade, ez.value) } // action
-			).valueAction_(0);
-			this.pbut(\xfade);
+		controls[\xfade] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"xfade",  // label
+			ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+			{ |ez| synth.set(\xfade, ez.value) } // action
+		).valueAction_(0);
+		this.pbut(\xfade);
 
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
-			});
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
-			});
-		};
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//};
 	}
 }
 
@@ -907,71 +907,71 @@ GainLimiterGUI : EffectGUI {
 
 		midisetup = [[\gain, 16], [\limiter, 17]]; // control, MIDI effect channel
 
-		synthdef = 	SynthDef(\gain, {|in=0, out=0, gain=1, limiter=1, xfade=1|
-			var signal = In.ar(in, 2) ;
+		synthdef = 	SynthDef(\gain, {|in=0, out=0, gain=1, limit=1, xfade=1|
+			var signal = In.ar(in, 2) * gain;
 			SendPeakRMS.kr(signal, 10, 3, '/gaininlvl'); // to monitor incoming feedback signal
-			signal = Limiter.ar(signal, limiter) * gain;
+			signal = Limiter.ar(signal, limit);
 			SendPeakRMS.kr(signal, 10, 3, '/gainoutlvl'); // to monitor incoming feedback signal
 			XOut.ar(out, xfade, signal);
 		});
 
-		Server.default.waitForBoot{
-			this.audio;
+		//Server.default.waitForBoot{
+		//this.audio;
 
-			super.gui("Gain_Limiter", 430@70); // init super gui w
+		super.gui("Gain_Limiter", 430@70); // init super gui w
 
-			levels = List.new;
+		levels = List.new;
 
-			inOSCFunc = OSCFunc({|msg| {
-				levels[..1].do({|lvl, i| // in levels
-					lvl.peakLevel = msg[3..][i*2].ampdb.linlin(-80, 0, 0, 1, \min);
-					lvl.value = msg[3..][(i*2)+1].ampdb.linlin(-80, 0, 0, 1);
-				});
-			}.defer;
-			}, '/gaininlvl', Server.default.addr);
-
-			outOSCFunc = OSCFunc({|msg| {
-				levels[2..].do({|lvl, i| // out levels
-					lvl.peakLevel = msg[3..][i*2].ampdb.linlin(-80, 0, 0, 1, \min);
-					lvl.value = msg[3..][(i*2)+1].ampdb.linlin(-80, 0, 0, 1);
-				});
-			}.defer;
-			}, '/gainoutlvl', Server.default.addr);
-
-			vlay = VLayoutView(w, 150@17); // size
-			4.do{|i|
-				levels.add( LevelIndicator(vlay, 4).warning_(0.9).critical_(1.0).drawsPeak_(true) ); // 5 height each
-				if (i==1, {CompositeView(vlay, 1)}); // plus 2px separator
-			};
-
-			w.view.decorator.nextLine; //////////////////
-
-			order.add(\gain);
-			controls[\gain] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"gain",  // label
-				ControlSpec(0, 20, \lin, 0.1, 1),     // controlSpec
-				{ |ez| synth.set(\gain, ez.value) } // action
-			);
-			this.pbut(\gain);
-
-			order.add(\limiter);
-			controls[\limiter] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"limit",  // label
-				ControlSpec(0.001, 1, \lin, 0.01, 1),     // controlSpec
-				{ |ez| synth.set(\limiter, ez.value) } // action
-			);
-			this.pbut(\limiter);
-
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
+		inOSCFunc = OSCFunc({|msg| {
+			levels[..1].do({|lvl, i| // in levels
+				lvl.peakLevel = msg[3..][i*2].ampdb.linlin(-80, 0, 0, 1, \min);
+				lvl.value = msg[3..][(i*2)+1].ampdb.linlin(-80, 0, 0, 1);
 			});
+		}.defer;
+		}, '/gaininlvl', Server.default.addr);
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
+		outOSCFunc = OSCFunc({|msg| {
+			levels[2..].do({|lvl, i| // out levels
+				lvl.peakLevel = msg[3..][i*2].ampdb.linlin(-80, 0, 0, 1, \min);
+				lvl.value = msg[3..][(i*2)+1].ampdb.linlin(-80, 0, 0, 1);
 			});
-		}
+		}.defer;
+		}, '/gainoutlvl', Server.default.addr);
+
+		vlay = VLayoutView(w, 150@17); // size
+		4.do{|i|
+			levels.add( LevelIndicator(vlay, 4).warning_(0.9).critical_(1.0).drawsPeak_(true) ); // 5 height each
+			if (i==1, {CompositeView(vlay, 1)}); // plus 2px separator
+		};
+
+		w.view.decorator.nextLine; //////////////////
+
+		order.add(\gain);
+		controls[\gain] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"gain",  // label
+			ControlSpec(0, 20, \lin, 0.1, 1),     // controlSpec
+			{ |ez| synth.set(\gain, ez.value) } // action
+		);
+		this.pbut(\gain);
+
+		order.add(\limit);
+		controls[\limit] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"limit",  // label
+			ControlSpec(0.001, 1, \lin, 0.01, 1),     // controlSpec
+			{ |ez| synth.set(\limit, ez.value) } // action
+		);
+		this.pbut(\limit);
+
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
+
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//}
 	}
 }
 
@@ -996,50 +996,50 @@ DelayGUI : EffectGUI {
 			XOut.ar(out, xfade, signal )
 		}).add;
 
-		Server.default.waitForBoot{
-			this.audio;
-			super.gui("Delay", Rect(310,0, 430, 100));
+		//Server.default.waitForBoot{
+		//this.audio;
+		super.gui("Delay", Rect(310,0, 430, 100));
 
-			w.view.decorator.nextLine;
+		w.view.decorator.nextLine;
 
-			////////////////////////
+		////////////////////////
 
-			order.add(\delt);
-			controls[\delt] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"delay",  // label
-				ControlSpec(0.01, 1.5, \lin, 0.01, 0.25),     // controlSpec
-				{ |ez| synth.set(\delt, ez.value) } // action
-			);
-			controls[\delt].numberView.maxDecimals = 3 ;
-			this.pbut(\delt);
+		order.add(\delt);
+		controls[\delt] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"delay",  // label
+			ControlSpec(0.01, 1.5, \lin, 0.01, 0.25),     // controlSpec
+			{ |ez| synth.set(\delt, ez.value) } // action
+		);
+		controls[\delt].numberView.maxDecimals = 3 ;
+		this.pbut(\delt);
 
-			order.add(\dect);
-			controls[\dect] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"decay",  // label
-				ControlSpec(0.01, 10, \lin, 0.01, 2),     // controlSpec
-				{ |ez| synth.set(\dect, ez.value) } // action
-			);
-			controls[\dect].numberView.maxDecimals = 3 ;
-			this.pbut(\dect);
+		order.add(\dect);
+		controls[\dect] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"decay",  // label
+			ControlSpec(0.01, 10, \lin, 0.01, 2),     // controlSpec
+			{ |ez| synth.set(\dect, ez.value) } // action
+		);
+		controls[\dect].numberView.maxDecimals = 3 ;
+		this.pbut(\dect);
 
-			controls[\xfade] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"xfade",  // label
-				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
-				{ |ez| synth.set(\xfade, ez.value) } // action
-			).valueAction_(0);
-			this.pbut(\xfade);
+		controls[\xfade] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"xfade",  // label
+			ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+			{ |ez| synth.set(\xfade, ez.value) } // action
+		).valueAction_(0);
+		this.pbut(\xfade);
 
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
-			});
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
-			});
-		};
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//};
 	}
 
 }
@@ -1068,50 +1068,50 @@ FreeverbGUI : EffectGUI {
 			XOut.ar(out, xfade, signal)
 		}).add;
 
-		Server.default.waitForBoot{
-			this.audio;
-			super.gui("Freeverb", Rect(310,0, 430, 100));
+		//Server.default.waitForBoot{
+		//this.audio;
+		super.gui("Freeverb", Rect(310,0, 430, 100));
 
-			w.view.decorator.nextLine;
+		w.view.decorator.nextLine;
 
-			////////////////////////
+		////////////////////////
 
-			order.add(\room);
-			controls[\room] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"room",  // label
-				ControlSpec(0, 1, \lin, 0, 2),     // controlSpec
-				{ |ez| synth.set(\room, ez.value) } // action
-			);
-			controls[\room].numberView.maxDecimals = 3 ;
-			this.pbut(\room);
+		order.add(\room);
+		controls[\room] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"room",  // label
+			ControlSpec(0, 1, \lin, 0, 2),     // controlSpec
+			{ |ez| synth.set(\room, ez.value) } // action
+		);
+		controls[\room].numberView.maxDecimals = 3 ;
+		this.pbut(\room);
 
-			order.add(\damp);
-			controls[\damp] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"damp",  // label
-				ControlSpec(0, 1, \lin, 0, 0),     // controlSpec
-				{ |ez| synth.set(\damp, ez.value) } // action
-			);
-			controls[\damp].numberView.maxDecimals = 3 ;
-			this.pbut(\damp);
+		order.add(\damp);
+		controls[\damp] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"damp",  // label
+			ControlSpec(0, 1, \lin, 0, 0),     // controlSpec
+			{ |ez| synth.set(\damp, ez.value) } // action
+		);
+		controls[\damp].numberView.maxDecimals = 3 ;
+		this.pbut(\damp);
 
-			controls[\xfade] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"xfade",  // label
-				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
-				{ |ez| synth.set(\xfade, ez.value) } // action
-			).valueAction_(0);
-			this.pbut(\xfade);
+		controls[\xfade] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"xfade",  // label
+			ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+			{ |ez| synth.set(\xfade, ez.value) } // action
+		).valueAction_(0);
+		this.pbut(\xfade);
 
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
-			});
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
-			});
-		};
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//};
 	}
 
 }
@@ -1133,111 +1133,111 @@ GVerbGUI : EffectGUI {
 			XOut.ar(out, xfade, signal)
 		}).add;
 
-		Server.default.waitForBoot{
-			this.audio;
-			super.gui("GVerb", Rect(310,0, 430, 250));
+		//Server.default.waitForBoot{
+		//this.audio;
+		super.gui("GVerb", Rect(310,0, 430, 250));
 
-			w.view.decorator.nextLine;
+		w.view.decorator.nextLine;
 
-			////////////////////////
+		////////////////////////
 
-			order.add(\roomsize);
-			controls[\roomsize] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"roomsize",  // label
-				ControlSpec(0, 100, \lin, 0, 10),     // controlSpec
-				{ |ez| synth.set(\roomsize, ez.value) } // action
-			);
-			//controls[\room].numberView.maxDecimals = 3 ;
-			this.pbut(\roomsize);
+		order.add(\roomsize);
+		controls[\roomsize] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"roomsize",  // label
+			ControlSpec(0, 100, \lin, 0, 10),     // controlSpec
+			{ |ez| synth.set(\roomsize, ez.value) } // action
+		);
+		//controls[\room].numberView.maxDecimals = 3 ;
+		this.pbut(\roomsize);
 
-			order.add(\revtime);
-			controls[\revtime] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"revtime",  // label
-				ControlSpec(0, 3, \lin, 0, 2),     // controlSpec
-				{ |ez| synth.set(\revtime, ez.value) } // action
-			);
-			controls[\revtime].numberView.maxDecimals = 3 ;
-			this.pbut(\revtime);
+		order.add(\revtime);
+		controls[\revtime] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"revtime",  // label
+			ControlSpec(0, 3, \lin, 0, 2),     // controlSpec
+			{ |ez| synth.set(\revtime, ez.value) } // action
+		);
+		controls[\revtime].numberView.maxDecimals = 3 ;
+		this.pbut(\revtime);
 
-			order.add(\damping);
-			controls[\damping] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"damping",  // label
-				ControlSpec(0, 1, \lin, 0, 0),     // controlSpec
-				{ |ez| synth.set(\damping, ez.value) } // action
-			);
-			controls[\damping].numberView.maxDecimals = 3 ;
-			this.pbut(\damping);
+		order.add(\damping);
+		controls[\damping] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"damping",  // label
+			ControlSpec(0, 1, \lin, 0, 0),     // controlSpec
+			{ |ez| synth.set(\damping, ez.value) } // action
+		);
+		controls[\damping].numberView.maxDecimals = 3 ;
+		this.pbut(\damping);
 
-			order.add(\inputbw);
-			controls[\inputbw] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"inputbw",  // label
-				ControlSpec(0, 1, \lin, 0, 0.5),     // controlSpec
-				{ |ez| synth.set(\inputbw, ez.value) } // action
-			);
-			controls[\inputbw].numberView.maxDecimals = 3 ;
-			this.pbut(\inputbw);
+		order.add(\inputbw);
+		controls[\inputbw] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"inputbw",  // label
+			ControlSpec(0, 1, \lin, 0, 0.5),     // controlSpec
+			{ |ez| synth.set(\inputbw, ez.value) } // action
+		);
+		controls[\inputbw].numberView.maxDecimals = 3 ;
+		this.pbut(\inputbw);
 
-			order.add(\spread);
-			controls[\spread] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"spread",  // label
-				ControlSpec(0, 30, \lin, 0, 15),     // controlSpec
-				{ |ez| synth.set(\spread, ez.value) } // action
-			);
-			//controls[\spread].numberView.maxDecimals = 3 ;
-			this.pbut(\spread);
+		order.add(\spread);
+		controls[\spread] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"spread",  // label
+			ControlSpec(0, 30, \lin, 0, 15),     // controlSpec
+			{ |ez| synth.set(\spread, ez.value) } // action
+		);
+		//controls[\spread].numberView.maxDecimals = 3 ;
+		this.pbut(\spread);
 
-			order.add(\earlyreflevel);
-			controls[\earlyreflevel] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"earlyreflevel",  // label
-				ControlSpec(0, 1, \lin, 0, 0.7),     // controlSpec
-				{ |ez| synth.set(\earlyreflevel, ez.value) } // action
-			);
-			controls[\earlyreflevel].numberView.maxDecimals = 3 ;
-			this.pbut(\earlyreflevel);
+		order.add(\earlyreflevel);
+		controls[\earlyreflevel] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"earlyreflevel",  // label
+			ControlSpec(0, 1, \lin, 0, 0.7),     // controlSpec
+			{ |ez| synth.set(\earlyreflevel, ez.value) } // action
+		);
+		controls[\earlyreflevel].numberView.maxDecimals = 3 ;
+		this.pbut(\earlyreflevel);
 
-			//earlyreflevel=0.7, taillevel=0.5, maxroomsize=300
-			order.add(\taillevel);
-			controls[\taillevel] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"taillevel",  // label
-				ControlSpec(0, 1, \lin, 0, 0.5),     // controlSpec
-				{ |ez| synth.set(\taillevel, ez.value) } // action
-			);
-			controls[\taillevel].numberView.maxDecimals = 3 ;
-			this.pbut(\taillevel);
+		//earlyreflevel=0.7, taillevel=0.5, maxroomsize=300
+		order.add(\taillevel);
+		controls[\taillevel] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"taillevel",  // label
+			ControlSpec(0, 1, \lin, 0, 0.5),     // controlSpec
+			{ |ez| synth.set(\taillevel, ez.value) } // action
+		);
+		controls[\taillevel].numberView.maxDecimals = 3 ;
+		this.pbut(\taillevel);
 
-			order.add(\maxroomsize);
-			controls[\maxroomsize] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"maxroomsize",  // label
-				ControlSpec(0, 600, \lin, 0, 300),     // controlSpec
-				{ |ez| synth.set(\maxroomsize, ez.value) } // action
-			);
-			//controls[\maxroomsize].numberView.maxDecimals = 3 ;
-			this.pbut(\maxroomsize);
+		order.add(\maxroomsize);
+		controls[\maxroomsize] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"maxroomsize",  // label
+			ControlSpec(0, 600, \lin, 0, 300),     // controlSpec
+			{ |ez| synth.set(\maxroomsize, ez.value) } // action
+		);
+		//controls[\maxroomsize].numberView.maxDecimals = 3 ;
+		this.pbut(\maxroomsize);
 
-			controls[\xfade] = EZSlider( w,         // parent
-				slbounds,    // bounds
-				"xfade",  // label
-				ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
-				{ |ez| synth.set(\xfade, ez.value) } // action
-			).valueAction_(0);
-			this.pbut(\xfade);
+		controls[\xfade] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"xfade",  // label
+			ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+			{ |ez| synth.set(\xfade, ez.value) } // action
+		).valueAction_(0);
+		this.pbut(\xfade);
 
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
-			});
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
-			});
-		};
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//};
 	}
 
 }
@@ -1250,33 +1250,36 @@ M2stGUI : EffectGUI {
 
 	init {|exepath, preset, autopreset|
 		super.init(exepath);
-
 		//midisetup = [[\freq, 23]];
 
-		synthdef = SynthDef(\m2st, {|in=3, out=0|
+		synthdef = SynthDef(\m2st, {|in=3, out=5|
 			Out.ar(out, In.ar(in, 1)!2);
 		}).add;
 
-		Server.default.waitForBoot{
-			this.audio;
-			super.gui("M2st", Rect(310,0, 330, 30));
+		//Server.default.waitForBoot{
+		//this.audio;
+		super.gui("M2st", Rect(310,0, 330, 30));
 
-			if (preset.isNil.not, { // not loading a preset file by default
-				super.preset( w.name, preset ); // try to read and apply the default preset
-			});
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
 
-			if (autopreset.isNil.not, {
-				{ this.auto(autopreset) }.defer(1) // not in a hurry
-			});
-		};
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+		//};
 	}
 
-	/*	audio {|argarr=#[]| // CHECK IF THIS IS THE SOLUTION
-	synth.free;
-	synthdef.load;
-	Server.default.sync;
-	synth = Synth(synthdef.name, argarr);
-	Server.default.sync;
-	("run"+synth.defName+"synth").postln;
+/*	audio { // CHECK IF THIS IS THE SOLUTION
+		"*** M2ST audio()".postln;
+		Server.default.waitForBoot{
+			synth.free;
+			synthdef.load;
+			Server.default.sync;
+			synth = Synth(synthdef.name);
+			//synth = Synth.tail(Server.default, synthdef.name);
+			Server.default.sync;
+			("run"+synth.defName+"synth").postln;
+		}
 	}*/
 }
