@@ -2,6 +2,7 @@
 */
 f = Feedback1.new;
 
+
 /* EFFECTS
 // effects I use in combination with the feedback unit. some are just quick tests
 */
@@ -9,14 +10,14 @@ AutoNotchGUI.new;
 TremoloGUI.new;
 NormalizerGUI.new;
 CompanderGUI.new;
-FreqShiftGUI.new
-LimiterGUI.new
-ChaosPitchShiftGUI.new
+FreqShiftGUI.new;
+LimiterGUI.new;
+ChaosPitchShiftGUI.new;
 PitchShiftGUI.new;
 GainLimiterGUI.new;
-DelayGUI.new
-FreeverbGUI.new
-GVerbGUI.new
+DelayGUI.new;
+FreeverbGUI.new;
+GVerbGUI.new;
 M2stGUI.new // takes a mono channel and duplicates it in two channels
 
 Launcher.new; // simple GUI to launch all effects
@@ -26,7 +27,6 @@ ChannelEQ.new(10); // you can use the loop bus value to control the internal fee
 
 BufferPlayerGUI.new
 Pads.new("/path/to/files/*.flac")
-
 
 
 // PRESET SYSTEM.

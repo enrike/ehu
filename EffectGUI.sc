@@ -1,4 +1,3 @@
-
 BaseGUI {
 
 	//classvar effectsGroup;
@@ -163,6 +162,9 @@ EffectGUI : BaseGUI {
 		synthdef = SynthDef(\default, {});
 		super.init(exepath);
 		utils = List.new;
+		if (~ehu_effects.isNil, {~ehu_effects=List.new});
+		~ehu_effects.add(this);
+		~ehu_effects.postln;
 	}
 
 	close {
@@ -172,6 +174,7 @@ EffectGUI : BaseGUI {
 		utils.do{|ut|
 			ut.close
 		};
+		~ehu_effects.remove(this)
 	}
 
 	pbut {|controlname|
@@ -223,11 +226,38 @@ EffectGUI : BaseGUI {
 				synth = nil;
 				("kill"+synthdef.name+"synth").postln;
 			})
-		}).value=1;
+		}).value=0;
 
-		Server.default.waitForBoot{
-		//	controls[\on].valueAction_(1)
-		};//.defer(1.5)
+		controls[\up] = Button(w, 13@18)
+		.states_([ ["<", Color.white, Color.black]])
+		.action_({ arg butt;
+			~ehu_effects.do{|ef, i|
+				if( (ef==this), {
+					if (i>0, {
+						synth.moveBefore(~ehu_effects[i-1].synth);
+						~ehu_effects.removeAt(i);
+						~ehu_effects.insert(i-1, ef);
+						Server.queryAllNodes;
+					})
+			})};
+
+		});
+		controls[\down] = Button(w, 13@18)
+		.states_([ [">", Color.white, Color.black]])
+		.action_({ arg butt;
+			~ehu_effects.do{|ef, i|
+				if( (ef==this), {
+					if (i<(~ehu_effects.size-1), {
+						synth.moveAfter(~ehu_effects[i+1].synth);
+						~ehu_effects.removeAt(i);
+						~ehu_effects.insert(i+1, ef);
+						Server.queryAllNodes;
+					})
+			})}
+		});
+
+
+
 	}
 
 	audio {|argarr=#[]|

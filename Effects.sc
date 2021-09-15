@@ -338,7 +338,7 @@ CompanderGUI : EffectGUI {
 
 		super.gui("Compressor_Expander", Rect(310,0, 430, 155));
 
-		StaticText(w, 20@18);
+		//StaticText(w, 20@18);
 
 		SimpleButton(w,"comp",{
 			controls[\slopeBelow].valueAction_(1);
@@ -463,17 +463,18 @@ AutoNotchGUI : EffectGUI {
 
 
 		//Server.default.waitForBoot{
-		this.send;
+		{this.send;
 
-		Server.default.sync;
+/*		Server.default.sync;
 
-		//this.audio;
+		this.audio;
 
-		Server.default.sync;
+		Server.default.sync;*/
 
 		synth = Synth.tail(Server.default, \autonotch, [\uid, uid]);// ovewrite
+		}.defer(1);
 
-		Server.default.sync;
+		//Server.default.sync;
 
 		pitchOSCF = OSCFunc({|msg|
 			//synth.set(\uid, uid); // very bad code. make sure it is the right one
@@ -754,7 +755,7 @@ DCompanderGUI : EffectGUI {
 				[signal], //needs to be a 2D array: [ [ left, right ] ]
 				freqs,
 				rqs
-			);
+			).add;
 
 			signal = Compander.ar(signal, signal, thresh, slopeBelow.lag(0.05),
 				slopeAbove.lag(0.05), clampTime.lag(0.05), relaxTime.lag(0.05));
@@ -913,7 +914,7 @@ GainLimiterGUI : EffectGUI {
 			signal = Limiter.ar(signal, limit);
 			SendPeakRMS.kr(signal, 10, 3, '/gainoutlvl'); // to monitor incoming feedback signal
 			XOut.ar(out, xfade, signal);
-		});
+		}).add;
 
 		//Server.default.waitForBoot{
 		//this.audio;
@@ -938,7 +939,7 @@ GainLimiterGUI : EffectGUI {
 		}.defer;
 		}, '/gainoutlvl', Server.default.addr);
 
-		vlay = VLayoutView(w, 150@17); // size
+		vlay = VLayoutView(w, 120@17); // size
 		4.do{|i|
 			levels.add( LevelIndicator(vlay, 4).warning_(0.9).critical_(1.0).drawsPeak_(true) ); // 5 height each
 			if (i==1, {CompositeView(vlay, 1)}); // plus 2px separator
