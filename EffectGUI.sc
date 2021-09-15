@@ -162,9 +162,7 @@ EffectGUI : BaseGUI {
 		synthdef = SynthDef(\default, {});
 		super.init(exepath);
 		utils = List.new;
-		if (~ehu_effects.isNil, {~ehu_effects=List.new});
-		~ehu_effects.add(this);
-		~ehu_effects.postln;
+		if (~ehu_effects.isNil, {~ehu_effects=List.new})
 	}
 
 	close {
@@ -220,10 +218,12 @@ EffectGUI : BaseGUI {
 		.action_({ arg butt;
 			if (butt.value==1, {
 				("running audio:"+name).postln;
-				this.audio
+				this.audio;
+				~ehu_effects.add(this);
 			}, {
 				synth.free;
 				synth = nil;
+				~ehu_effects.remove(this);
 				("kill"+synthdef.name+"synth").postln;
 			})
 		}).value=0;
@@ -237,7 +237,7 @@ EffectGUI : BaseGUI {
 						synth.moveBefore(~ehu_effects[i-1].synth);
 						~ehu_effects.removeAt(i);
 						~ehu_effects.insert(i-1, ef);
-						Server.queryAllNodes;
+						Server.local.queryAllNodes;
 					})
 			})};
 
@@ -251,7 +251,7 @@ EffectGUI : BaseGUI {
 						synth.moveAfter(~ehu_effects[i+1].synth);
 						~ehu_effects.removeAt(i);
 						~ehu_effects.insert(i+1, ef);
-						Server.queryAllNodes;
+						Server.local.queryAllNodes;
 					})
 			})}
 		});

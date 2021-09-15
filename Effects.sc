@@ -23,8 +23,6 @@ Launcher {
 			path = exepath;
 		});
 
-		path.postln;
-
 		this.close;
 		~utils = List.new;//refs to GUI windows
 
@@ -112,9 +110,6 @@ TremoloGUI : EffectGUI {
 			XOut.ar(out, xfade, sig);
 		});
 
-		//Server.default.waitForBoot{
-		//this.audio;
-
 		super.gui("Tremolo", 430@70); // init super gui w
 
 		w.view.decorator.nextLine;
@@ -146,7 +141,6 @@ TremoloGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//};
 	}
 }
 
@@ -180,9 +174,6 @@ NormalizerGUI : EffectGUI {
 			XOut.ar(out, xfade, sig);
 		});
 
-		//Server.default.waitForBoot{
-		//this.audio;
-
 		super.gui("Normalizer", Rect(310,320, 430, 70)); // init super gui w
 
 		w.view.decorator.nextLine;
@@ -210,7 +201,6 @@ NormalizerGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//};
 	}
 }
 
@@ -231,9 +221,6 @@ LimiterGUI : EffectGUI {
 			sig = Limiter.ar(sig, level.asFloat);
 			XOut.ar(out, xfade, sig);
 		});
-
-		//Server.default.waitForBoot{
-		//this.audio;
 
 		super.gui("Limiter", Rect(310,250, 430, 70)); // init super gui w
 
@@ -262,7 +249,6 @@ LimiterGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//};
 	}
 }
 
@@ -282,9 +268,6 @@ PatcherGUI : EffectGUI { // just read a bus and send that signal to another bus
 			Out.ar(out, In.ar(in, 2)*level);
 		});
 
-		//Server.default.waitForBoot{
-		//this.audio;
-
 		super.gui("Patcher", Rect(310,250, 430, 50)); // init super gui w
 
 		w.view.decorator.nextLine;
@@ -303,7 +286,6 @@ PatcherGUI : EffectGUI { // just read a bus and send that signal to another bus
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//};
 	}
 }
 
@@ -332,9 +314,6 @@ CompanderGUI : EffectGUI {
 				slopeAbove.lag(0.05), clampTime.lag(0.05), relaxTime.lag(0.05));
 			XOut.ar(out, xfade, sig);
 		});
-
-		//Server.default.waitForBoot{
-		//this.audio;
 
 		super.gui("Compressor_Expander", Rect(310,0, 430, 155));
 
@@ -426,7 +405,6 @@ CompanderGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//};
 	}
 }
 
@@ -461,20 +439,10 @@ AutoNotchGUI : EffectGUI {
 
 		uid = UniqueID.next;
 
-
-		//Server.default.waitForBoot{
-		{this.send;
-
-/*		Server.default.sync;
-
-		this.audio;
-
-		Server.default.sync;*/
-
-		synth = Synth.tail(Server.default, \autonotch, [\uid, uid]);// ovewrite
+		{
+			this.send;
+			synth = Synth.tail(Server.default, \autonotch, [\uid, uid]);// ovewrite
 		}.defer(1);
-
-		//Server.default.sync;
 
 		pitchOSCF = OSCFunc({|msg|
 			//synth.set(\uid, uid); // very bad code. make sure it is the right one
@@ -523,7 +491,6 @@ AutoNotchGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//}
 	}
 
 	audio {
@@ -560,8 +527,6 @@ FreqShiftGUI : EffectGUI {
 			XOut.ar(out, xfade, signal);
 		});
 
-		//Server.default.waitForBoot{
-		//this.audio;
 		super.gui("FreqShift", Rect(310,0, 430, 75));
 
 		w.view.decorator.nextLine;
@@ -593,7 +558,6 @@ FreqShiftGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//};
 	}
 
 }
@@ -618,8 +582,6 @@ PitchShiftGUI : EffectGUI {
 			XOut.ar(out, xfade, signal);
 		});
 
-		//Server.default.waitForBoot{
-		//this.audio;
 		super.gui("PitchShift", Rect(310,0, 430, 75));
 
 		w.view.decorator.nextLine;
@@ -651,7 +613,6 @@ PitchShiftGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//};
 	}
 
 }
@@ -675,8 +636,6 @@ ChaosPitchShiftGUI : EffectGUI {
 			XOut.ar(out, xfade, signal);
 		}).add;
 
-		//Server.default.waitForBoot{
-		//this.audio;
 		super.gui("ChaosPitchShift", Rect(310,0, 430, 100));
 
 		w.view.decorator.nextLine;
@@ -718,7 +677,6 @@ ChaosPitchShiftGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//};
 	}
 
 }
@@ -764,7 +722,6 @@ DCompanderGUI : EffectGUI {
 			XOut.ar(out, xfade, signal);
 		});
 
-		//Server.default.waitForBoot{
 		this.audio([\freqs, freqs, \rqs, rqs]);
 
 		super.gui("D Compressor_Expander", Rect(310,0, 430, 200));
@@ -891,7 +848,6 @@ DCompanderGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//};
 	}
 }
 
@@ -915,9 +871,6 @@ GainLimiterGUI : EffectGUI {
 			SendPeakRMS.kr(signal, 10, 3, '/gainoutlvl'); // to monitor incoming feedback signal
 			XOut.ar(out, xfade, signal);
 		}).add;
-
-		//Server.default.waitForBoot{
-		//this.audio;
 
 		super.gui("Gain_Limiter", 430@70); // init super gui w
 
@@ -972,7 +925,6 @@ GainLimiterGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//}
 	}
 }
 
@@ -997,8 +949,6 @@ DelayGUI : EffectGUI {
 			XOut.ar(out, xfade, signal )
 		}).add;
 
-		//Server.default.waitForBoot{
-		//this.audio;
 		super.gui("Delay", Rect(310,0, 430, 100));
 
 		w.view.decorator.nextLine;
@@ -1040,7 +990,6 @@ DelayGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//};
 	}
 
 }
@@ -1069,8 +1018,6 @@ FreeverbGUI : EffectGUI {
 			XOut.ar(out, xfade, signal)
 		}).add;
 
-		//Server.default.waitForBoot{
-		//this.audio;
 		super.gui("Freeverb", Rect(310,0, 430, 100));
 
 		w.view.decorator.nextLine;
@@ -1112,9 +1059,7 @@ FreeverbGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//};
 	}
-
 }
 
 GVerbGUI : EffectGUI {
@@ -1134,8 +1079,6 @@ GVerbGUI : EffectGUI {
 			XOut.ar(out, xfade, signal)
 		}).add;
 
-		//Server.default.waitForBoot{
-		//this.audio;
 		super.gui("GVerb", Rect(310,0, 430, 250));
 
 		w.view.decorator.nextLine;
@@ -1238,7 +1181,6 @@ GVerbGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//};
 	}
 
 }
@@ -1257,8 +1199,6 @@ M2stGUI : EffectGUI {
 			Out.ar(out, In.ar(in, 1)!2);
 		}).add;
 
-		//Server.default.waitForBoot{
-		//this.audio;
 		super.gui("M2st", Rect(310,0, 330, 30));
 
 		if (preset.isNil.not, { // not loading a preset file by default
@@ -1268,19 +1208,5 @@ M2stGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
-		//};
 	}
-
-/*	audio { // CHECK IF THIS IS THE SOLUTION
-		"*** M2ST audio()".postln;
-		Server.default.waitForBoot{
-			synth.free;
-			synthdef.load;
-			Server.default.sync;
-			synth = Synth(synthdef.name);
-			//synth = Synth.tail(Server.default, synthdef.name);
-			Server.default.sync;
-			("run"+synth.defName+"synth").postln;
-		}
-	}*/
 }
