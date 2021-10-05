@@ -186,21 +186,19 @@ EffectGUI : BaseGUI {
 	gui {|name, bounds|
 		super.gui(name, bounds);
 
-		StaticText(w, 20@18).align_(\right).string_("In").resize_(7);
+		StaticText(w, 14@18).align_(\right).string_("In").resize_(7);
 		controls[\in] = PopUpMenu(w, Rect(10, 10, 45, 17))
 		.items_( Array.fill(16, { arg i; i }) )
 		.action_{|m|
 			synth.set(\in, m.value);
-		}
-		.value_(0); // default to sound in
+		}.value_(0); // default to sound in
 
 		StaticText(w, 20@18).align_(\right).string_("Out").resize_(7);
 		controls[\out] = PopUpMenu(w, Rect(10, 10, 45, 17))
 		.items_( Array.fill(16, { arg i; i }) )
 		.action_{|m|
 			synth.set(\out, m.value);
-		}
-		.value_(0); // default to sound in
+		}.value_(0); // default to sound in
 
 		SimpleButton(w,"midi",{
 			this.midi(midisetup);
@@ -228,7 +226,7 @@ EffectGUI : BaseGUI {
 			})
 		}).value=0;
 
-		controls[\up] = Button(w, 13@18)
+		controls[\up] = Button(w, 11@18)
 		.states_([ ["<", Color.white, Color.black]])
 		.action_({ arg butt;
 			~ehu_effects.do{|ef, i|
@@ -242,7 +240,7 @@ EffectGUI : BaseGUI {
 			})};
 
 		});
-		controls[\down] = Button(w, 13@18)
+		controls[\down] = Button(w, 11@18)
 		.states_([ [">", Color.white, Color.black]])
 		.action_({ arg butt;
 			~ehu_effects.do{|ef, i|
@@ -256,8 +254,11 @@ EffectGUI : BaseGUI {
 			})}
 		});
 
-
-
+		controls[\tree] = Button(w, 8@18)
+		.states_([ ["t", Color.white, Color.black]])
+		.action_({ arg butt;
+			Server.local.queryAllNodes;
+		});
 	}
 
 	audio {|argarr=#[]|

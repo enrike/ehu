@@ -763,7 +763,7 @@ DCompanderGUI : EffectGUI {
 		controls[\slopeBelow] = EZSlider( w,         // parent
 			slbounds,    // bounds
 			"slpBelow",  // label
-			ControlSpec(-2, 5, \lin, 0.01, 1),     // controlSpec
+			ControlSpec(-2, 5, \lin, 0.001, 1),     // controlSpec
 			{ |ez| synth.set(\slopeBelow, ez.value) } // action
 		);
 		controls[\slopeBelow].numberView.maxDecimals = 3 ;
@@ -773,7 +773,7 @@ DCompanderGUI : EffectGUI {
 		controls[\slopeAbove] = EZSlider( w,         // parent
 			slbounds,    // bounds
 			"slpAbove",  // label
-			ControlSpec(-2, 5, \lin, 0.01, 0.5),     // controlSpec
+			ControlSpec(-2, 5, \lin, 0.001, 0.5),     // controlSpec
 			{ |ez| synth.set(\slopeAbove, ez.value) } // action
 		);
 		controls[\slopeAbove].numberView.maxDecimals = 3 ;
