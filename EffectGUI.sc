@@ -114,7 +114,10 @@ BaseGUI {
 		("reading preset"+apath).postln;
 
 		[\bounds, data[\bounds]].postln; //make sure it first deals with ON
-		{ w.bounds = data[\bounds] }.defer; // wait for QT
+		{
+			var b = data[\bounds];
+			w.bounds = Rect(b.left, b.top, w.width, w.height);
+		}.defer; // wait for QT
 		data.removeAt(\bounds); // we are done with this
 
 		data.keysValuesDo{ |key, value|
