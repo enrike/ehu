@@ -294,6 +294,10 @@ EffectGUI : BaseGUI {
 	}
 
 	setupControl {|control, channel|
+		MIDIdef(control).free;
+		MIDIdef(control++"_r").free;
+		MIDIdef(control++"_s").free;
+
 		// sliders and knobs
 		MIDIdef.cc(control, {arg ...args;
 			{
@@ -315,7 +319,7 @@ EffectGUI : BaseGUI {
 		}, channel+64); // R buttons in nanokontrol
 
 		// S buttons random short jump for sliders
-		MIDIdef.cc(control++"_r", {arg ...args;
+		MIDIdef.cc(control++"_s", {arg ...args;
 			{
 				if (args[0]==127, {
 					var current = controls[control].value;
