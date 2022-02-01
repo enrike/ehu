@@ -154,11 +154,11 @@ BufferPlayerGUI  {
 	var synthdef, synth;
 	var plotview, drawview, plotwinrefresh, b, uid, posOSCF, pos;
 
-	*new {
-		^super.new.init;
+	*new {|filepath|
+		^super.new.init(filepath);
 	}
 
-	init {
+	init {|filepath|
 		controls = Dictionary.new;
 
 		uid = UniqueID.next;
@@ -320,6 +320,10 @@ BufferPlayerGUI  {
 
 			"To zoom in/out: Shift + right-click + mouse-up/down".postln;
 			"To scroll: right-click + mouse-left/right".postln;
+
+			Server.default.sync;
+
+			if (filepath.notNil, {this.load(filepath)})
 		}
 	}
 
