@@ -479,7 +479,7 @@ CompressorGUI : EffectGUI {
 		controls[\thresh] = EZSlider( w,         // parent
 			slbounds,    // bounds
 			"thresh",  // label
-			ControlSpec(-10, 1, \lin, 0.001, -6),     // controlSpec
+			ControlSpec(-30, 0, \lin, 0.001, -6),     // controlSpec
 			{ |ez| synth.set(\thresh, ez.value) } // action
 		);
 		//controls[\thresh].numberView.maxDecimals = 3 ;
@@ -489,7 +489,7 @@ CompressorGUI : EffectGUI {
 		controls[\ratio] = EZSlider( w,         // parent
 			slbounds,    // bounds
 			"ratio",  // label
-			ControlSpec(0.1, 10, \lin, 0.001, 4),     // controlSpec
+			ControlSpec(0.01, 1, \lin, 0.001, 0.2),     // controlSpec
 			{ |ez| synth.set(\ratio, ez.value) } // action
 		);
 		controls[\ratio].numberView.maxDecimals = 3 ;
@@ -1556,7 +1556,7 @@ Mirror : EffectGUI {
 	var flash;
 	var recbufs;
 	var players;
-	var delay, delaybus=30;
+	//var delay, delaybus=30;
 	var listener, recorder, index=0, sttime=0;
 
 	*new {|exepath, preset=\default, autopreset|
@@ -1594,7 +1594,7 @@ Mirror : EffectGUI {
 		);
 		this.pbut(\thres);
 
-		controls[\del] = EZSlider( w,         // parent
+/*		controls[\del] = EZSlider( w,         // parent
 			slbounds,    // bounds
 			"del",  // label
 			ControlSpec(0, 0.5, \lin, 0.01, 0.07),     // controlSpec
@@ -1602,7 +1602,7 @@ Mirror : EffectGUI {
 				delay.set(\delay, ez.value)
 			} // action
 		);
-		this.pbut(\del);
+		this.pbut(\del);*/
 
 		controls[\rate] = EZSlider( w,         // parent
 			slbounds,    // bounds
@@ -1610,12 +1610,12 @@ Mirror : EffectGUI {
 			ControlSpec(-1, 1, \lin, 0.01, -1),     // controlSpec
 			{ |ez| rate = ez.value } // action
 		);
-		this.pbut(\ratel);
+		this.pbut(\rate);
 
 		controls[\amp] = EZSlider( w,         // parent
 			slbounds,    // bounds
-			"amp",  // label
-			ControlSpec(0, 1, \lin, 0.01, amp),     // controlSpec
+			"gain",  // label
+			ControlSpec(0, 5, \lin, 0.01, amp),     // controlSpec
 			{ |ez| amp = ez.value } // action
 		);
 		this.pbut(\amp);
@@ -1623,14 +1623,16 @@ Mirror : EffectGUI {
 		// overwrite
 		//controls[\in].postln;
 		controls[\in].action = {|m|
+			m.value.postln;
 			in = m.value;
 			try{listener.set(\in, in)};
-			try{delay.set(\in, in)}
+			//try{delay.set(\in, in)}
 		};
 		//controls[\out].postln;
 		controls[\out].action = {|m|
+			m.value.postln;
 			out = m.value;
-			try{listener.set(\out, in)}
+			try{listener.set(\out, out)}
 		};
 
 		OSCdef(\mirrorsilenceOSCdef).clear;
@@ -1665,7 +1667,7 @@ Mirror : EffectGUI {
 
 			listener.free;
 			recorder.free;
-			delay.free;
+			//delay.free;
 
 			recbufs.collect(_.free);
 			players.collect(_.free);
@@ -1673,9 +1675,9 @@ Mirror : EffectGUI {
 			recbufs = List.newClear(num);
 			players = List.newClear(num);
 
-			SynthDef(\tempdelay, {|in=0, out=0, delay=0.07|
+/*			SynthDef(\tempdelay, {|in=0, out=0, delay=0.07|
 				Out.ar(out, DelayC.ar(In.ar(in, 2), delaytime:delay))
-			}).load;
+			}).load;*/
 
 			SynthDef(\ehurecorder,{ arg in=0, bufnum=0, del=0.01;
 				var signal = In.ar(in, 2);
@@ -1701,7 +1703,7 @@ Mirror : EffectGUI {
 			Server.default.sync;
 			///////////////////////
 
-			delay = Synth(\tempdelay, [\in, in, \out, delaybus, \amp, amp]);
+			//delay = Synth(\tempdelay, [\in, in, \out, delaybus, \amp, amp]);
 
 			listener = Synth.tail(Server.default, \sil_listener, [
 				\in, in,
@@ -1720,13 +1722,13 @@ Mirror : EffectGUI {
 						{flash.value=1}.defer;
 						recbufs[index].zero;
 						recorder = Synth.tail(Server.default, \ehurecorder,
-							[\in, delaybus, \bufnum, recbufs[index].bufnum, \loop, 0]);
+							[\in, in, \bufnum, recbufs[index].bufnum, \loop, 0]);
 					})
 				},{
 					if (recorder.isNil.not, {
 						var len = ((SystemClock.seconds - sttime) * recbufs[index].sampleRate).asInteger;
 						if (rate>0, {len=0}); // start from start point
-						players[index] = Synth(\ehuplayermirror, [\out, out, \bufnum, recbufs[index].bufnum,
+						players[index] = Synth.new(\ehuplayermirror, [\out, out, \bufnum, recbufs[index].bufnum,
 							\rate, -1, \st, len, \rate, rate, \amp, amp]);
 						{flash.value=0}.defer;
 						recorder.free;
@@ -1751,11 +1753,11 @@ Shooter : EffectGUI {
 
 	var flash;
 	var players;
-	var listener;
 	var filepath;
 	var files;
 	var buffer;
 	var index = 0;
+	var rand=0;
 
 	*new {|exepath, preset=\default, autopreset, filepath=""|
 		^super.new.init(exepath, preset, autopreset, filepath);
@@ -1778,34 +1780,45 @@ Shooter : EffectGUI {
 			slbounds,    // bounds
 			"thres",  // label
 			ControlSpec(0, 1, \lin, 0.01, 0.05),     // controlSpec
-			{ |ez| thr = ez.value; listener.set(\silen_thres, ez.value) } // action
+			{ |ez|
+				thr = ez.value;
+				try { synth.set(\thres, ez.value) };
+			} // action
 		);
 		this.pbut(\thres);
 
 		controls[\amp] = EZSlider( w,         // parent
 			slbounds,    // bounds
-			"amp",  // label
-			ControlSpec(0, 1, \lin, 0.01, amp),     // controlSpec
-			{ |ez| amp = ez.value } // action
+			"gain",  // label
+			ControlSpec(0, 5, \lin, 0.01, amp),     // controlSpec
+			{ |ez|
+				amp = ez.value;
+				try { synth.set(\gain, ez.value) };
+			} // action
 		);
 		this.pbut(\amp);
-
 
 		if (PathName.new(filepath).isFolder, { // if a folder apply wildcards
 			files = PathName.new(filepath).files.collect(_.fileName);
 		});
 
-
-		StaticText(w, 60@18).align_(\right).string_("shoot").resize_(7);
-		controls[\file] = PopUpMenu(w, Rect(0, 10, 260, 18))
+		StaticText(w, 60@18).align_(\right).string_("file").resize_(7);
+		controls[\file] = PopUpMenu(w, Rect(0, 10, 190, 18))
 		.items_( files.asArray )
 		.action_{|m|
 			buffer.free;
 			buffer = Buffer.read(Server.default, filepath++Platform.pathSeparator++files[m.value]);
 		}.value_(0); // default to sound in
 
-		OSCdef(\onsetOSCdef).clear;
-		OSCdef(\onsetOSCdef).free;
+		// random button
+		controls[\rand] = Button(w, 65@18)
+		.states_([
+			["rand", Color.black, Color.grey],
+			["rand", Color.black, Color.red],
+		])
+		.action_({|but|
+			rand=but.value
+		});
 
 		if (preset.isNil.not, { // not loading a preset file by default
 			super.preset( w.name, preset ); // try to read and apply the default preset
@@ -1818,7 +1831,7 @@ Shooter : EffectGUI {
 
 	close {
 		("freeing").postln;
-		listener.free;
+		synth.free;
 
 		players.collect(_.free);
 		super.close;
@@ -1830,42 +1843,52 @@ Shooter : EffectGUI {
 	}
 
 	audio {
-
 		Server.default.waitForBoot{
-			listener.free;
+			synth.free;
+
+			"audio shooter".postln;
 
 			players.collect(_.free);
-
 			players = List.newClear(num);
 
 			SynthDef(\onset_listener, { |in=0, gain=1, thres=0.6 |
-				var signal, onset;
-				signal = SoundIn.ar(in)*gain;
-				signal = FFT(LocalBuf(2048), signal, wintype:1);		// threshold
+				var signal, onset, level;
+				signal = In.ar(in)*gain;
+				level = WAmp.kr(signal);
+				signal = FFT(LocalBuf(2048), signal, wintype:1); // threshold
 				onset = Onsets.kr(signal, thres, \rcomplex, relaxtime: 2.1, floor: 0.1, mingap: 1,
 					medianspan:11, whtype:1, rawodf:0);
-				SendReply.kr(onset, '/onsetshooter', 1);
+				SendReply.kr(onset, '/onsetshooter', level);
 			}).add;
 
 			SynthDef(\ehuplayerbasic, {|bufnum, amp=1, rate=1, st=0, out=0|
-				//var len = BufFrames.kr(bufnum);
 				Out.ar(out, PlayBuf.ar(2, bufnum, rate, startPos:st, loop:0, doneAction: Done.freeSelf) * amp )
 			}).add;
 
 			Server.default.sync; //////////////////////////
 
-			listener = Synth.tail(Server.default, \onset_listener, [\in, in, \threshold, thr]);
+			synth = Synth.tail(Server.default, \onset_listener, [\in, in, \threshold, thr]);
 
-			OSCdef(\onsetOSCdef).clear;
-			OSCdef(\onsetOSCdef).free;
-			OSCdef(\onsetOSCdef, {|msg, time, addr, recvPort|
+			Server.default.sync; //////////////////////////
+
+			OSCdef(\shootonsetOSCdef).clear;
+			OSCdef(\shootonsetOSCdef).free;
+			OSCdef(\shootonsetOSCdef, {|msg, time, addr, recvPort|
 				{flash.value=1}.defer;
 				{flash.value=0}.defer(0.1);
 				//players.postln;
+				if (rand==1, {
+					buffer.free;
+					buffer = Buffer.read(Server.default, PathName(filepath).files.choose.fullPath);
+					Server.default.waitForBoot{
+						Server.default.sync; // this might slow down the response!!
+					}
+				});
 
 				if (buffer.notNil, {
 					players[index].free;
-					players.put(index, Synth(\ehuplayerbasic, [\out, out, \bufnum, buffer.bufnum, \rate, 1, \amp, amp]));
+					players.put(index, Synth(\ehuplayerbasic, [\out, out, \bufnum, buffer.bufnum,
+						\rate, 1, \amp, amp * msg[3]]));
 					index = index + 1;
 					if (index >= players.size, {index=0})
 				});
