@@ -1,12 +1,13 @@
-
+/*the midi function is designed to be used with a nanokorg controller
+*/
 Pads { // NEW
-	var w, buttons, synths, amp, tail, nk2values, loopsOSC;
+	var w, buttons, sls, synths, amp, tail, nk2values, loopsOSC;
 
-	*new {|path, out=0, col=5, size=120, amp=1, midif=1, loop=0, tail=0|
-		^super.new.init(path, out, col, size, amp, midif, loop, tail);
+	*new {|path, out=0, col=5, size=120, amp=1, midif=1, loop=0, tail=0, nk2=#[0,1,2,3,4,5,6,7]|
+		^super.new.init(path, out, col, size, amp, midif, loop, tail, nk2);
 	}
 
-	init {|path, out, col, size, amp, midif, loop, atail| //////////////////////
+	init {|path, out, col, size, amp, midif, loop, atail, nk2| //////////////////////
 		//super.init(path);
 		if (path.isNil, {
 			path = Platform.userHomeDir;
@@ -43,11 +44,12 @@ Pads { // NEW
 
 			synths = Array.fill(buffers.size, nil);
 			buttons = List.new;
+			sls = List.new;
 			loopsOSC = List.fill(buffers.size, {nil});
 
 			nk2values = List.fill(buffers.size, { Dictionary.newFrom([\amp, amp, \rate, 1, \loop, loop]) });
 
-			wsize = (col*(size+2))+8;
+			wsize = (col*(size+2+15+2))+8;
 			hsize = (buffers.size/col)*(size);
 			//if (buffers.size%col>0, {hsize = hsize+(size*0.8)}); // extra row
 
@@ -62,6 +64,7 @@ Pads { // NEW
 			// slider to control de final mix volume? limiter?
 
 			buffers.do{|buf, index|
+				var sl = nil;
 				var name = PathName(buf.path).fileName;
 				var bu = Button(w, size@(size*0.75)).states_([
 					[">"+name, Color.white, Color.black],
@@ -127,20 +130,23 @@ Pads { // NEW
 
 				buttons.add(bu);
 
-				/*				Slider(w, Rect(20, 50, 150, 20))
-				.focusColor_(Color.red(alpha:0.2))
-				.background_(Color.rand)
-				.value_(0.5)
-				.action_({|value|
-				rate=value;
-				});*/
+				sl = Slider(w,15@(size*0.75))
+				.orientation_(\vertical)
+				//.focusColor_(Color.red(alpha:0.2))
+				//.background_(Color.rand)
+				.value_(amp)
+				.action_({|sl|
+					nk2values[index][\amp] = sl.value;
+					synths[index].set(\amp, nk2values[index][\amp])
+				});
+				buttons.add(sl);
 
 				if((index>0)&&((index+1)%col.max(1)==0), {
 					w.view.decorator.nextLine;
 				});
 			};
 
-			if (midif==1, {this.midi});
+			if (midif==1, {this.midi(nk2)});
 
 			w.front;
 		}
@@ -148,7 +154,7 @@ Pads { // NEW
 
 
 
-	midi {
+	midi {|nk2|
 		MIDIdef.freeAll;
 		if (MIDIClient.initialized==false, {
 			MIDIClient.init;
@@ -157,7 +163,7 @@ Pads { // NEW
 
 		// [0,16,383, 48, 64] //vol, knob, S, M, R
 		{ // nanokorg MIDI
-			8.do{|i|
+			nk2.do{|i |
 				MIDIdef("\vol"++i).free;
 				MIDIdef("\knob"++i).free;
 				MIDIdef("\s"++i).free;
@@ -165,7 +171,8 @@ Pads { // NEW
 				// slider AMP
 				MIDIdef.cc("\vol"++i, {arg ...args;
 					nk2values[i][\amp] = args[0]/127;
-					synths[i].set(\amp, nk2values[i][\amp])
+					synths[i].set(\amp, nk2values[i][\amp]);
+					sls.value = nk2values[i][\amp]; //just display
 				}, i);
 				// knob PITCH 0-2
 				MIDIdef.cc("\knob"++(16+i), {arg ...args;
