@@ -1,7 +1,7 @@
 /*the midi function is designed to be used with a nanokorg controller
 */
 Pads { // NEW
-	var w, buttons, sls, synths, amp, tail, nk2values, loopsOSC;
+	var w, buttons, asls, psls, synths, amp, tail, nk2values, loopsOSC;
 
 	*new {|path, out=0, col=5, size=120, amp=1, midif=1, loop=0, tail=0, nk2=#[0,1,2,3,4,5,6,7]|
 		^super.new.init(path, out, col, size, amp, midif, loop, tail, nk2);
@@ -44,13 +44,14 @@ Pads { // NEW
 
 			synths = Array.fill(buffers.size, nil);
 			buttons = List.new;
-			sls = List.new;
+			asls = List.new;
+			psls = List.new;
 			loopsOSC = List.fill(buffers.size, {nil});
 
 			nk2values = List.fill(buffers.size, { Dictionary.newFrom([\amp, amp, \rate, 1, \loop, loop]) });
 
-			wsize = (col*(size+2+15+2))+8;
-			hsize = (buffers.size/col)*(size);
+			wsize = (col*(size+3+15+15+3))+8;
+			hsize = (buffers.size/col)*(size+7);
 			//if (buffers.size%col>0, {hsize = hsize+(size*0.8)}); // extra row
 
 			w = Window("Pads", wsize@hsize);
@@ -61,12 +62,25 @@ Pads { // NEW
 				buffers.collect(_.free);
 			};
 
+
+/*			StaticText(w, 20@18).align_(\right).string_("Out").resize_(7);
+			//controls[\out] =
+			PopUpMenu(w, Rect(10, 10, 45, 17))
+			.items_( Array.fill(16, { arg i; i }) )
+			.action_{|m|
+				//synth.set(\out, m.value);
+				synths.do{|i|i.set(\out, m.value)};
+			}.value_(0); // default to sound in
+
+			w.view.decorator.nextLine;*/
+
 			// slider to control de final mix volume? limiter?
 
 			buffers.do{|buf, index|
 				var sl = nil;
 				var name = PathName(buf.path).fileName;
-				var bu = Button(w, size@(size*0.75)).states_([
+				var bu;
+				bu = Button(w, size@(size*0.75)).states_([
 					[">"+name, Color.white, Color.black],
 					["||"+name, Color.black, Color.red]
 				])
@@ -127,10 +141,9 @@ Pads { // NEW
 						("pads kill"+index+"synth").postln;
 					})
 				}).value=0;
-
 				buttons.add(bu);
 
-				sl = Slider(w,15@(size*0.75))
+				sl = Slider(w,15@(size*0.75))//AMP
 				.orientation_(\vertical)
 				//.focusColor_(Color.red(alpha:0.2))
 				//.background_(Color.rand)
@@ -139,7 +152,16 @@ Pads { // NEW
 					nk2values[index][\amp] = sl.value;
 					synths[index].set(\amp, nk2values[index][\amp])
 				});
-				buttons.add(sl);
+				asls.add(sl);
+
+				sl = Slider(w,15@(size*0.75)) //PITCH
+				.orientation_(\vertical)
+				.value_(1)
+				.action_({|sl|
+					nk2values[index][\rate] = sl.value.linlin(0,1, 0,1.25);
+					synths[index].set(\rate, nk2values[index][\rate])
+				});
+				psls.add(sl);
 
 				if((index>0)&&((index+1)%col.max(1)==0), {
 					w.view.decorator.nextLine;
@@ -153,6 +175,9 @@ Pads { // NEW
 	}
 
 
+	out {|chan=0|
+		synths.do{|i|i.set(\out, chan)};
+	}
 
 	midi {|nk2|
 		MIDIdef.freeAll;
@@ -172,13 +197,14 @@ Pads { // NEW
 				MIDIdef.cc("\vol"++i, {arg ...args;
 					nk2values[i][\amp] = args[0]/127;
 					synths[i].set(\amp, nk2values[i][\amp]);
-					sls.value = nk2values[i][\amp]; //just display
+					{ asls[i].value = nk2values[i][\amp] }.defer; //just display
 				}, i);
 				// knob PITCH 0-2
 				MIDIdef.cc("\knob"++(16+i), {arg ...args;
 					nk2values[i][\rate] = args[0].linlin(0,128, 0, 1.25);
 					nk2values[i][\rate].postln;
-					synths[i].set(\rate, nk2values[i][\rate])
+					synths[i].set(\rate, nk2values[i][\rate]);
+					{ psls[i].value = nk2values[i][\rate] }.defer; //just display
 				}, (16+i));
 				// R key LOOP
 				MIDIdef.cc("\s"++(32+i), {arg ...args;
