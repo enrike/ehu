@@ -1,13 +1,13 @@
 /*the midi function is designed to be used with a nanokorg controller
 */
 Pads { // NEW
-	var w, buttons, asls, psls, synths, amp, tail, nk2values, loopsOSC;
+	var w, buttons, asls, psls, synths, amp, tail, nk2values, loopsOSC, out;
 
 	*new {|path, out=0, col=5, size=120, amp=1, midif=1, loop=0, tail=0, nk2=#[0,1,2,3,4,5,6,7]|
 		^super.new.init(path, out, col, size, amp, midif, loop, tail, nk2);
 	}
 
-	init {|path, out, col, size, amp, midif, loop, atail, nk2| //////////////////////
+	init {|path, aout, col, size, amp, midif, loop, atail, nk2| //////////////////////
 		//super.init(path);
 		if (path.isNil, {
 			path = Platform.userHomeDir;
@@ -17,6 +17,7 @@ Pads { // NEW
 		//AppClock.clear;
 
 		tail = atail;
+		out = aout;
 
 		Server.default.waitForBoot{
 			var buffers, files, wsize, hsize;
@@ -176,7 +177,8 @@ Pads { // NEW
 
 
 	out {|chan=0|
-		synths.do{|i|i.set(\out, chan)};
+		out=chan;
+		synths.do{|i|i.set(\out, out)};
 	}
 
 	midi {|nk2|
