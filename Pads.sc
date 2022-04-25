@@ -25,15 +25,15 @@ Pads { // NEW
 			buffers.collect(_.free);
 			buffers = List.new;
 
-			SynthDef(\splayerS, {|buffer, amp=1, out=0, rate=1, loop=0, index=0|
+			SynthDef(\splayerS, {|buffer, amp=1, out=0, rate=1, dir=1, loop=0, index=0|
 				var pb;
 				SendReply.kr(TDelay.kr(Impulse.kr(BufDur.kr(buffer)), BufDur.kr(buffer)), '/loop', 1, index);
-				pb = PlayBuf.ar(2, buffer, BufRateScale.kr(buffer)*rate, loop: loop);//, doneAction:2);
+				pb = PlayBuf.ar(2, buffer, BufRateScale.kr(buffer)*rate*dir, loop: loop);//, doneAction:2);
 				Out.ar(out, pb *  amp);
 			}).load;
 
-			SynthDef(\splayerM, {|buffer, amp=1, out=0, rate=1, loop=0|
-				Out.ar(out, (PlayBuf.ar(1, buffer, BufRateScale.kr(buffer)*rate, loop: loop)!2) * amp);
+			SynthDef(\splayerM, {|buffer, amp=1, out=0, rate=1, dir=1, loop=0|
+				Out.ar(out, (PlayBuf.ar(1, buffer, BufRateScale.kr(buffer)*rate*dir, loop: loop)!2) * amp);
 			}).load;
 
 			path.pathMatch.do{|path|
@@ -49,7 +49,7 @@ Pads { // NEW
 			psls = List.new;
 			loopsOSC = List.fill(buffers.size, {nil});
 
-			nk2values = List.fill(buffers.size, { Dictionary.newFrom([\amp, amp, \rate, 1, \loop, loop]) });
+			nk2values = List.fill(buffers.size, { Dictionary.newFrom([\amp, amp, \rate, 1, \loop, loop, \dir, 1]) });
 
 			wsize = (col*(size+3+15+15+3))+8;
 			hsize = (buffers.size/col)*(size+7);
@@ -64,13 +64,13 @@ Pads { // NEW
 			};
 
 
-/*			StaticText(w, 20@18).align_(\right).string_("Out").resize_(7);
+			/*			StaticText(w, 20@18).align_(\right).string_("Out").resize_(7);
 			//controls[\out] =
 			PopUpMenu(w, Rect(10, 10, 45, 17))
 			.items_( Array.fill(16, { arg i; i }) )
 			.action_{|m|
-				//synth.set(\out, m.value);
-				synths.do{|i|i.set(\out, m.value)};
+			//synth.set(\out, m.value);
+			synths.do{|i|i.set(\out, m.value)};
 			}.value_(0); // default to sound in
 
 			w.view.decorator.nextLine;*/
@@ -101,13 +101,17 @@ Pads { // NEW
 						if (tail==1, {
 							synths[index] = Synth.tail(Server.default, synthdef,
 								[buffer: buf, out:out, amp:nk2values[index][\amp],
-									rate:nk2values[index][\rate], loop:nk2values[index][\loop],
+									rate:nk2values[index][\rate],
+									loop:nk2values[index][\loop],
+									dir:nk2values[index][\dir],
 									index:index
 							]);
 						}, {
 							synths[index] = Synth(synthdef,
 								[buffer: buf, out:out, amp:nk2values[index][\amp],
-									rate:nk2values[index][\rate], loop:nk2values[index][\loop],
+									rate:nk2values[index][\rate],
+									loop:nk2values[index][\loop],
+									dir:nk2values[index][\dir],
 									index:index
 							]);
 						});
@@ -147,7 +151,7 @@ Pads { // NEW
 				sl = Slider(w,15@(size*0.75))//AMP
 				.orientation_(\vertical)
 				//.focusColor_(Color.red(alpha:0.2))
-				//.background_(Color.rand)
+				.background_(Color.grey)
 				.value_(amp)
 				.action_({|sl|
 					nk2values[index][\amp] = sl.value;
@@ -157,6 +161,7 @@ Pads { // NEW
 
 				sl = Slider(w,15@(size*0.75)) //PITCH
 				.orientation_(\vertical)
+				.background_(Color.magenta)
 				.value_(1)
 				.action_({|sl|
 					nk2values[index][\rate] = sl.value.linlin(0,1, 0,1.25);
@@ -195,32 +200,40 @@ Pads { // NEW
 				MIDIdef("\knob"++i).free;
 				MIDIdef("\s"++i).free;
 				MIDIdef("\r"++i).free;
+				MIDIdef("\m"++i).free;
 				// slider AMP
 				MIDIdef.cc("\vol"++i, {arg ...args;
 					nk2values[i][\amp] = args[0]/127;
 					synths[i].set(\amp, nk2values[i][\amp]);
 					{ asls[i].value = nk2values[i][\amp] }.defer; //just display
-				}, i);
+				}, i); // 0!!
 				// knob PITCH 0-2
 				MIDIdef.cc("\knob"++(16+i), {arg ...args;
 					nk2values[i][\rate] = args[0].linlin(0,128, 0, 1.25);
 					nk2values[i][\rate].postln;
 					synths[i].set(\rate, nk2values[i][\rate]);
 					{ psls[i].value = nk2values[i][\rate] }.defer; //just display
-				}, (16+i));
-				// R key LOOP
+				}, (16+i)); // 16!!
+				// S key LOOP?
 				MIDIdef.cc("\s"++(32+i), {arg ...args;
 					if (args[0]>0, { // only when pressed
 						nk2values[i][\loop] = args[0]/127; //
 						synths[i].set(\loop, nk2values[i][\loop])
 					});
-				}, (32+i));
+				}, (32+i)); // 32!!
+				// M key reverse?
+				MIDIdef.cc("\m"++(48+i), {arg ...args;
+					if (args[0]>0, { // only when pressed
+						nk2values[i][\dir] = nk2values[i][\dir].neg; //args[0]/127; //
+						synths[i].set(\dir, nk2values[i][\dir])
+					});
+				}, (48+i)); // 48!!
 				// R key PLAY/PAUSE
 				MIDIdef.cc("\r"++(64+i), {arg ...args;
 					if (args[0]>0, {// only when pressed
 						{buttons[i].valueAction_( (buttons[i].value-1).abs )}.defer
 					});
-				}, (64+i));
+				}, (64+i)); // 64!!
 			}
 		}.defer(0.5);
 	}
