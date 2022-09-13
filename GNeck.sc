@@ -114,6 +114,13 @@ GNeckGUI : BaseGUI {
 		};
 	}
 
+	setChord {|chord|
+		buttons.flat.collect(_.value = 0);
+		chord.do{|note, string|
+			//buttons[string]
+		}
+	}
+
 	clear {
 		buttons.flat.collect(_.value = 0);
 		chord = midi.copy;
