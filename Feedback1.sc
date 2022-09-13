@@ -123,6 +123,10 @@ Feedback1 : EffectGUI {
 			utils.add( ChordGUI.new(this, path, chord) );
 		});
 
+		SimpleButton(w,"scrmbl",{
+			this.scramble
+		});
+
 		w.view.decorator.nextLine;
 
 		controls[\notch] = Button(w, 40@18)
