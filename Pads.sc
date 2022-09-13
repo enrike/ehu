@@ -1,7 +1,7 @@
 /*the midi function is designed to be used with a nanokorg controller
 */
 Pads { // NEW
-	var w, buttons, asls, psls, synths, amp, tail, nk2values, loopsOSC, out;
+	var w, buttons, asls, psls, dirs, loops, synths, amp, tail, nk2values, loopsOSC, out;
 
 	*new {|path, out=0, col=5, size=120, amp=1, midif=1, loop=0, tail=0, nk2=#[0,1,2,3,4,5,6,7]|
 		^super.new.init(path, out, col, size, amp, midif, loop, tail, nk2);
@@ -47,11 +47,14 @@ Pads { // NEW
 			buttons = List.new;
 			asls = List.new;
 			psls = List.new;
+			dirs = List.new;
+			loops = List.new;
 			loopsOSC = List.fill(buffers.size, {nil});
 
-			nk2values = List.fill(buffers.size, { Dictionary.newFrom([\amp, amp, \rate, 1, \loop, loop, \dir, 1]) });
+			nk2values = List.fill(buffers.size, { Dictionary.newFrom(
+				[\amp, amp, \rate, 1, \loop, loop, \dir, 1]) });
 
-			wsize = (col*(size+3+15+15+3))+8;
+			wsize = (col*(size+3+25+25+25+5))+8;
 			hsize = (buffers.size/col)*(size+7);
 			//if (buffers.size%col>0, {hsize = hsize+(size*0.8)}); // extra row
 
@@ -78,12 +81,12 @@ Pads { // NEW
 			// slider to control de final mix volume? limiter?
 
 			buffers.do{|buf, index|
-				var sl = nil;
+				var sl, dirbut, loopbut, bu;
 				var name = PathName(buf.path).fileName;
-				var bu;
+
 				bu = Button(w, size@(size*0.75)).states_([
-					[">"+name, Color.white, Color.black],
-					["||"+name, Color.black, Color.red]
+					[name, Color.white, Color.black],
+					[name, Color.black, Color.red]
 				])
 				.action_({ arg butt;
 					if (butt.value==1, {
@@ -148,6 +151,30 @@ Pads { // NEW
 				}).value=0;
 				buttons.add(bu);
 
+				dirbut = Button(w, 20@(size*0.75)).states_([
+					[">\n>\n>", Color.green, Color.black],
+					["<\n<\n<", Color.green, Color.black]
+				])
+				.action_({ arg butt;
+					if (butt.value==0, {
+						nk2values[index][\dir] = 1;
+					}, {
+						nk2values[index][\dir] = -1;
+					});
+					synths[index].set(\dir, nk2values[index][\dir])
+				});
+				dirs.add(dirbut);
+
+				loopbut = Button(w, 20@(size*0.75)).states_([
+					["o\no\no", Color.green, Color.black],
+					["-\n-\n-", Color.green, Color.black]
+				])
+				.action_({ arg butt;
+					nk2values[index][\loop] = (butt.value-1).abs;
+					synths[index].set(\loop, nk2values[index][\loop])
+				}).value = abs(loop-1); //display default but must reverse value
+				loops.add(loopbut);
+
 				sl = Slider(w,15@(size*0.75))//AMP
 				.orientation_(\vertical)
 				//.focusColor_(Color.red(alpha:0.2))
@@ -156,7 +183,7 @@ Pads { // NEW
 				.action_({|sl|
 					nk2values[index][\amp] = sl.value;
 					synths[index].set(\amp, nk2values[index][\amp])
-				});
+				}).value = amp;
 				asls.add(sl);
 
 				sl = Slider(w,15@(size*0.75)) //PITCH
@@ -166,7 +193,7 @@ Pads { // NEW
 				.action_({|sl|
 					nk2values[index][\rate] = sl.value.linlin(0,1, 0,1.25);
 					synths[index].set(\rate, nk2values[index][\rate])
-				});
+				}).value = 1;
 				psls.add(sl);
 
 				if((index>0)&&((index+1)%col.max(1)==0), {
@@ -216,21 +243,25 @@ Pads { // NEW
 				}, (16+i)); // 16!!
 				// S key LOOP?
 				MIDIdef.cc("\s"++(32+i), {arg ...args;
-					if (args[0]>0, { // only when pressed
-						nk2values[i][\loop] = args[0]/127; //
-						synths[i].set(\loop, nk2values[i][\loop])
+					if (args[0]>0, { // not when release
+						nk2values[i][\loop] = (nk2values[i][\loop]-1).abs; //
+						synths[i].set(\loop, nk2values[i][\loop]);
+						{ loops[i].value = (nk2values[i][\loop]-1).abs }.defer; //just display
+						//{loops[i].valueAction_( (loops[i].value-1).abs )}.defer
 					});
 				}, (32+i)); // 32!!
 				// M key reverse?
 				MIDIdef.cc("\m"++(48+i), {arg ...args;
-					if (args[0]>0, { // only when pressed
-						nk2values[i][\dir] = nk2values[i][\dir].neg; //args[0]/127; //
-						synths[i].set(\dir, nk2values[i][\dir])
+					if (args[0]>0, { // not when release
+						nk2values[i][\dir] = nk2values[i][\dir].neg;
+						synths[i].set(\dir, nk2values[i][\dir]);
+						{ dirs[i].value = nk2values[i][\dir].neg }.defer; //just display as NEG in this case
+						//{dirs[i].valueAction_( (dirs[i].value-1).abs )}.defer
 					});
 				}, (48+i)); // 48!!
 				// R key PLAY/PAUSE
 				MIDIdef.cc("\r"++(64+i), {arg ...args;
-					if (args[0]>0, {// only when pressed
+					if (args[0]>0, {// not when release
 						{buttons[i].valueAction_( (buttons[i].value-1).abs )}.defer
 					});
 				}, (64+i)); // 64!!
