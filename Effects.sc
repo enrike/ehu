@@ -105,9 +105,11 @@ TremoloGUI : EffectGUI {
 		midisetup = [[\tremolo, 16], [\xfade, 17]]; // control, MIDI effect channel
 
 		synthdef = SynthDef(\trem, {|in=0, out=0, freq=0, xfade= 0|
-			var sig = In.ar(in, 2);
-			sig = sig * SinOsc.ar(freq);
-			XOut.ar(out, xfade, sig);
+			var bus_signal, in_signal;
+			in_signal = In.ar(in, 2);
+			bus_signal = in_signal * SinOsc.ar(freq);
+			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			Out.ar(out, bus_signal);
 		});
 
 		super.gui("Tremolo", 430@70); // init super gui w
@@ -169,9 +171,11 @@ NormalizerGUI : EffectGUI {
 		super.init(exepath);
 
 		synthdef = SynthDef(\norm, {|in=0, out=0, level=0, xfade= 0|
-			var sig = In.ar(in, 2) ;
-			sig = Normalizer.ar(sig, level, 0.01);
-			XOut.ar(out, xfade, sig);
+			var bus_signal, in_signal;
+			in_signal= In.ar(in, 2) ;
+			bus_signal = Normalizer.ar(in_signal, level, 0.01);
+			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			Out.ar(out, bus_signal);
 		});
 
 		super.gui("Normalizer", Rect(310,320, 430, 70)); // init super gui w
@@ -217,9 +221,15 @@ LimiterGUI : EffectGUI {
 		super.init(exepath);
 
 		synthdef = SynthDef(\lim, {|in=0, out=0, level=0, xfade= 0|
-			var sig = In.ar(in, 2) ;
+			/*var sig = In.ar(in, 2) ;
 			sig = Limiter.ar(sig, level.asFloat);
 			XOut.ar(out, xfade, sig);
+			*/
+			var bus_signal, in_signal;
+			in_signal= In.ar(in, 2) ;
+			bus_signal =  Limiter.ar(in_signal, level.asFloat);
+			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			Out.ar(out, bus_signal);
 		});
 
 		super.gui("Limiter", Rect(310,250, 430, 70)); // init super gui w
@@ -446,11 +456,13 @@ CompressorGUI : EffectGUI {
 		synthdef = SynthDef(\comp, { |in=0, out=0, attack=0.01, release=0.1, thresh= -6,
 			ratio=4, makeup=1, xfade= 0|
 			var amplitudeDb, gainDb, sig;
-			sig = In.ar(in, 2);
-			amplitudeDb = Amplitude.ar(sig, attack, release).ampdb;
+			var bus_signal, in_signal;
+			in_signal = In.ar(in, 2);
+			amplitudeDb = Amplitude.ar(in_signal, attack, release).ampdb;
 			gainDb = ((amplitudeDb - thresh) * (1 / ratio - 1)).min(0);
-			sig = sig * gainDb.dbamp * (makeup+1);
-			XOut.ar(out, xfade, sig);
+			bus_signal = in_signal * gainDb.dbamp * (makeup+1);
+			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			Out.ar(out, bus_signal);
 		});
 
 		super.gui("Compressor", Rect(310,0, 430, 155));
@@ -489,10 +501,10 @@ CompressorGUI : EffectGUI {
 		controls[\ratio] = EZSlider( w,         // parent
 			slbounds,    // bounds
 			"ratio",  // label
-			ControlSpec(0.01, 1, \lin, 0.001, 0.2),     // controlSpec
+			ControlSpec(1, 10, \lin, 0.01, 4),     // controlSpec
 			{ |ez| synth.set(\ratio, ez.value) } // action
 		);
-		controls[\ratio].numberView.maxDecimals = 3 ;
+		//controls[\ratio].numberView.maxDecimals = 3 ;
 		this.pbut(\ratio);
 
 		order.add(\makeup);
@@ -539,11 +551,12 @@ CompanderGUI : EffectGUI {
 
 		synthdef = SynthDef(\compexp, {|in=0, out=0, thresh=0.5, slopeBelow=1, slopeAbove=1, clampTime=0.01,
 			relaxTime=0.01, xfade= 0|
-			var sig = In.ar(in, 2);
-
-			sig = Compander.ar(sig, sig, thresh, slopeBelow.lag(0.05),
+			var bus_signal, in_signal;
+			in_signal = In.ar(in, 2);
+			bus_signal = Compander.ar(in_signal, in_signal, thresh, slopeBelow.lag(0.05),
 				slopeAbove.lag(0.05), clampTime.lag(0.05), relaxTime.lag(0.05));
-			XOut.ar(out, xfade, sig);
+			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			Out.ar(out, bus_signal);
 		});
 
 		super.gui("Compressor_Expander", Rect(310,0, 430, 155));
@@ -772,6 +785,7 @@ AutoNotchGUI : EffectGUI {
 
 		{
 			this.send;
+			Server.default.sync;
 			synth = Synth.tail(Server.default, \autonotch, [\uid, uid]);// ovewrite
 		}.defer(1);
 
@@ -852,10 +866,11 @@ FreqShiftGUI : EffectGUI {
 		midisetup = [[\freq, 23]];
 
 		synthdef = SynthDef(\fshift, {|in=0, out=0, freq=0, phase=0, xfade= 0| //(0..2pi)
-			var signal = In.ar(in, 2);
-			signal = FreqShift.ar(signal, freq, phase);
-
-			XOut.ar(out, xfade, signal);
+			var bus_signal, in_signal;
+			in_signal = In.ar(in, 2);
+			bus_signal = FreqShift.ar(in_signal, freq, phase);
+			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			Out.ar(out, bus_signal);
 		});
 
 		super.gui("FreqShift", Rect(310,0, 430, 75));
@@ -908,9 +923,11 @@ PitchShiftGUI : EffectGUI {
 		midisetup = [[\freq, 23]];
 
 		synthdef = SynthDef(\pshift, {|in=0, out=0, freq=1, xfade= 0| //(0..2pi)
-			var signal = In.ar(in, 2);
-			signal = PitchShift.ar(signal, pitchRatio:freq);
-			XOut.ar(out, xfade, signal);
+			var bus_signal, in_signal;
+			in_signal = In.ar(in, 2);
+			bus_signal = PitchShift.ar(in_signal, pitchRatio:freq);
+			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			Out.ar(out, bus_signal);
 		});
 
 		super.gui("PitchShift", Rect(310,0, 430, 75));
@@ -962,9 +979,11 @@ ChaosPitchShiftGUI : EffectGUI {
 		//midisetup = [[\freq, 23]];
 
 		synthdef = SynthDef(\chaoticPitchShift, {|in=0, out=0, a=1.4, b=0.3, xfade= 0|
-			var signal = In.ar(in, 2);
-			signal = PitchShift.ar(signal, pitchRatio:HenonN.ar(SampleRate.ir, a, b));
-			XOut.ar(out, xfade, signal);
+			var in_signal, bus_signal;
+			in_signal = In.ar(in, 2);
+			bus_signal = PitchShift.ar(in_signal, pitchRatio:HenonN.ar(SampleRate.ir, a, b));
+			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			Out.ar(out, bus_signal);
 		}).add;
 
 		super.gui("ChaosPitchShift", Rect(310,0, 430, 100));
@@ -1196,11 +1215,13 @@ GainLimiterGUI : EffectGUI {
 		midisetup = [[\gain, 16], [\limiter, 17]]; // control, MIDI effect channel
 
 		synthdef = 	SynthDef(\gain, {|in=0, out=0, gain=1, limit=1, xfade=1|
-			var signal = In.ar(in, 2) * gain;
-			SendPeakRMS.kr(signal, 10, 3, '/gaininlvl'); // to monitor incoming feedback signal
-			signal = Limiter.ar(signal, limit);
-			SendPeakRMS.kr(signal, 10, 3, '/gainoutlvl'); // to monitor incoming feedback signal
-			XOut.ar(out, xfade, signal);
+			var bus_signal, in_signal;
+			in_signal = In.ar(in, 2) * gain;
+			SendPeakRMS.kr(in_signal, 10, 3, '/gaininlvl'); // to monitor incoming feedback signal
+			bus_signal = Limiter.ar(in_signal, limit);
+			SendPeakRMS.kr(bus_signal, 10, 3, '/gainoutlvl'); // to monitor incoming feedback signal
+			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			Out.ar(out, bus_signal);
 		}).add;
 
 		super.gui("Gain_Limiter", 430@70); // init super gui w
@@ -1275,9 +1296,11 @@ DelayGUI : EffectGUI {
 		//midisetup = [[\freq, 23]];
 
 		synthdef = SynthDef(\delay, {|in=0, out=0, delt=0.25, dect=2, xfade=1|
-			var signal = In.ar(in, 2);
-			signal = CombL.ar(signal, maxdelaytime: 2.5, delaytime: delt, decaytime: dect);
-			XOut.ar(out, xfade, signal )
+			var bus_signal, in_signal;
+			in_signal = In.ar(in, 2);
+			bus_signal = CombL.ar(in_signal, maxdelaytime: 2.5, delaytime: delt, decaytime: dect);
+			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			Out.ar(out, bus_signal);
 		}).add;
 
 		super.gui("Delay", Rect(310,0, 430, 100));
@@ -1339,14 +1362,14 @@ FreeverbGUI : EffectGUI {
 
 	init {|exepath, preset, autopreset|
 		super.init(exepath);
-
 		//midisetup = [[\freq, 23]];
 
 		synthdef = SynthDef(\freeverb, {|in=0, out=0, mix= 1, room= 0.5, damp= 0.5, xfade=1|
-			var signal = In.ar(in, 2);
-			//signal = FreeVerb.ar(signal, mix, room, damp)
-			signal = FreeVerb2.ar(signal[0], signal[1], mix, room, damp);
-			XOut.ar(out, xfade, signal)
+			var bus_signal, in_signal;
+			in_signal = In.ar(in, 2);
+			bus_signal = FreeVerb2.ar(in_signal[0], in_signal[1], mix, room, damp);
+			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			Out.ar(out, bus_signal);
 		}).add;
 
 		super.gui("Freeverb", Rect(310,0, 430, 100));
@@ -1405,9 +1428,11 @@ GVerbGUI : EffectGUI {
 		//midisetup = [[\freq, 23]];
 
 		synthdef = SynthDef(\gverb, {|in=0, out=0, roomsize=10, revtime=3, damping=0.5, inputbw=0.5, spread=15, earlyreflevel=0.7, taillevel=0.5, maxroomsize=300 xfade=1|
-			var signal = In.ar(in, 1);//(In.ar(in, 2).sum)/2;
-			signal = GVerb.ar(signal, roomsize, revtime, damping, inputbw, spread, 1, earlyreflevel, taillevel, maxroomsize);
-			XOut.ar(out, xfade, signal)
+			var bus_signal, in_signal;
+			in_signal = In.ar(in, 2);
+			bus_signal = GVerb.ar(in_signal, roomsize, revtime, damping, inputbw, spread, 1, earlyreflevel, taillevel, maxroomsize);
+			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			Out.ar(out, bus_signal);
 		}).add;
 
 		super.gui("GVerb", Rect(310,0, 430, 250));
@@ -1518,6 +1543,7 @@ GVerbGUI : EffectGUI {
 
 
 M2stGUI : EffectGUI {
+	var button;
 	*new {|exepath, preset=\default, autopreset|
 		^super.new.init(exepath, preset, autopreset);
 	}
@@ -1526,11 +1552,20 @@ M2stGUI : EffectGUI {
 		super.init(exepath);
 		//midisetup = [[\freq, 23]];
 
-		synthdef = SynthDef(\m2st, {|in=3, out=5|
-			Out.ar(out, In.ar(in, 1)!2);
+		synthdef = SynthDef(\m2st, {|in=3, out=5, amp=1|
+			Out.ar(out, (In.ar(in, 1)*amp)!2);
 		}).add;
 
-		super.gui("M2st", Rect(310,0, 330, 30));
+		super.gui("M2st", Rect(310,0, 310, 45));
+
+		controls[\onoff] = Button(w, 300@20)
+		.states_([
+			["mute", Color.black, Color.red],
+			["mute", Color.white, Color.black],
+		])
+		.action_({ arg bu;
+			synth.set(\amp, bu.value)
+		});
 
 		if (preset.isNil.not, { // not loading a preset file by default
 			super.preset( w.name, preset ); // try to read and apply the default preset
@@ -1539,6 +1574,21 @@ M2stGUI : EffectGUI {
 		if (autopreset.isNil.not, {
 			{ this.auto(autopreset) }.defer(1) // not in a hurry
 		});
+	}
+
+	go {|flag|
+		{ controls[\onoff].valueAction_(flag) }.defer
+	}
+
+	audio {|argarr=#[]|
+		Server.default.waitForBoot{
+			synth.free;
+			synthdef.load;
+			Server.default.sync;
+			synth = Synth.head(Server.default, synthdef.name, argarr);
+			Server.default.sync;
+			("run"+synth.defName+"synth").postln;
+		}
 	}
 }
 
@@ -1594,13 +1644,13 @@ Mirror : EffectGUI {
 		);
 		this.pbut(\thres);
 
-/*		controls[\del] = EZSlider( w,         // parent
-			slbounds,    // bounds
-			"del",  // label
-			ControlSpec(0, 0.5, \lin, 0.01, 0.07),     // controlSpec
-			{ |ez|
-				delay.set(\delay, ez.value)
-			} // action
+		/*		controls[\del] = EZSlider( w,         // parent
+		slbounds,    // bounds
+		"del",  // label
+		ControlSpec(0, 0.5, \lin, 0.01, 0.07),     // controlSpec
+		{ |ez|
+		delay.set(\delay, ez.value)
+		} // action
 		);
 		this.pbut(\del);*/
 
@@ -1675,8 +1725,8 @@ Mirror : EffectGUI {
 			recbufs = List.newClear(num);
 			players = List.newClear(num);
 
-/*			SynthDef(\tempdelay, {|in=0, out=0, delay=0.07|
-				Out.ar(out, DelayC.ar(In.ar(in, 2), delaytime:delay))
+			/*			SynthDef(\tempdelay, {|in=0, out=0, delay=0.07|
+			Out.ar(out, DelayC.ar(In.ar(in, 2), delaytime:delay))
 			}).load;*/
 
 			SynthDef(\ehurecorder,{ arg in=0, bufnum=0, del=0.01;
@@ -1755,7 +1805,8 @@ Shooter : EffectGUI {
 	var players;
 	var filepath;
 	var files;
-	var buffer;
+	var buffer; // this should be a list preloading all buffers
+	var buffers;
 	var index = 0;
 	var rand=0;
 
@@ -1768,6 +1819,8 @@ Shooter : EffectGUI {
 
 		filepath = afilepath;
 		players = List.newClear(num);
+		buffers = Dictionary.new;
+		// preload all buffers here
 
 		super.gui("Shooter", Rect(310,0, 330, 90));
 
@@ -1790,24 +1843,28 @@ Shooter : EffectGUI {
 		controls[\amp] = EZSlider( w,         // parent
 			slbounds,    // bounds
 			"gain",  // label
-			ControlSpec(0, 5, \lin, 0.01, amp),     // controlSpec
+			ControlSpec(0, 20, \lin, 0.01, amp),     // controlSpec
 			{ |ez|
 				amp = ez.value;
-				try { synth.set(\gain, ez.value) };
+				//try { synth.set(\gain, ez.value) }; // no need
 			} // action
 		);
 		this.pbut(\amp);
 
+		//Server.default.waitForBoot{
 		if (PathName.new(filepath).isFolder, { // if a folder apply wildcards
 			files = PathName.new(filepath).files.collect(_.fileName);
+			/*PathName.new(filepath).files.do{|file, index|
+			buffers.put(file.fileName.asSymbol, Buffer.read(Server.default, file));
+			};*/
 		});
+		//};
 
 		StaticText(w, 60@18).align_(\right).string_("file").resize_(7);
 		controls[\file] = PopUpMenu(w, Rect(0, 10, 190, 18))
 		.items_( files.asArray )
 		.action_{|m|
-			buffer.free;
-			buffer = Buffer.read(Server.default, filepath++Platform.pathSeparator++files[m.value]);
+			buffer = buffers[files[m.value].asSymbol]
 		}.value_(0); // default to sound in
 
 		// random button
@@ -1848,6 +1905,12 @@ Shooter : EffectGUI {
 
 			"audio shooter".postln;
 
+			if (PathName.new(filepath).isFolder, { // if a folder apply wildcards
+				PathName.new(filepath).files.do{|file, index|
+					buffers.put(file.fileName.asSymbol, Buffer.read(Server.default, file.fullPath));
+				};
+			});
+
 			players.collect(_.free);
 			players = List.newClear(num);
 
@@ -1877,16 +1940,10 @@ Shooter : EffectGUI {
 				{flash.value=1}.defer;
 				{flash.value=0}.defer(0.1);
 				//players.postln;
-				if (rand==1, {
-					buffer.free;
-					buffer = Buffer.read(Server.default, PathName(filepath).files.choose.fullPath);
-					Server.default.waitForBoot{
-						Server.default.sync; // this might slow down the response!!
-					}
-				});
+				if (rand==1, { buffer = buffers.choose });
 
 				if (buffer.notNil, {
-					players[index].free;
+					//try { players[index].free };
 					players.put(index, Synth(\ehuplayerbasic, [\out, out, \bufnum, buffer.bufnum,
 						\rate, 1, \amp, amp * msg[3]]));
 					index = index + 1;
@@ -1895,4 +1952,166 @@ Shooter : EffectGUI {
 			}, '/onsetshooter', Server.default.addr);
 		}
 	}
+}
+
+
+
+
+JPverbGUI : EffectGUI {
+
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
+	}
+
+	init {|exepath, preset, autopreset|
+		super.init(exepath);
+
+		//midisetup = [[\freq, 23]];
+
+		synthdef = SynthDef(\jpverb, {|in=0, out=0, xfade=1,
+			t60=1.0, damp=0.0, size=1.0, earlyDiff=0.707, modDepth=0.1,
+			modFreq=2.0, low=1.0, mid=1.0, high=1.0, lowcut=500.0, highcut=2000.0|
+			var bus_signal, in_signal;
+			in_signal = In.ar(in, 2); // stereo input
+			bus_signal = JPverb.ar(
+				in_signal, t60, damp, size, earlyDiff, modDepth, modFreq, low, mid, high, lowcut, highcut
+			);
+
+			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			Out.ar(out, bus_signal);
+		}).add;
+
+		super.gui("JPverb", Rect(310,0, 430, 300));
+
+		w.view.decorator.nextLine;
+
+		////////////////////////
+		order.add(\t60);
+		controls[\t60] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"t60",  // label
+			ControlSpec(0.1, 60, \lin, 0.1, 5),     // controlSpec
+			{ |ez| synth.set(\t60, ez.value) } // action
+		);
+		//controls[\room].numberView.maxDecimals = 3 ;
+		this.pbut(\t60);
+
+		order.add(\damp);
+		controls[\damp] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"damp",  // label
+			ControlSpec(0, 1, \lin, 0, 1),     // controlSpec
+			{ |ez| synth.set(\damp, ez.value) } // action
+		);
+		//controls[\damp].numberView.maxDecimals = 3 ;
+		this.pbut(\damp);
+
+		order.add(\size);
+		controls[\size] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"size",  // label
+			ControlSpec(0.5, 5, \lin, 0.01, 2),     // controlSpec
+			{ |ez| synth.set(\size, ez.value) } // action
+		);
+		//controls[\size].numberView.maxDecimals = 3 ;
+		this.pbut(\size);
+
+		order.add(\earlyDiff);
+		controls[\earlyDiff] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			\earlyDiff,  // label
+			ControlSpec(0, 1, \lin, 0, 0.5),     // controlSpec
+			{ |ez| synth.set(\earlyDiff, ez.value) } // action
+		);
+		controls[\earlyDiff].numberView.maxDecimals = 3 ;
+		this.pbut(\earlyDiff);
+
+		order.add(\modDepth);
+		controls[\modDepth] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			\modDepth,  // label
+			ControlSpec(0, 1, \lin, 0, 1),     // controlSpec
+			{ |ez| synth.set(\modDepth, ez.value) } // action
+		);
+		//controls[\spread].numberView.maxDecimals = 3 ;
+		this.pbut(\modDepth);
+
+		order.add(\modFreq);
+		controls[\modFreq] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			\modFreq,  // label
+			ControlSpec(0, 1, \lin, 0, 0.5),     // controlSpec
+			{ |ez| synth.set(\modFreq, ez.value) } // action
+		);
+		//controls[\modFreq].numberView.maxDecimals = 3 ;
+		this.pbut(\modFreq);
+
+		//earlyreflevel=0.7, taillevel=0.5, maxroomsize=300
+		order.add(\low);
+		controls[\low] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			\low,  // label
+			ControlSpec(0, 1, \lin, 0, 0.5),     // controlSpec
+			{ |ez| synth.set(\low, ez.value) } // action
+		);
+		//controls[\low].numberView.maxDecimals = 3 ;
+		this.pbut(\low);
+
+		order.add(\mid);
+		controls[\mid] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			\mid,  // label
+			ControlSpec(0, 1, \lin, 0, 0.5),     // controlSpec
+			{ |ez| synth.set(\mid, ez.value) } // action
+		);
+		//controls[\mid].numberView.maxDecimals = 3 ;
+		this.pbut(\mid);
+
+		order.add(\high);
+		controls[\high] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			\high,  // label
+			ControlSpec(0, 1, \lin, 0, 0.5),     // controlSpec
+			{ |ez| synth.set(\high, ez.value) } // action
+		);
+		//controls[\high].numberView.maxDecimals = 3 ;
+		this.pbut(\high);
+
+		order.add(\lowcut);
+		controls[\lowcut] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			\lowcut,  // label
+			ControlSpec(0, 20000, \lin, 0, 1000),     // controlSpec
+			{ |ez| synth.set(\lowcut, ez.value) } // action
+		);
+		//controls[\lowcut].numberView.maxDecimals = 3 ;
+		this.pbut(\lowcut);
+
+		order.add(\highcut);
+		controls[\highcut] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			\highcut,  // label
+			ControlSpec(0, 20000, \lin, 0, 1000),     // controlSpec
+			{ |ez| synth.set(\highcut, ez.value) } // action
+		);
+		//controls[\highcut].numberView.maxDecimals = 3 ;
+		this.pbut(\highcut);
+
+		controls[\xfade] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"xfade",  // label
+			ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+			{ |ez| synth.set(\xfade, ez.value) } // action
+		).valueAction_(0);
+		this.pbut(\xfade);
+
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
+
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+	}
+
 }
