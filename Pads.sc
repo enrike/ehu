@@ -191,9 +191,9 @@ Pads { // NEW
 				.background_(Color.magenta)
 				.value_(1)
 				.action_({|sl|
-					nk2values[index][\rate] = sl.value.linlin(0,1, 0,1.25);
+					nk2values[index][\rate] = sl.value.linlin(0,1, 0, 1.25);
 					synths[index].set(\rate, nk2values[index][\rate])
-				}).value = 1;
+				}).value_(1.linlin(0,1.25, 0, 1));
 				psls.add(sl);
 
 				if((index>0)&&((index+1)%col.max(1)==0), {
