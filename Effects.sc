@@ -9,6 +9,36 @@ AutoNotch.new;
 */
 
 
+ControlGUI {
+	var w, chrono, sttime;
+	*new{
+		^super.new.init();
+	}
+
+	init{
+		w=Window("Control", Rect(0, 200,250,70));
+		Button(w, Rect(0, 40, 250,30)).states_([
+			["RECORD", Color.white, Color.black],
+			["RECORDING", Color.black, Color.red]] )
+		.action_({|but|
+			if (but.value==1, {
+				Server.default.recHeaderFormat = "wav";
+				Server.default.record;
+				//s.record(Platform.recordingsDir++Platform.pathSeparator++Date.getDate.stamp++".wav");
+			},{
+				Server.default.stopRecording
+			})
+		});
+		w.alwaysOnTop=true;
+		w.front;
+
+		//sttime = Process.elapsedTime;
+		chrono = Task({});
+	}
+
+
+}
+
 Launcher {
 	var path, w;
 
@@ -228,8 +258,8 @@ LimiterGUI : EffectGUI {
 			var bus_signal, in_signal;
 			in_signal= In.ar(in, 2) ;
 			bus_signal =  Limiter.ar(in_signal, level.asFloat);
-			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
-			Out.ar(out, bus_signal);
+			//bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			ReplaceOut.ar(out, bus_signal);
 		});
 
 		super.gui("Limiter", Rect(310,250, 430, 70)); // init super gui w
@@ -274,11 +304,22 @@ PatcherGUI : EffectGUI { // just read a bus and send that signal to another bus
 	init {|exepath, preset, autopreset|
 		super.init(exepath);
 
-		synthdef = SynthDef(\patcher, {|in=0, out=0, level=0|
-			Out.ar(out, In.ar(in, 2)*level);
+		synthdef = SynthDef(\patcher, {|in=0, out=0, level=0, mode=0|
+			Out.ar(out, In.ar(in, 2)*level); // new signal line at out
+			Out.ar(in, In.ar(in, 2)*level*mode); // old signal line still at in if mode not 0
 		});
 
 		super.gui("Patcher", Rect(310,250, 430, 50)); // init super gui w
+
+		controls[\onoff] = Button(w, 50@20)
+		.states_([
+			["in|out", Color.white, Color.black],
+			["in>out", Color.black, Color.red],
+		])
+		.action_({ arg bu;
+			bu.value.postln;
+			synth.set(\mode, bu.value)
+		});
 
 		w.view.decorator.nextLine;
 
@@ -441,6 +482,101 @@ if (autopreset.isNil.not, {
 });
 }
 }*/
+
+SoundGateGUI : EffectGUI {
+
+	*new {|exepath, preset=\default, autopreset|
+		^super.new.init(exepath, preset, autopreset);
+	}
+
+	init {|exepath, preset, autopreset|
+		super.init(exepath);
+
+
+		synthdef = SynthDef(\soundgate, { |in=0, out=0, attack=0.01, release=0.1, thresh= -6,
+			ratio=4, makeup=1, xfade= 0|
+			var amplitudeDb, gainDb, sig;
+			var bus_signal, in_signal;
+			in_signal = In.ar(in, 2);
+			amplitudeDb = Amplitude.ar(in_signal, attack, release).ampdb.poll;
+			bus_signal = in_signal / (50-amplitudeDb).dbamp;
+
+			//gainDb = ((amplitudeDb - thresh) * (1 / ratio - 1)).min(0);
+			//bus_signal = (in_signal / gainDb.dbamp) * (makeup+1);
+			bus_signal = (bus_signal * xfade) + (in_signal * (1 - xfade));
+			Out.ar(out, bus_signal);
+		});
+
+		super.gui("Soundgate", Rect(310,0, 430, 155));
+
+		order.add(\attack);
+		controls[\attack] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"attack",  // label
+			ControlSpec(0.001, 1, \lin, 0.001, 0.01),     // controlSpec
+			{ |ez| synth.set(\attack, ez.value) } // action
+		);
+		controls[\attack].numberView.maxDecimals = 3 ;
+		this.pbut(\attack);
+
+		order.add(\release);
+		controls[\release] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"release",  // label
+			ControlSpec(0.001, 1, \lin, 0.001, 0.1),     // controlSpec
+			{ |ez| synth.set(\release, ez.value) } // action
+		);
+		controls[\release].numberView.maxDecimals = 3 ;
+		this.pbut(\release);
+
+		order.add(\thresh);
+		controls[\thresh] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"thresh",  // label
+			ControlSpec(-30, 0, \lin, 0.001, -6),     // controlSpec
+			{ |ez| synth.set(\thresh, ez.value) } // action
+		);
+		//controls[\thresh].numberView.maxDecimals = 3 ;
+		this.pbut(\thresh);
+
+		order.add(\ratio);
+		controls[\ratio] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"ratio",  // label
+			ControlSpec(1, 10, \lin, 0.01, 4),     // controlSpec
+			{ |ez| synth.set(\ratio, ez.value) } // action
+		);
+		//controls[\ratio].numberView.maxDecimals = 3 ;
+		this.pbut(\ratio);
+
+		order.add(\makeup);
+		controls[\makeup] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			\makeup,  // label
+			ControlSpec(0, 5, \lin, 0.001, 0),     // controlSpec
+			{ |ez| synth.set(\makeup, ez.value) } // action
+		);
+		//controls[\makeup].numberView.maxDecimals = 3 ;
+		this.pbut(\makeup);
+
+		controls[\xfade] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"xfade",  // label
+			ControlSpec(0, 1, \lin, 0.01, 0),     // controlSpec
+			{ |ez| synth.set(\xfade, ez.value) } // action
+		).valueAction_(0);
+		this.pbut(\xfade);
+
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
+
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+
+	}
+}
 
 
 
@@ -1874,7 +2010,8 @@ Shooter : EffectGUI {
 			["rand", Color.black, Color.red],
 		])
 		.action_({|but|
-			rand=but.value
+			rand=but.value;
+			if (but.value==1, controls[\file].valueAction_(controls[\file].value)) // back
 		});
 
 		if (preset.isNil.not, { // not loading a preset file by default
@@ -1950,6 +2087,215 @@ Shooter : EffectGUI {
 					if (index >= players.size, {index=0})
 				});
 			}, '/onsetshooter', Server.default.addr);
+		}
+	}
+}
+
+
+
+
+
+
+
+
+BuffersGUI : EffectGUI {
+	var in=0;
+	var out=0;
+	var thr = 0.6;
+	var num=5;
+	var amp=0.9;
+
+	var flash;
+	var players;
+	var filepath;
+	var files;
+	var buffer; // this should be a list preloading all buffers
+	var buffers;
+	var index = 0;
+	var rand=0;
+	var time=10, task, timerand=0;
+
+	*new {|exepath, preset=\default, autopreset, filepath=""|
+		^super.new.init(exepath, preset, autopreset, filepath);
+	}
+
+	init {|exepath, preset, autopreset, afilepath|
+		super.init(exepath);
+
+		filepath = afilepath;
+		players = List.newClear(num);
+		buffers = Dictionary.new;
+		// preload all buffers here
+
+		super.gui("Buffers", Rect(310,0, 330, 120));
+
+		//Server.default.waitForBoot{
+		if (PathName.new(filepath).isFolder, { // if a folder apply wildcards
+			files = PathName.new(filepath).files.collect(_.fileName);
+			/*PathName.new(filepath).files.do{|file, index|
+			buffers.put(file.fileName.asSymbol, Buffer.read(Server.default, file));
+			};*/
+		});
+		//};
+
+		StaticText(w, 60@18).align_(\right).string_("file").resize_(7);
+		controls[\file] = PopUpMenu(w, Rect(0, 10, 190, 18))
+		.items_( files.asArray )
+		.action_{|m|
+			buffer = buffers[files[m.value].asSymbol]
+		}.value_(0); // default to sound in
+
+		// random button
+		controls[\rand] = Button(w, 32@18)
+		.states_([
+			["rnd", Color.black, Color.grey],
+			["rnd", Color.black, Color.red],
+		])
+		.action_({|but|
+			rand=but.value;
+			if (but.value==1, controls[\file].valueAction_(controls[\file].value)) // back
+		});
+
+
+		controls[\play] = Button(w, 32@18)
+		.states_([
+			["play", Color.black, Color.grey],
+		])
+		.action_({|but|
+			if (rand==1, { buffer = buffers.choose });
+
+			if (buffer.notNil, {
+				//try { players[index].free };
+				players.add( Synth(\ehuplayerbasic, [\out, out, \bufnum, buffer.bufnum,
+					\rate, 1, \amp, amp ]) );
+				/*players.put(index, Synth(\ehuplayerbasic, [\out, out, \bufnum, buffer.bufnum,
+				\rate, 1, \amp, amp ]));
+				index = index + 1;
+				if (index >= players.size, {index=0})*/
+			});
+			//rand=but.value;
+			///if (but.value==1, controls[\file].valueAction_(controls[\file].value)) // back
+		});
+
+		w.view.decorator.nextLine;
+
+
+
+
+		controls[\amp] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"amp",  // label
+			ControlSpec(0, 2, \lin, 0.01, amp),     // controlSpec
+			{ |ez|
+				amp = ez.value;
+				try {
+					players.collect(_.set(\amp, ez.value)) }
+				//synth.set(\amp, ez.value) }; // no need?
+			} // action
+		);
+		this.pbut(\amp);
+
+
+
+
+		w.view.decorator.nextLine;
+
+		controls[\time] = EZSlider( w,         // parent
+			slbounds,    // bounds
+			"time",  // label
+			ControlSpec(0, 120, \lin, 1, time),     // controlSpec
+			{ |ez|
+				time = ez.value;
+			} // action
+		);
+		this.pbut(time);
+
+		controls[\timerand] = Button(w, 65@18)
+		.states_([
+			["rand", Color.black, Color.grey],
+			["rand", Color.black, Color.red],
+		])
+		.action_({|but|
+			timerand=but.value;
+			//if (but.value==1, controls[\file].valueAction_(controls[\file].value)) // back
+		});
+		//this.pbut(\timerand); // need this?
+
+
+		controls[\task] = Button(w, 65@18)
+		.states_([
+			["task", Color.black, Color.grey],
+			["task", Color.black, Color.red],
+		])
+		.action_({|but|
+			task.stop;
+
+			if (but.value==1, {
+				task = Task({
+					inf.do{
+						if (rand==1, { buffer = buffers.choose });
+
+						if (buffer.notNil, {
+							//try { players[index].free };
+							players.add(Synth(\ehuplayerbasic, [\out, out, \bufnum, buffer.bufnum,
+								\rate, 1, \amp, amp ]));
+							/*							players.put(index, Synth(\ehuplayerbasic, [\out, out, \bufnum, buffer.bufnum,
+							\rate, 1, \amp, amp ]));
+							index = index + 1;
+							if (index >= players.size, {index=0})*/
+						});
+						if (timerand.asBoolean, {
+							time.rand.wait
+						}, {
+							time.wait
+						});
+					}
+				}).start
+			})
+
+		});
+
+
+		if (preset.isNil.not, { // not loading a preset file by default
+			super.preset( w.name, preset ); // try to read and apply the default preset
+		});
+
+		if (autopreset.isNil.not, {
+			{ this.auto(autopreset) }.defer(1) // not in a hurry
+		});
+	}
+
+	close {
+		("freeing").postln;
+		synth.free;
+
+		players.collect(_.free);
+		super.close;
+
+		utils.do{|ut|
+			ut.close
+		};
+		~ehu_effects.remove(this)
+	}
+
+	audio {
+		Server.default.waitForBoot{
+			synth.free;
+
+			if (PathName.new(filepath).isFolder, { // if a folder apply wildcards
+				PathName.new(filepath).files.do{|file, index|
+					buffers.put(file.fileName.asSymbol, Buffer.read(Server.default, file.fullPath));
+				};
+			});
+
+			players.collect(_.free);
+			players = List.newClear(num);
+
+			SynthDef(\ehuplayerbasic, {|bufnum, amp=1, rate=1, st=0, out=0|
+				Out.ar(out, PlayBuf.ar(2, bufnum, rate, startPos:st, loop:0, doneAction: Done.freeSelf) * amp )
+			}).add;
+
+			Server.default.sync; //////////////////////////
 		}
 	}
 }
@@ -2115,3 +2461,8 @@ JPverbGUI : EffectGUI {
 	}
 
 }
+
+
+
+
+

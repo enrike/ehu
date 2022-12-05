@@ -34,7 +34,7 @@ BaseGUI {
 	}
 
 	gui { |name="", bounds=#[0,0, 310, 120]| // run this if you want to have open and save buttons in the window
-
+		name.postln;
 		name = name.replace(" ", "_").toLower;
 
 		w = Window.new(name, bounds).alwaysOnTop=true;
@@ -59,7 +59,7 @@ BaseGUI {
 		~ehuws.add(this)
 	}
 
-	preset {|name, default=\default|
+	preset {|name="", default=\default|
 		var thepath = "";
 		name = name.replace(" ", "_").toLower;
 		thepath = PathName.new(path ++ Platform.pathSeparator ++ "presets"
@@ -79,10 +79,11 @@ BaseGUI {
 		{controls[name].valueAction = value}.defer
 	}
 
-	save {
-		var data = Dictionary.new, name="", filename;
-		if (w.isNil.not, {name=w.name.replace(" ", "_").toLower}); //prepend the windows name
-		filename = name++"_"++Date.getDate.stamp++".preset";
+	save {|aname|
+		var data = Dictionary.new, wname="", filename;
+		if (w.isNil.not, {wname=w.name.replace(" ", "_").toLower}); //prepend the windows name
+		if (aname.isNil, {aname = Date.getDate.stamp});
+		filename = wname++"_"++aname++".preset";
 
 		data.put(\bounds, w.bounds);
 
@@ -154,16 +155,17 @@ SimpleButton {
 
 
 EffectGUI : BaseGUI {
-	var <synth, midisetup, synthdef, utils;
+	var <synth, midisetup, synthdef, utils, in=0, out=0;
 
-	/*	*new {|exepath=""|
-	^super.new.initEffectGUI(exepath);
+/*		*new {|exepath=""|
+	^super.new.init(exepath);
 	}*/
 
 	init {|exepath|
 		midisetup = List.new;
 		synthdef = SynthDef(\default, {});
 		super.init(exepath);
+
 		utils = List.new;
 		if (~ehu_effects.isNil, {~ehu_effects=List.new})
 	}
@@ -193,6 +195,7 @@ EffectGUI : BaseGUI {
 		controls[\in] = PopUpMenu(w, Rect(10, 10, 45, 17))
 		.items_( Array.fill(16, { arg i; i }) )
 		.action_{|m|
+			in = m.value;
 			synth.set(\in, m.value);
 		}.value_(0); // default to sound in
 
@@ -200,8 +203,9 @@ EffectGUI : BaseGUI {
 		controls[\out] = PopUpMenu(w, Rect(10, 10, 45, 17))
 		.items_( Array.fill(16, { arg i; i }) )
 		.action_{|m|
+			out = m.value;
 			synth.set(\out, m.value);
-		}.value_(0); // default to sound in
+		}.value_(out); // default to sound in
 
 		SimpleButton(w,"midi",{
 			this.midi(midisetup);
