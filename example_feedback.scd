@@ -4,6 +4,8 @@
 f = Feedback1.new;
 f = Feedback1.new(preset: "201026_121925");
 
+StageLimiter.activate // good idea to use this class from BatLib to protect you ears and equipment
+
 f.chord.postln;
 f.midi; // connect to nanokontrol2
 f.gneck; // gui to change the chord
@@ -188,7 +190,7 @@ t.start
 t = Task({
 	var base=30;
 	inf.do({ arg i;
-		f.chord(base+~chords.wchoose([0.75, 0.25]));
+		f.chord(base+~chords.wchoose([0.75, 0.25])+0.6.rand);
 		~times.choose.wait;
 	});
 });

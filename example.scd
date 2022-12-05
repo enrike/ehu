@@ -23,6 +23,8 @@ M2stGUI.new; // takes a mono channel and duplicates it in two channels
 Shooter.new(filepath:"/path/to/folder/with/files") // shots a sample when onset is detected. (max 5 layers at the same time)
 Mirror.new; // reverses incoming onsets
 PatcherGUI.new // patches the audio from a bus into another bus
+//SoundGateGUI.new // reverse noise gate (only low noise passes)
+Chrono.new // just a GUI chronometer that counts to 59:59
 
 Launcher.new; // simple GUI to launch all effects
 
@@ -64,5 +66,6 @@ Feedback1.new(autopreset:"default");
 // save ALL open window's current state at the same time
 ~ehuws.collect(_.save)
 // because each wind add itsleft to ~ehuws list
+~ehuws.collect(_.save("bigmuff")) // will save the presets under "bigmuff" tag instead of inserting the date-time stamp
 
 
