@@ -175,7 +175,7 @@ Feedback1 : EffectGUI {
 		controls[\gainin] = EZSlider( w,         // parent
 			slbounds,    // bounds
 			"gain in",  // label
-			ControlSpec(0, 2, \lin, 0.001, 0),     // controlSpec
+			ControlSpec(0, 4, \lin, 0.001, 0),     // controlSpec
 			{ |ez| synth.set(\gainin, ez.value) }
 		);
 		controls[\gainin].numberView.maxDecimals = 3 ;
@@ -288,6 +288,10 @@ Feedback1 : EffectGUI {
 		});
 
 		["FEEDBACK1 READY", synth].postln;
+	}
+
+	saveall{|aname|
+		~ehuws.collect(_.save(aname))
 	}
 
 	updateall {//
