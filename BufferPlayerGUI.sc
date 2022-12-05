@@ -312,10 +312,10 @@ BufferPlayerGUI  {
 
 			plotwinrefresh = Task({
 				inf.do({
-					plotview.timeCursorPosition = pos;
+					{plotview.timeCursorPosition = pos}.defer;
 					0.1.wait;
 				})
-			}, AppClock);
+			});
 			plotwinrefresh.start;
 
 			"To zoom in/out: Shift + right-click + mouse-up/down".postln;
