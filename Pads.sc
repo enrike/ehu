@@ -1,17 +1,23 @@
 /*the midi function is designed to be used with a nanokorg controller
 */
 Pads : BaseGUI { // NEW
-	var w, buttons, asls, psls, dirs, loops, synths, amp, tail, nk2values, loopsOSC, posOSC, lvlOSC, out, midiout, midiport;
+	classvar padcount=0;
+	var w, buttons, asls, psls, dirs, loops, synths, amp, tail, nk2values, loopsOSC, posOSC, lvlOSC;
+	var out, midiout, midiport, mode;
 	var id;
 
-	*new {|path, out=0, col=5, size=120, amp=1, midif=1, loop=0, tail=0, nk2=#[0,1,2,3,4,5,6,7], randmode=0|
-		^super.new.init(path, out, col, size, amp, midif, loop, tail, nk2, nil, randmode);
+	*new {|path, out=0, col=5, size=120, amp=1, midif=1, loop=0, tail=0, nk2=#[0,1,2,3,4,5,6,7], randmode=0, mode=0|
+		^super.new.init(path, out, col, size, amp, midif, loop, tail, nk2, nil, randmode, mode);
 	}
 
-	init {|path, aout, col, size, amp, midif, loop, atail, nk2, device="nanoKONTROL2", randmode| //////////////////////
+	init {|path, aout, col, size, amp, midif, loop, atail, nk2, device="nanoKONTROL2", randmode, amode| //////////////////////
 		super.init(nil); // correct?
 
-		id = UniqueID.next;
+		padcount = padcount+1;
+
+		id = UniqueID.next + (padcount * 1000); // each pad instance gets a different slot of indexes for players trigger IDs
+
+		["pad with ID", id, "padcout", padcount].postln;
 
 		if (path.isNil, {
 			path = Platform.userHomeDir;
@@ -22,9 +28,10 @@ Pads : BaseGUI { // NEW
 
 		tail = atail;
 		out = aout;
+		mode = amode; // 0 on/off switch, 1 on overwrites, 2 on layers them. 3 click on / release off
 
 		Server.default.waitForBoot{
-			var buffers, files, wsize, hsize, target;
+			var buffers, files, wsize, hsize, target, displayname;
 			synths.collect(_.free);
 			buffers.collect(_.free);
 			buffers = List.new;
@@ -62,7 +69,9 @@ Pads : BaseGUI { // NEW
 
 			if (randmode.asBoolean, {wsize=(size.x+10+10+20+30+30+25); hsize=(27+(size.y*0.75))}); //overwrite
 
-			super.gui("Pads", wsize@hsize);
+			displayname = path.split[path.split.size-2];
+
+			super.gui("Pads"+displayname, wsize@hsize);
 
 			//w = Window("Pads", wsize@hsize).alwaysOnTop=true;
 			//w.view.decorator = FlowLayout(w.view.bounds);
@@ -100,82 +109,91 @@ Pads : BaseGUI { // NEW
 
 			target.do{|buf, index|
 				var sl, dirbut, loopbut, bu, levels = List.new, playhead;
-				var name = PathName(buf.path).fileName;
-				name = name[..11]++"\n"++name[12..]; // break into lines
+				var name;
 
-				if (randmode.asBoolean, {name="RAND"}); //overwrite
+				Task{ // sync
+					SynthDef(\splayerS, {|buffer, amp=1, out=0, rate=1, dir=1, loop=0,
+						index=0, trigger=0, id=0|
+						var signal, phasor;//, numchans = buf.numChannels; // dynamic numchan
+						signal = amp * PlayBuf.ar(2, buffer, dir*rate*BufRateScale.kr(buffer),
+							loop: loop, doneAction:2);
+						phasor = Phasor.ar( 0, dir*rate*BufRateScale.kr(buffer),
+							start: 0, end: BufFrames.ir(buffer), resetPos: 0);
+						SendPeakRMS.kr(signal, 10, 3, '/lvl', index);
+						SendReply.kr( LFPulse.kr(12, 0), '/pos', phasor/BufFrames.ir(buffer), index);
+						SendReply.ar( Trig.ar(phasor >= ( BufFrames.ir(buffer) - 1)), '/loop', 1, index);
+						Out.ar(out, signal);
+					}).load;
+
+					SynthDef(\splayerM, {|buffer, amp=1, out=0, rate=1, dir=1, loop=0,
+						index=0, trigger=0, id=0|
+						var signal, phasor;
+						signal = amp * PlayBuf.ar(1, buffer, dir*rate*BufRateScale.kr(buffer),
+							loop: loop, doneAction:2);
+						phasor = Phasor.ar( 0, dir*rate*BufRateScale.kr(buffer),
+							start: 0, end: BufFrames.ir(buffer), resetPos: 0);
+						signal = Pan2.ar(signal); // duplicate if mono
+						SendPeakRMS.kr(signal, 10, 3, '/lvl', index);
+						SendReply.kr( LFPulse.kr(12, 0), '/pos', phasor/BufFrames.ir(buffer), index);
+						SendReply.ar( Trig.ar(phasor >= ( BufFrames.ir(buffer) - 1)), '/loop', 1, index);
+						Out.ar(out, signal);
+					}).load;
+					Server.default.sync; // takes time to load
+				}.start; // sync task end
+
+				name = index.asString+"\n"; //
+				if (randmode.asBoolean, {name="RAND\n"}); //overwrite
+				if (midif.asBoolean, {name = name++"nk:"+(nk2[index]+1)++"\n"}); // only if midi is on
+				name = name + PathName(buf.path).fileName.insert(14, "\n"); //break if too long
+
 
 				bu = Button(w, size.x@(size.y*0.75)).states_([
 					[name, Color.white, Color.black],
 					[name, Color.black, Color.red]
 				])
 				.action_({ arg butt;
-					if (butt.value==1, {
+					if ( (mode==1) || (butt.value==1), {
+						var synthname;
+						butt.value_(1); /// dont go black ever
+						if ( buf.numChannels==2, {
+							synthname = \splayerS
+						},{
+							synthname = \splayerM
+						});
 						//[buf.duration, buf.numChannels].postln;
-						Task{ // sync
-							if ( buf.numChannels==2, {
-								SynthDef(\splayer, {|buffer, amp=1, out=0, rate=1, dir=1, loop=0, index=0, trigger=0, id=0|
-									var signal, phasor;//, numchans = buf.numChannels; // dynamic numchan
-									signal = amp * PlayBuf.ar(2, buffer, dir*rate*BufRateScale.kr(buffer),
-										loop: loop, doneAction:2);
-									phasor = Phasor.ar( 0, dir*rate*BufRateScale.kr(buffer),
-										start: 0, end: BufFrames.ir(buffer), resetPos: 0);
-									SendPeakRMS.kr(signal, 10, 3, '/lvl', index);
-									SendReply.kr( LFPulse.kr(12, 0), '/pos', phasor/BufFrames.ir(buffer), index);
-									SendReply.ar( Trig.ar(phasor >= ( BufFrames.ir(buffer) - 1)), '/loop', 1, index);
-									Out.ar(out, signal);
-								}).load;
-							},{ // MONO duplicates
-								SynthDef(\splayer, {|buffer, amp=1, out=0, rate=1, dir=1, loop=0, index=0, trigger=0, id=0|
-									var signal, phasor;
-									signal = amp * PlayBuf.ar(1, buffer, dir*rate*BufRateScale.kr(buffer),
-										loop: loop, doneAction:2);
-									phasor = Phasor.ar( 0, dir*rate*BufRateScale.kr(buffer),
-										start: 0, end: BufFrames.ir(buffer), resetPos: 0);
-									signal = Pan2.ar(signal); // duplicate if mono
-									SendPeakRMS.kr(signal, 10, 3, '/lvl', index);
-									SendReply.kr( LFPulse.kr(12, 0), '/pos', phasor/BufFrames.ir(buffer), index);
-									SendReply.ar( Trig.ar(phasor >= ( BufFrames.ir(buffer) - 1)), '/loop', 1, index);
-									Out.ar(out, signal);
-								}).load;
-							});
 
-							Server.default.sync; // takes time to load
+						if (synths[index].notNil, {synths[index].free});
+						//if (tail==1, {tail=\addToTail},{tail=\addToHead});
 
-							if (synths[index].notNil, {synths[index].free});
-							//if (tail==1, {tail=\addToTail},{tail=\addToHead});
+						if (randmode.asBoolean, {buf = buffers.choose});
 
-							if (randmode.asBoolean, {buf = buffers.choose});
-
-							if (tail==1, {
-								synths[index] = Synth.tail(Server.default, \splayer,
-									[buffer: buf,
-										out:out,
-										amp:nk2values[index][\amp],
-										rate:nk2values[index][\rate],
-										loop:nk2values[index][\loop],
-										dir:nk2values[index][\dir],
-										index:id+index,
-										//id:id,
-										trigger:1
-								]);
-							}, {
-								synths[index] = Synth(\splayer,
-									[buffer: buf,
-										out:out,
-										amp:nk2values[index][\amp],
-										rate:nk2values[index][\rate],
-										loop:nk2values[index][\loop],
-										dir:nk2values[index][\dir],
-										index:id+index,
-										//id:id,
-										trigger:1
-										//target:Server.default,
-										//addAction: tail // CHECK THIS WORKS OK ###################
-								]);
-							});
-
-						}.start; // sync task end
+						if (tail==1, {
+							synths[index] = Synth.tail(Server.default, synthname,
+								[buffer: buf,
+									out:out,
+									amp:nk2values[index][\amp],
+									rate:nk2values[index][\rate],
+									loop:nk2values[index][\loop],
+									dir:nk2values[index][\dir],
+									index:id+index, // fix this to get proper unique IDs across pads
+									//id:id,
+									trigger:1
+							]);
+						}, {
+							synths[index] = Synth(synthname,
+								[buffer: buf,
+									out:out,
+									amp:nk2values[index][\amp],
+									rate:nk2values[index][\rate],
+									loop:nk2values[index][\loop],
+									dir:nk2values[index][\dir],
+									index:id+index,  // fix this to get proper unique IDs across pads
+									//id:id,
+									trigger:1
+									//target:Server.default,
+									//addAction: tail // CHECK THIS WORKS OK ###################
+							]);
+						});
 
 						OSCdef(\loop++index).free; // not working!!!! ++++++++++++++++
 						loopsOSC[index] = OSCdef(\loop++index, {|msg, time, addr, recvPort|
@@ -307,6 +325,18 @@ Pads : BaseGUI { // NEW
 		synths[index].free;
 		synths[index] = nil;
 		("pads kill"+index+"synth").postln;
+	}
+
+	play {|...args|
+		args.asArray.do{|pad|
+			{buttons[pad].valueAction_(1)}.defer
+		}
+	}
+
+	stop {|...args|
+		args.asArray.do{|pad|
+			{buttons[pad].valueAction_(0)}.defer
+		}
 	}
 
 
